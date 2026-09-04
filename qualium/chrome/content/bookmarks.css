@@ -1,0 +1,83 @@
+/* ==========================================================================
+   Qualium Quantum Browser v5 — Bookmarks Manager Styling
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--q-bg-window);
+  color: var(--q-text-primary);
+  font-family: var(--q-font-sans);
+  min-height: 100vh;
+  padding: var(--q-space-8) var(--q-space-12);
+}
+
+.page-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: var(--q-space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-2);
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-3);
+}
+
+.header-title-row h1 {
+  font-size: var(--q-text-xl);
+  font-weight: 600;
+  color: var(--q-text-primary);
+}
+
+.header-desc {
+  font-size: var(--q-text-sm);
+  color: var(--q-text-muted);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--q-space-12);
+  gap: var(--q-space-3);
+  background: var(--q-bg-surface);
+  border: 1px dashed var(--q-border-medium);
+  border-radius: var(--q-radius-xl);
+}
+
+.empty-icon {
+  color: var(--q-text-muted);
+}
+
+.empty-state h3 {
+  font-size: var(--q-text-base);
+  font-weight: 600;
+  color: var(--q-text-primary);
+}
+
+.empty-state p {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-muted);
+}
+
+kbd {
+  background: var(--q-bg-surface-2, #252a32);
+  border: 1px solid var(--q-border-medium);
+  border-radius: var(--q-radius-sm);
+  padding: 0.15rem 0.35rem;
+  font-family: var(--q-font-mono);
+  font-size: 0.75rem;
+  color: var(--q-text-secondary);
+}

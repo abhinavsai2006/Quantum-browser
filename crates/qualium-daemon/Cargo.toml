@@ -1,0 +1,22 @@
+[package]
+name = "qualium-daemon"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qualium-core = { path = "../qualium-core" }
+qualium-crypto = { path = "../qualium-crypto" }
+qualium-filter = { path = "../qualium-filter" }
+qualium-network = { path = "../qualium-network" }
+qualium-vault = { path = "../qualium-vault" }
+qualium-ipc = { path = "../qualium-ipc" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+rand = { workspace = true }

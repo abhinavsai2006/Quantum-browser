@@ -1,0 +1,21 @@
+[package]
+name = "qualium-network"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qualium-core = { path = "../qualium-core" }
+qualium-crypto = { path = "../qualium-crypto" }
+qualium-filter = { path = "../qualium-filter" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+bytes = { workspace = true }
+uuid = { workspace = true }
+rand = { workspace = true }
+url = { workspace = true }

@@ -1,0 +1,411 @@
+/* ==========================================================================
+   Qualium Quantum Browser v5 — "Qualium Quiet Precision" Browser Shell
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--q-bg-window);
+  font-family: var(--q-font-sans);
+  color: var(--q-text-primary);
+  font-size: var(--q-text-base);
+  user-select: none;
+}
+
+.browser-window {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: var(--q-bg-window);
+}
+
+/* 1. TITLEBAR & TABS */
+.browser-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--q-bg-chrome);
+  padding: 0.35rem 0.5rem 0 0.5rem;
+  border-bottom: 1px solid var(--q-border-subtle);
+  min-height: 40px;
+}
+
+.tab-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-strip::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-2);
+  background: transparent;
+  color: var(--q-text-secondary);
+  border-radius: var(--q-radius-lg) var(--q-radius-lg) 0 0;
+  padding: 0.45rem 0.75rem;
+  font-size: var(--q-text-sm);
+  font-weight: 500;
+  max-width: 220px;
+  min-width: 130px;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--q-motion-fast), color var(--q-motion-fast);
+}
+
+.tab:hover {
+  background: var(--q-bg-hover);
+  color: var(--q-text-primary);
+}
+
+.tab.active {
+  background: var(--q-bg-toolbar);
+  color: var(--q-text-primary);
+  font-weight: 500;
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.tab-favicon {
+  color: var(--q-text-muted);
+}
+
+.tab.active .tab-favicon {
+  color: var(--q-accent-primary);
+}
+
+.tab-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--q-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: background var(--q-motion-fast), opacity var(--q-motion-fast), color var(--q-motion-fast);
+}
+
+.tab:hover .tab-close-btn,
+.tab.active .tab-close-btn {
+  opacity: 1;
+}
+
+.tab-close-btn:hover {
+  background: var(--q-bg-hover);
+  color: var(--q-text-primary);
+}
+
+.btn-new-tab {
+  margin-left: 2px;
+  align-self: center;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-1);
+}
+
+.win-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  color: var(--q-text-muted);
+  cursor: pointer;
+  border-radius: var(--q-radius-sm);
+  transition: background var(--q-motion-fast), color var(--q-motion-fast);
+}
+
+.win-btn:hover {
+  background: var(--q-bg-hover);
+  color: var(--q-text-primary);
+}
+
+.win-btn.win-close:hover {
+  background: var(--q-accent-danger);
+  color: #FFFFFF;
+}
+
+/* 2. NAVIGATION TOOLBAR */
+.browser-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-2);
+  background: var(--q-bg-toolbar);
+  padding: var(--q-space-2) var(--q-space-3);
+  border-bottom: 1px solid var(--q-border-subtle);
+  min-height: 44px;
+}
+
+.nav-cluster, .action-cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 3. OMNIBOX & ADDRESS BAR */
+.omnibox-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--q-bg-input);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-full);
+  padding: 0 var(--q-space-3);
+  height: 32px;
+  gap: var(--q-space-2);
+  transition: border-color var(--q-motion-normal), box-shadow var(--q-motion-normal), background var(--q-motion-normal);
+}
+
+.omnibox-wrapper:focus-within {
+  border-color: var(--q-accent-primary);
+  box-shadow: 0 0 0 2px var(--q-accent-primary-subtle);
+  background: var(--q-bg-surface);
+}
+
+.omnibox-security-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-1);
+  color: var(--q-accent-primary);
+  font-size: var(--q-text-xs);
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: var(--q-radius-full);
+  background: var(--q-accent-primary-subtle);
+  cursor: pointer;
+}
+
+.omnibox-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--q-font-sans);
+  font-size: var(--q-text-sm);
+  color: var(--q-text-primary);
+}
+
+.omnibox-trailing {
+  display: flex;
+  align-items: center;
+}
+
+/* Q-Security Button */
+.q-security-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-1);
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-full);
+  padding: 0.25rem 0.6rem;
+  font-family: var(--q-font-sans);
+  font-size: var(--q-text-xs);
+  font-weight: 500;
+  color: var(--q-text-secondary);
+  cursor: pointer;
+  transition: all var(--q-motion-fast);
+}
+
+.q-security-btn:hover {
+  background: var(--q-bg-hover);
+  color: var(--q-text-primary);
+  border-color: var(--q-border-medium);
+}
+
+/* 4. CALM QUALIUM SECURITY POPOVER */
+.q-popover {
+  position: absolute;
+  top: 86px;
+  right: 56px;
+  width: 320px;
+  background: var(--q-bg-elevated);
+  border: 1px solid var(--q-border-medium);
+  border-radius: var(--q-radius-xl);
+  box-shadow: var(--q-shadow-popover);
+  padding: var(--q-space-4);
+  display: none;
+  flex-direction: column;
+  gap: var(--q-space-3);
+  z-index: 1000;
+}
+
+.q-popover.visible {
+  display: flex;
+}
+
+.popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popover-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-2);
+}
+
+.popover-title-row h3 {
+  font-size: var(--q-text-sm);
+  font-weight: 600;
+  color: var(--q-text-primary);
+}
+
+.popover-summary {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-secondary);
+  line-height: 1.4;
+}
+
+.popover-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-2);
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-md);
+  padding: var(--q-space-3);
+}
+
+.popover-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--q-text-muted);
+}
+
+.popover-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--q-text-xs);
+}
+
+.row-label {
+  color: var(--q-text-secondary);
+}
+
+.row-value {
+  font-weight: 500;
+  color: var(--q-text-primary);
+}
+
+.popover-actions {
+  display: flex;
+  gap: var(--q-space-2);
+}
+
+.popover-btn {
+  flex: 1;
+  font-size: var(--q-text-xs);
+  padding: 0.35rem 0.5rem;
+}
+
+/* 5. BROWSER MENU DROPDOWN */
+.browser-menu-dropdown {
+  position: absolute;
+  top: 86px;
+  right: 12px;
+  display: none;
+}
+
+.browser-menu-dropdown.visible {
+  display: block;
+}
+
+/* 6. CONTENT VIEWPORT */
+.browser-viewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background: var(--q-bg-window);
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.content-browser {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  border: none;
+  display: block;
+}
+
+.engine-diagnostic-banner {
+  position: absolute;
+  bottom: var(--q-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--q-bg-elevated);
+  border: 1px solid var(--q-accent-warning);
+  border-radius: var(--q-radius-lg);
+  padding: var(--q-space-3) var(--q-space-5);
+  box-shadow: var(--q-shadow-lg);
+  z-index: 100;
+  max-width: 600px;
+  animation: q-fade-in var(--q-motion-normal);
+}
+
+.diagnostic-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--q-space-3);
+  color: var(--q-text-primary);
+  font-size: var(--q-text-xs);
+}
+
+.diagnostic-content strong {
+  display: block;
+  font-size: var(--q-text-sm);
+  color: var(--q-accent-warning);
+  margin-bottom: var(--q-space-1);
+}
+
+.diagnostic-content p {
+  color: var(--q-text-secondary);
+  line-height: 1.4;
+}
+
+.diagnostic-content code {
+  background: var(--q-bg-surface);
+  padding: 0.1rem 0.3rem;
+  border-radius: var(--q-radius-sm);
+  font-family: var(--q-font-mono);
+  color: var(--q-accent-primary);
+}

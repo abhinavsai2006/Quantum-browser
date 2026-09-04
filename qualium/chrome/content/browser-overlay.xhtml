@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Qualium Quantum Browser v5 - Native Toolbar Chrome Overlay -->
+<overlay id="qualium-browser-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <toolbarpalette id="BrowserToolbarPalette">
+    <!-- 🛡 Q Security Toolbar Button -->
+    <toolbarbutton id="qualium-security-button"
+                   class="toolbarbutton-1 chromeclass-toolbar-additional"
+                   label="Qualium Security Hub"
+                   tooltiptext="Qualium Quantum Security &amp; Privacy (🛡 Q)"
+                   type="menu-button"
+                   oncommand="QualiumPanel.toggle(this, event)">
+      <image class="toolbarbutton-icon" src="chrome://qualium/skin/qualium-shield.svg"/>
+      <label class="toolbarbutton-text" value="🛡 Q"/>
+      <panel id="qualium-security-panel"
+             type="arrow"
+             orient="vertical"
+             noautofocus="true"
+             role="dialog"
+             aria-label="Qualium Security Hub">
+        <!-- Panel content loaded from qualium-panel.xhtml -->
+      </panel>
+    </toolbarbutton>
+  </toolbarpalette>
+
+</overlay>

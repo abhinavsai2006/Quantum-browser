@@ -1,0 +1,38 @@
+/* Qualium Quantum Browser v5 — In-Content Styling (userContent.css) */
+@-moz-document url-prefix("about:preferences"), url-prefix("chrome://browser/content/preferences") {
+  /* Hide any stock Mozilla promotional banners */
+  #defaultBrowserBox,
+  #setAsDefaultDesc,
+  #setDefaultBrowser,
+  .more-from-mozilla,
+  #moreFromMozillaCategory,
+  #firefoxSupport,
+  #helpButton,
+  .spotlight,
+  .banner {
+    display: none !important;
+  }
+
+  /* Qaulium Graphite Theme — Modern Chromium/Firefox In-Content */
+  :root {
+    --in-content-page-background: #111215 !important;
+    --in-content-page-color: #f8fafc !important;
+    --in-content-box-background: #18191e !important;
+    --in-content-box-border-color: rgba(255, 255, 255, 0.08) !important;
+    --in-content-primary-button-background: #28292e !important;
+    --in-content-primary-button-background-hover: #363840 !important;
+    --in-content-primary-button-text-color: #ffffff !important;
+    --in-content-button-background: #1c1d22 !important;
+    --in-content-button-background-hover: #28292e !important;
+    --in-content-button-text-color: #f8fafc !important;
+    --in-content-border-focus: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  /* Sleek modern rounded buttons for in-content preferences */
+  button.primary,
+  .button[default],
+  button {
+    border-radius: 8px !important;
+    transition: all 0.12s ease !important;
+  }
+}

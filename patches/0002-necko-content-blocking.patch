@@ -1,0 +1,51 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 2/7] necko: Intercept HTTP/HTTPS channels and enforce Qualium native request filter
+
+---
+ netwerk/protocol/http/nsHttpChannel.cpp | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/netwerk/protocol/http/nsHttpChannel.cpp b/netwerk/protocol/http/nsHttpChannel.cpp
+index 3b4c1a2..9e2d3f1 100644
+--- a/netwerk/protocol/http/nsHttpChannel.cpp
++++ b/netwerk/protocol/http/nsHttpChannel.cpp
+@@ -45,6 +45,7 @@
+ #include "nsIHttpChannelInternal.h"
+ #include "nsIClassOfService.h"
+ #include "nsIQualiumSecurityService.h"
++#include "mozilla/Services.h"
+
+ namespace mozilla {
+ namespace net {
+@@ -3450,6 +3451,27 @@ nsresult nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
+   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_INITIALIZED);
+
++  // Qualium Native Content & Tracker Blocking Interception
++  {
++    nsCOMPtr<nsIQualiumSecurityService> qsec =
++      do_GetService("@qualium.ai/security-service;1");
++    if (qsec) {
++      nsAutoCString spec;
++      mURI->GetSpec(spec);
++      nsAutoString wideSpec = NS_ConvertUTF8toUTF16(spec);
++      nsAutoString wideFirstParty;
++      if (mTopWindowURI) {
++        nsAutoCString fpSpec;
++        mTopWindowURI->GetHost(fpSpec);
++        wideFirstParty = NS_ConvertUTF8toUTF16(fpSpec);
++      }
++      bool blocked = false;
++      qsec->ShouldBlockUrl(wideSpec, wideFirstParty, &blocked);
++      if (blocked) {
++        LOG(("Qualium Filter: Blocked request to %s", spec.get()));
++        return NS_ERROR_CONTENT_BLOCKED;
++      }
++    }
++  }
++
+   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
+
+   mListener = aListener;
+-- 
+2.45.0

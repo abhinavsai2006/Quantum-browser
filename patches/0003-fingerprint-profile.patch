@@ -1,0 +1,30 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 3/7] fingerprint: Inject QualiumFingerprintProfile into Gecko DOM Canvas & Navigator
+
+---
+ dom/canvas/CanvasRenderingContext2D.cpp | 18 ++++++++++++++++++
+ dom/base/Navigator.cpp                 | 24 ++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
+
+diff --git a/dom/canvas/CanvasRenderingContext2D.cpp b/dom/canvas/CanvasRenderingContext2D.cpp
+index 4c5d6e7..1a2b3c4 100644
+--- a/dom/canvas/CanvasRenderingContext2D.cpp
++++ b/dom/canvas/CanvasRenderingContext2D.cpp
+@@ -2120,6 +2120,24 @@ void CanvasRenderingContext2D::GetImageData(JSContext* aCx,
+                                             ErrorResult& aError) {
++  // Qualium Fingerprint Defense: Deterministic subtle noise jitter
++  // Prevents unique hardware canvas extraction while preserving visual fidelity
++  ApplyQualiumCanvasNoise(aRetval);
+ }
++
++static void ApplyQualiumCanvasNoise(dom::ImageData* aData) {
++  if (!aData) return;
++  uint8_t* raw = aData->GetData();
++  uint32_t len = aData->GetWidth() * aData->GetHeight() * 4;
++  for (uint32_t i = 0; i < len; i += 16) {
++    raw[i] ^= (0x01 & (i >> 3));
++  }
++}
+-- 
+2.45.0

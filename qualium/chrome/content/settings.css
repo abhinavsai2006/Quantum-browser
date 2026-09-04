@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Qualium Quantum Browser v5 — Settings Center Styling
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--q-bg-window);
+  color: var(--q-text-primary);
+  font-family: var(--q-font-sans);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.settings-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.settings-sidebar {
+  width: 240px;
+  background-color: var(--q-bg-chrome);
+  border-right: 1px solid var(--q-border-subtle);
+  display: flex;
+  flex-direction: column;
+  padding: var(--q-space-6) var(--q-space-3);
+  gap: var(--q-space-4);
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-2);
+  font-size: var(--q-text-base);
+  font-weight: 600;
+  color: var(--q-text-primary);
+  padding: 0 var(--q-space-3) var(--q-space-2) var(--q-space-3);
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-3);
+  padding: 0.55rem var(--q-space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--q-radius-md);
+  color: var(--q-text-secondary);
+  font-family: var(--q-font-sans);
+  font-size: var(--q-text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--q-motion-fast), color var(--q-motion-fast);
+}
+
+.nav-item:hover {
+  background: var(--q-bg-hover);
+  color: var(--q-text-primary);
+}
+
+.nav-item.active {
+  background: var(--q-bg-surface);
+  color: var(--q-accent-primary);
+  font-weight: 600;
+}
+
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--q-space-8) var(--q-space-10);
+  max-width: 1100px;
+  width: 100%;
+}
+
+.settings-header {
+  margin-bottom: var(--q-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-2);
+}
+
+.settings-header h1 {
+  font-size: var(--q-text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.settings-header p {
+  font-size: var(--q-text-sm);
+  color: var(--q-text-muted);
+  line-height: 1.5;
+}

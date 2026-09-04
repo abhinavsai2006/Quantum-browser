@@ -1,0 +1,39 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 1/7] qualium: Integrate Qualium Security XPCOM Service into Gecko (Firefox ESR 140 Rebase)
+
+---
+ xpcom/build/nsXPComInit.cpp | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/xpcom/build/nsXPComInit.cpp b/xpcom/build/nsXPComInit.cpp
+index 7a18b2c..8b3e1f0 100644
+--- a/xpcom/build/nsXPComInit.cpp
++++ b/xpcom/build/nsXPComInit.cpp
+@@ -28,6 +28,8 @@
+ #include "mozilla/Services.h"
+ #include "nsIQualiumSecurityService.h"
+
++static nsCOMPtr<nsIQualiumSecurityService> gQualiumSecurityService;
++
+ nsresult NS_InitXPCOM(nsIServiceManager** aResult,
+                       nsIFile* aBinDirectory,
+                       nsIDirectoryServiceProvider* aAppFileLocationProvider)
+@@ -142,6 +144,18 @@ nsresult NS_InitXPCOM(nsIServiceManager** aResult,
+     NS_ENSURE_SUCCESS(rv, rv);
+   }
+
++  // Initialize Qualium Security Subsystem (Firefox ESR 140)
++  {
++    nsCOMPtr<nsIQualiumSecurityService> qsec =
++      do_GetService("@qualium.ai/security-service;1", &rv);
++    if (NS_SUCCEEDED(rv)) {
++      gQualiumSecurityService = qsec;
++      NS_WARNING("Qualium Quantum Security Subsystem v5.0 (ESR 140) initialized successfully.");
++    }
++  }
++
+   return NS_OK;
+ }
+-- 
+2.45.0

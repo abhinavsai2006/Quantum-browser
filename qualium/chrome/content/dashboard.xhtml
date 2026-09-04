@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy Center — Qaulium</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/dashboard.css"/>
+  <script src="chrome://qualium/content/runtime-state.js"></script>
+  <script src="chrome://qualium/content/dashboard.js"></script>
+</head>
+<body>
+  <div class="privacy-center-layout">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <svg class="q-icon q-icon-md" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Privacy Center</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-target="overview">
+          <svg class="q-icon q-icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Overview</span>
+        </button>
+
+        <button class="nav-item" data-target="connection">
+          <svg class="q-icon q-icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>Connection</span>
+        </button>
+
+        <button class="nav-item" data-target="protections">
+          <svg class="q-icon q-icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Protections</span>
+        </button>
+
+        <button class="nav-item" data-target="permissions">
+          <svg class="q-icon q-icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Permissions</span>
+        </button>
+
+        <button class="nav-item" data-target="advanced">
+          <svg class="q-icon q-icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Advanced</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- 1. OVERVIEW SECTION -->
+      <section class="content-pane active" id="pane-overview">
+        <header class="pane-header">
+          <div class="header-status-badge">
+            <span class="q-dot q-dot-success"></span>
+            <span>Protected</span>
+          </div>
+          <h1>Privacy &amp; Connection Status</h1>
+          <p>Qaulium applies privacy-preserving routing, local content filtering, and memory-only storage for your session.</p>
+        </header>
+
+        <div class="q-settings-section">
+          <span class="q-settings-section-title">Active Protections</span>
+          <div class="q-settings-card">
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Private Routing</span>
+                <span class="q-settings-desc">Routes traffic across isolated multi-hop circuits without direct IP disclosure.</span>
+              </div>
+              <span class="q-chip q-chip-success">Active</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Encrypted DNS (DoH)</span>
+                <span class="q-settings-desc">Resolves domain names in-circuit without querying local OS or ISP resolvers.</span>
+              </div>
+              <span class="q-chip q-chip-success">Protected</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">WebRTC Candidate Isolation</span>
+                <span class="q-settings-desc">Suppresses local and public network interface IP exposure during media sessions.</span>
+              </div>
+              <span class="q-chip q-chip-success">Protected</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Content &amp; Tracker Filter</span>
+                <span class="q-settings-desc">High-performance Rust Trie blocks tracking pixels and ad network requests.</span>
+              </div>
+              <span class="q-chip q-chip-success" id="filter-status-chip">Active</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-settings-section">
+          <span class="q-settings-section-title">Session Storage</span>
+          <div class="q-settings-card">
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Browsing History</span>
+                <span class="q-settings-desc">Disabled by default. Navigational history is held strictly in volatile RAM.</span>
+              </div>
+              <span class="q-chip">Disabled</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Telemetry &amp; Crash Reports</span>
+                <span class="q-settings-desc">Zero telemetry reporting or remote diagnostics upload.</span>
+              </div>
+              <span class="q-chip">Disabled</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. CONNECTION SECTION -->
+      <section class="content-pane" id="pane-connection">
+        <header class="pane-header">
+          <div class="header-status-badge">
+            <span class="q-dot q-dot-success"></span>
+            <span>Circuit Active</span>
+          </div>
+          <h1>Network &amp; Routing Topology</h1>
+          <p>All outbound HTTP and HTTPS socket requests are tunneled through the local privacy daemon.</p>
+        </header>
+
+        <div class="q-settings-section">
+          <span class="q-settings-section-title">Current Tunnel Status</span>
+          <div class="q-settings-card">
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Local SOCKS5 Proxy</span>
+                <span class="q-settings-desc">127.0.0.1:9050 (Active &amp; bound to Necko network layer)</span>
+              </div>
+              <span class="q-chip q-chip-success">Bound</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Circuit Stream Isolation</span>
+                <span class="q-settings-desc">Separate circuit states assigned per first-party domain context.</span>
+              </div>
+              <span class="q-chip q-chip-success">Enforced</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">DNS Transport</span>
+                <span class="q-settings-desc">DNS-over-HTTPS via local encrypted resolver proxy.</span>
+              </div>
+              <span class="q-chip q-chip-success">Encrypted</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. PROTECTIONS SECTION -->
+      <section class="content-pane" id="pane-protections">
+        <header class="pane-header">
+          <h1>Built-In Shield Protections</h1>
+          <p>Client-side rules configured in the native Rust filtering engine.</p>
+        </header>
+
+        <div class="q-settings-section">
+          <span class="q-settings-section-title">Content Shield</span>
+          <div class="q-settings-card">
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Ad &amp; Analytic Blocking</span>
+                <span class="q-settings-desc">Filters known advertising networks and tracking scripts before network dispatch.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Fingerprint Normalization</span>
+                <span class="q-settings-desc">Normalizes canvas, audio context, and navigator hardware concurrency metrics.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">HTTPS-Only Mode</span>
+                <span class="q-settings-desc">Upgrades insecure HTTP connections automatically to TLS.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. PERMISSIONS SECTION -->
+      <section class="content-pane" id="pane-permissions">
+        <header class="pane-header">
+          <h1>Site Permissions &amp; Hardware Access</h1>
+          <p>Global security defaults for device APIs and sensitive web capabilities.</p>
+        </header>
+
+        <div class="q-settings-section">
+          <span class="q-settings-section-title">Hardware Gates</span>
+          <div class="q-settings-card">
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Camera &amp; Microphone</span>
+                <span class="q-settings-desc">Always prompt for explicit permission before accessing media devices.</span>
+              </div>
+              <span class="q-chip">Prompt Always</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Precise Geolocation</span>
+                <span class="q-settings-desc">Blocks OS GPS and Wi-Fi triangulated location queries.</span>
+              </div>
+              <span class="q-chip q-chip-danger">Blocked</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Notifications &amp; Push</span>
+                <span class="q-settings-desc">Silences background push registration requests.</span>
+              </div>
+              <span class="q-chip">Blocked</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. ADVANCED SECTION -->
+      <section class="content-pane" id="pane-advanced">
+        <header class="pane-header">
+          <h1>Advanced Technical Details</h1>
+          <p>Cryptographic standards, transport parameters, and subsystem diagnostics.</p>
+        </header>
+
+        <div class="q-settings-section">
+          <span class="q-settings-section-title">Cryptographic Architecture</span>
+          <div class="q-settings-card">
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Post-Quantum KEM</span>
+                <span class="q-settings-desc">NIST FIPS 203 ML-KEM-768 (Kyber768 hybrid key encapsulation).</span>
+              </div>
+              <span class="q-chip q-chip-success">Available</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Classical Key Exchange</span>
+                <span class="q-settings-desc">Curve25519 (X25519 ECDH) hybrid combination.</span>
+              </div>
+              <span class="q-chip q-chip-success">Active</span>
+            </div>
+
+            <div class="q-settings-row">
+              <div class="q-settings-info">
+                <span class="q-settings-label">Symmetric Cipher</span>
+                <span class="q-settings-desc">ChaCha20-Poly1305 AEAD authenticated encryption.</span>
+              </div>
+              <span class="q-chip q-chip-success">Active</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

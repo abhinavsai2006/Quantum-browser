@@ -1,0 +1,517 @@
+/* ==========================================================================
+   Qaulium Quantum Browser v5 — Premium Modern Chromium / Firefox Design
+   Ultra-refined obsidian, titanium, and slate palette with subtle micro-interactions
+   ========================================================================== */
+
+/* 1. Global Color Tokens & Variables */
+:root {
+  --toolbar-bgcolor: #1c1d22 !important;
+  --tab-selected-bgcolor: #28292e !important;
+  --tab-selected-textcolor: #ffffff !important;
+  --toolbar-field-background-color: #121316 !important;
+  --toolbar-field-focus-background-color: #18191d !important;
+  --toolbar-field-color: #f1f3f4 !important;
+  --toolbar-field-focus-color: #ffffff !important;
+  --lwt-accent-color: #121316 !important;
+  --lwt-text-color: #f1f3f4 !important;
+  --lwt-selected-tab-background-color: #28292e !important;
+  --toolbarbutton-icon-fill: #bcc1ca !important;
+  --toolbarbutton-icon-fill-attention: #34d399 !important;
+}
+
+/* 2. Window Titlebar & Window Background */
+#navigator-toolbox {
+  background-color: #121316 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+#titlebar {
+  background-color: #121316 !important;
+}
+
+/* 3. Modern Chromium / Firefox Tab Strip */
+#TabsToolbar {
+  background-color: #121316 !important;
+  min-height: 40px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+#TabsToolbar .tabbrowser-tab {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  padding-inline: 2px !important;
+}
+
+#TabsToolbar .tab-background {
+  border-radius: 8px 8px 0 0 !important;
+  margin-block: 3px 0 !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  border-bottom: none !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
+}
+
+#TabsToolbar .tabbrowser-tab:hover .tab-background:not([selected="true"]) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+#TabsToolbar .tabbrowser-tab[selected="true"] .tab-background {
+  background-color: #28292e !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+#TabsToolbar .tabbrowser-tab[selected="true"] .tab-label {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+#tabs-newtab-button,
+#TabsToolbar #new-tab-button {
+  fill: #bcc1ca !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  margin-block: auto !important;
+  transition: all 0.12s ease !important;
+}
+
+#tabs-newtab-button:hover,
+#TabsToolbar #new-tab-button:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  fill: #ffffff !important;
+}
+
+/* 4. Modern Chromium Navigation Toolbar */
+#nav-bar {
+  background-color: #1c1d22 !important;
+  padding: 4px 10px !important;
+  gap: 4px !important;
+}
+
+/* Minimalist Circular Navigation Buttons (Back, Forward, Reload, Stop) */
+#back-button, #forward-button, #reload-button, #stop-button {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  color: #bcc1ca !important;
+  fill: #bcc1ca !important;
+  padding: 5px !important;
+  margin-inline: 1px !important;
+  transition: all 0.12s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+#back-button:hover, #forward-button:hover, #reload-button:hover, #stop-button:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  fill: #ffffff !important;
+  box-shadow: none !important;
+}
+
+#back-button:active, #forward-button:active, #reload-button:active, #stop-button:active {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* 5. Modern Chromium Pill Omnibox / Address Bar */
+#urlbar-container {
+  max-width: 820px !important;
+  margin: 0 auto !important;
+}
+
+#urlbar-background {
+  background-color: #121316 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+#urlbar[focused="true"] > #urlbar-background {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  background-color: #18191d !important;
+}
+
+#urlbar-input {
+  color: #f1f3f4 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-size: 13px !important;
+}
+
+/* 6. Refined, Minimalist [ Protected ] Pill inside Address Bar */
+#tracking-protection-icon-container {
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 2px 8px !important;
+  margin-right: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+#tracking-protection-icon-container:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+#tracking-protection-icon {
+  fill: #34d399 !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+#tracking-protection-icon-container::after {
+  content: "Protected" !important;
+  color: #d1d5db !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+  margin-left: 4px !important;
+  text-transform: capitalize !important;
+}
+
+/* 7. Action Buttons (Bookmark, Downloads, Menu) */
+#star-button-box,
+#downloads-button,
+#PanelUI-menu-button {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  fill: #bcc1ca !important;
+  margin-inline: 1px !important;
+  padding: 5px !important;
+  transition: all 0.12s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+#star-button-box:hover,
+#downloads-button:hover,
+#PanelUI-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  fill: #ffffff !important;
+}
+
+#star-button-box:active,
+#downloads-button:active,
+#PanelUI-menu-button:active {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* 8. PURGE ALL STOCK FIREFOX BRANDING & PROMOTIONAL ELEMENTS */
+#firefox-view-button,
+#wrapper-firefox-view-button,
+#fxa-toolbar-menu-button,
+#fxa-avatar-image,
+#alltabs-button,
+#pocket-button-box,
+#save-to-pocket-button,
+#identity-permission-box,
+#identity-icon-label,
+#appMenu-fxa-status2,
+#appMenu-fxa-separator,
+#appMenu-help-button,
+#urlbar-search-button,
+.urlbar-search-button,
+#urlbar-search-splitter,
+#urlbar-search-mode-indicator,
+.search-one-offs,
+#urlbar-engine-one-off-item-other,
+#private-browsing-indicator-with-label,
+.private-browsing-indicator,
+#pageActionButton,
+#translations-button,
+#appMenu-print-button2,
+#appMenu-save-file-button2,
+#appMenu-find-button2,
+#appMenu-translate-button,
+#appMenu-zoom-controls,
+#appMenu-more-button2,
+#appMenu-report-broken-site-button,
+#appMenu-empty-profiles-button,
+#appMenu-profiles-button,
+#appMenu-addon-banners,
+#appMenu-update-banner {
+  display: none !important;
+}
+
+/* 9. Qaulium Fallback Tab Favicon */
+.tabbrowser-tab .tab-icon-image:not([src]),
+.tabbrowser-tab .tab-icon-image[src="chrome://branding/content/icon32.png"],
+.tabbrowser-tab .tab-icon-image[src="chrome://global/skin/icons/defaultFavicon.svg"] {
+  content: url("chrome://qualium/skin/qualium-shield.svg") !important;
+}
+
+/* 10. Refined Obsidian & Titanium Menus (Chromium-Style AppMenu and Protections) */
+#appMenu-popup {
+  min-width: 250px !important;
+  max-width: 280px !important;
+  background-color: #1c1d22 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+  padding: 6px !important;
+  color: #f1f5f9 !important;
+}
+
+#protections-popup,
+.panel-arrowcontent {
+  background-color: #1c1d22 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+  color: #f1f5f9 !important;
+}
+
+#appMenu-mainView,
+#protections-popup-mainView {
+  background: transparent !important;
+}
+
+#appMenu-mainView .subviewbutton {
+  color: #e2e8f0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 7px 12px !important;
+  margin: 1.5px 0 !important;
+  border-radius: 8px !important;
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.12s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+#appMenu-mainView .subviewbutton:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+#appMenu-mainView .subviewbutton .toolbarbutton-icon {
+  display: flex !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-inline-end: 12px !important;
+  opacity: 0.9 !important;
+  flex-shrink: 0 !important;
+}
+
+#appMenu-mainView .subviewbutton:hover .toolbarbutton-icon {
+  opacity: 1 !important;
+}
+
+#appMenu-mainView .subviewbutton .toolbarbutton-text {
+  flex: 1 !important;
+  text-align: start !important;
+}
+
+#appMenu-mainView .subviewbutton .toolbarbutton-accel {
+  color: #64748b !important;
+  font-size: 11px !important;
+  margin-inline-start: 10px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+}
+
+#appMenu-mainView .subviewbutton:hover .toolbarbutton-accel {
+  color: #94a3b8 !important;
+}
+
+/* Official Menu Item Icons */
+#appMenu-new-tab-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-tab.svg") !important;
+}
+#appMenu-new-window-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-window.svg") !important;
+}
+#appMenu-new-private-window-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-private.svg") !important;
+}
+#appMenu-bookmarks-button {
+  list-style-image: url("chrome://qualium/skin/menu-bookmark.svg") !important;
+}
+#appMenu-history-button {
+  list-style-image: url("chrome://qualium/skin/menu-history.svg") !important;
+}
+#appMenu-downloads-button {
+  list-style-image: url("chrome://qualium/skin/menu-downloads.svg") !important;
+}
+#appMenu-passwords-button {
+  list-style-image: url("chrome://qualium/skin/menu-passwords.svg") !important;
+}
+#appMenu-extensions-themes-button {
+  list-style-image: url("chrome://qualium/skin/menu-extensions.svg") !important;
+}
+#appMenu-settings-button {
+  list-style-image: url("chrome://qualium/skin/menu-settings.svg") !important;
+}
+#appMenu-help-button2 {
+  list-style-image: url("chrome://qualium/skin/qualium-shield.svg") !important;
+}
+#appMenu-quit-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-quit.svg") !important;
+}
+
+.subviewbutton {
+  color: #e2e8f0 !important;
+  border-radius: 6px !important;
+  transition: all 0.12s ease !important;
+}
+
+.subviewbutton:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.subviewbutton-iconic {
+  fill: #bcc1ca !important;
+}
+
+.subviewbutton:hover .subviewbutton-iconic {
+  fill: #ffffff !important;
+}
+
+toolbarseparator {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Protections Popup Qaulium Header Styling */
+#protections-popup-main-header-label {
+  color: #f8fafc !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+
+#protections-popup-etp-toggle {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+}
+
+#protections-popup-settings-button {
+  background: #2b2d33 !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+#protections-popup-settings-button:hover {
+  background: #363840 !important;
+}
+
+/* 11. Minimalist Tab Close Button (Chromium / Modern Firefox Circle) */
+.tab-close-button {
+  border-radius: 50% !important;
+  width: 20px !important;
+  height: 20px !important;
+  padding: 3px !important;
+  margin-inline-end: 2px !important;
+  fill: #9ca3af !important;
+  background-color: transparent !important;
+  border: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.tab-close-button:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  fill: #ffffff !important;
+}
+
+.tab-close-button:active {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* 12. Modern Chromium / Firefox Context Menus & Popups */
+menupopup {
+  --panel-background: #1c1d22 !important;
+  --panel-border-color: rgba(255, 255, 255, 0.1) !important;
+  --panel-border-radius: 10px !important;
+  background-color: #1c1d22 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6) !important;
+  padding: 4px !important;
+  color: #f1f5f9 !important;
+}
+
+menuitem, menu {
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  color: #e2e8f0 !important;
+  transition: background 0.1s ease, color 0.1s ease !important;
+}
+
+menuitem:hover, menu:hover,
+menuitem[_moz-menuactive="true"], menu[_moz-menuactive="true"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+menuseparator {
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  margin: 4px 6px !important;
+}
+
+/* 13. Bookmarks Toolbar & Personal Bar */
+#PersonalToolbar {
+  background-color: #1c1d22 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 2px 8px !important;
+}
+
+.bookmark-item {
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  color: #e2e8f0 !important;
+  transition: all 0.12s ease !important;
+}
+
+.bookmark-item:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+/* 14. Findbar Modernization */
+findbar {
+  background-color: #1c1d22 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 6px 14px !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+.findbar-textbox {
+  background-color: #121316 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+  color: #f1f5f9 !important;
+  padding: 4px 12px !important;
+}
+
+.findbar-textbox:focus {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.findbar-find-previous,
+.findbar-find-next,
+.findbar-closebutton {
+  border-radius: 50% !important;
+  background-color: transparent !important;
+  border: none !important;
+  fill: #bcc1ca !important;
+  transition: all 0.12s ease !important;
+}
+
+.findbar-find-previous:hover,
+.findbar-find-next:hover,
+.findbar-closebutton:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  fill: #ffffff !important;
+}
+

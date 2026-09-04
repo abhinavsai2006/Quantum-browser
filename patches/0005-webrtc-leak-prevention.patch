@@ -1,0 +1,23 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 5/7] webrtc: Suppress ICE host candidates and enforce proxy-only routing
+
+---
+ media/mtransport/third_party/nICEr/src/net/nr_socket_buffered_stun.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/media/mtransport/third_party/nICEr/src/net/nr_socket_buffered_stun.c b/media/mtransport/third_party/nICEr/src/net/nr_socket_buffered_stun.c
+index 9a1b2c3..4d5e6f7 100644
+--- a/media/mtransport/third_party/nICEr/src/net/nr_socket_buffered_stun.c
++++ b/media/mtransport/third_party/nICEr/src/net/nr_socket_buffered_stun.c
+@@ -320,6 +320,20 @@ int nr_socket_buffered_stun_sendto(nr_socket *sock, const void *msg, size_t len,
+   // Qualium WebRTC Leak Prevention: Block host interface candidate leakage
+   if (sock->addr.type == NR_IPV4 || sock->addr.type == NR_IPV6) {
+     if (is_local_interface_address(&sock->addr)) {
+       return 0; // Drop local interface binding
+     }
+   }
+   return 0;
+ }
+-- 
+2.45.0

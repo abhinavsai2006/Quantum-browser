@@ -1,0 +1,17 @@
+[package]
+name = "qualium-browser"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "QualiumQuantumBrowser"
+path = "src/main.rs"
+
+[dependencies]
+qualium-core = { path = "../qualium-core" }
+qualium-ipc = { path = "../qualium-ipc" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Security &amp; Network Notice — Qaulium</title>
+  <link rel="stylesheet" href="chrome://qualium/content/error.css"/>
+</head>
+<body>
+  <div class="error-container">
+    <div class="error-icon">🛡⚠️</div>
+    <h1 class="error-title">Connection Intercepted or Unavailable</h1>
+    <p class="error-subtitle" id="error-type">Privacy Network / TLS Security Boundary</p>
+
+    <div class="error-explanation-box">
+      <div class="explain-item">
+        <strong>WHAT HAPPENED</strong>
+        <p id="desc-what">The remote server failed certificate validation, or the active privacy circuit could not establish an authenticated TLS session.</p>
+      </div>
+      <div class="explain-item">
+        <strong>WHY THIS OCCURRED</strong>
+        <p id="desc-why">In strict privacy mode, Qaulium fails closed to prevent unencrypted network leaks, certificate spoofing, or downgrade attacks.</p>
+      </div>
+      <div class="explain-item">
+        <strong>WHAT YOU CAN DO</strong>
+        <p id="desc-action">Try rotating your network identity to establish a fresh circuit, or verify the domain name spelling.</p>
+      </div>
+    </div>
+
+    <div class="error-actions">
+      <button type="button" class="btn-action btn-primary" onclick="window.location.reload()">Retry Connection</button>
+      <button type="button" class="btn-action btn-secondary" onclick="window.location.href='about:newtab'">Return to New Tab</button>
+    </div>
+  </div>
+</body>
+</html>

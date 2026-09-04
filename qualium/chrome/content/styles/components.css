@@ -1,0 +1,289 @@
+/* ==========================================================================
+   Qualium Quantum Browser v5 — Reusable Component Library
+   ========================================================================== */
+
+/* 1. BUTTONS & ICON BUTTONS */
+.q-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--q-space-2);
+  padding: 0.45rem 0.9rem;
+  font-family: var(--q-font-sans);
+  font-size: var(--q-text-sm);
+  font-weight: 500;
+  border-radius: var(--q-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--q-motion-normal), border-color var(--q-motion-normal), color var(--q-motion-normal);
+  user-select: none;
+  text-decoration: none;
+}
+
+.q-btn:focus-visible {
+  outline: 2px solid var(--q-accent-primary);
+  outline-offset: 1px;
+}
+
+.q-btn-primary {
+  background: #28292e;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.q-btn-primary:hover {
+  background: #363840;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.q-btn-secondary {
+  background: var(--q-bg-surface);
+  color: var(--q-text-primary);
+  border-color: var(--q-border-subtle);
+}
+.q-btn-secondary:hover {
+  background: var(--q-bg-elevated);
+  border-color: var(--q-border-medium);
+}
+
+.q-btn-ghost {
+  background: transparent;
+  color: var(--q-text-secondary);
+}
+.q-btn-ghost:hover {
+  background: var(--q-bg-hover);
+  color: var(--q-text-primary);
+}
+
+.q-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--q-text-secondary);
+  cursor: pointer;
+  transition: all var(--q-motion-fast);
+}
+
+.q-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.q-icon-btn:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.q-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* 2. STATUS BADGES & CHIPS */
+.q-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--q-space-1);
+  padding: 0.15rem 0.5rem;
+  font-size: var(--q-text-xs);
+  font-weight: 500;
+  border-radius: var(--q-radius-full);
+  background: var(--q-bg-surface);
+  color: var(--q-text-secondary);
+  border: 1px solid var(--q-border-subtle);
+}
+
+.q-chip-success {
+  background: var(--q-accent-success-subtle);
+  color: var(--q-accent-success);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.q-chip-warning {
+  background: var(--q-accent-warning-subtle);
+  color: var(--q-accent-warning);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.q-chip-danger {
+  background: var(--q-accent-danger-subtle);
+  color: var(--q-accent-danger);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+/* 3. SETTINGS & PRIVACY CENTER ROWS */
+.q-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-3);
+  margin-bottom: var(--q-space-8);
+}
+
+.q-settings-section-title {
+  font-size: var(--q-text-md);
+  font-weight: 600;
+  color: var(--q-text-primary);
+}
+
+.q-settings-card {
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-lg);
+  overflow: hidden;
+}
+
+.q-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--q-space-4) var(--q-space-5);
+  border-bottom: 1px solid var(--q-border-subtle);
+  gap: var(--q-space-4);
+}
+
+.q-settings-row:last-child {
+  border-bottom: none;
+}
+
+.q-settings-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.q-settings-label {
+  font-size: var(--q-text-base);
+  font-weight: 500;
+  color: var(--q-text-primary);
+}
+
+.q-settings-desc {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-muted);
+  line-height: 1.4;
+}
+
+/* 4. TOGGLE SWITCHES */
+.q-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.q-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.q-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--q-bg-elevated);
+  border: 1px solid var(--q-border-medium);
+  border-radius: var(--q-radius-full);
+  transition: background var(--q-motion-normal), border-color var(--q-motion-normal);
+}
+
+.q-slider::before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--q-text-muted);
+  border-radius: 50%;
+  transition: transform var(--q-motion-normal);
+}
+
+.q-switch input:checked + .q-slider {
+  background-color: #34d399;
+  border-color: #34d399;
+}
+
+.q-switch input:checked + .q-slider::before {
+  transform: translateX(16px);
+  background-color: #ffffff;
+}
+
+/* 5. POPOVERS & MENUS */
+.q-menu {
+  background: var(--q-bg-elevated);
+  border: 1px solid var(--q-border-medium);
+  border-radius: var(--q-radius-lg);
+  box-shadow: var(--q-shadow-popover);
+  padding: var(--q-space-1);
+  min-width: 220px;
+  z-index: 1000;
+}
+
+.q-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem var(--q-space-3);
+  font-size: var(--q-text-sm);
+  color: var(--q-text-primary);
+  border-radius: var(--q-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  transition: background var(--q-motion-fast);
+}
+
+.q-menu-item:hover {
+  background: var(--q-bg-hover);
+}
+
+.q-menu-item-left {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-2);
+}
+
+.q-menu-shortcut {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-muted);
+  font-family: var(--q-font-sans);
+}
+
+.q-menu-separator {
+  height: 1px;
+  background: var(--q-border-subtle);
+  margin: var(--q-space-1) 0;
+}
+
+/* 6. TOAST NOTIFICATIONS */
+.q-toast-container {
+  position: fixed;
+  bottom: var(--q-space-5);
+  right: var(--q-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-2);
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.q-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-3);
+  background: var(--q-bg-elevated);
+  color: var(--q-text-primary);
+  border: 1px solid var(--q-border-medium);
+  border-radius: var(--q-radius-md);
+  padding: var(--q-space-3) var(--q-space-4);
+  font-size: var(--q-text-sm);
+  box-shadow: var(--q-shadow-md);
+}

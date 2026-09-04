@@ -1,0 +1,15 @@
+[package]
+name = "qualium-tests-privacy"
+version = "5.0.0"
+edition = "2021"
+
+[dependencies]
+qualium-core = { path = "../../crates/qualium-core" }
+qualium-crypto = { path = "../../crates/qualium-crypto" }
+qualium-filter = { path = "../../crates/qualium-filter" }
+qualium-network = { path = "../../crates/qualium-network" }
+qualium-vault = { path = "../../crates/qualium-vault" }
+qualium-ipc = { path = "../../crates/qualium-ipc" }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }

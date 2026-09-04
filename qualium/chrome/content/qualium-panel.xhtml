@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8"/>
+  <title>Qaulium Security Hub</title>
+  <link rel="stylesheet" href="chrome://qualium/content/qualium-panel.css"/>
+  <script src="chrome://qualium/content/runtime-state.js"></script>
+  <script src="chrome://qualium/content/qualium-panel.js"></script>
+</head>
+<body class="qualium-panel-body">
+  <div class="qualium-panel-header">
+    <div class="header-branding">
+      <span class="shield-badge">🛡</span>
+      <div class="brand-titles">
+        <h1 class="brand-name">QAULIUM SECURITY</h1>
+        <p class="brand-tagline">Quantum-Safe Privacy Architecture</p>
+      </div>
+    </div>
+    <button id="btn-new-identity" class="btn-identity" title="Wipe session state, clear temporary storage, and rotate anonymity circuit">
+      ⟳ New Identity
+    </button>
+  </div>
+
+  <div class="qualium-sections-container">
+    <!-- NETWORK SECTION -->
+    <div class="qualium-card">
+      <div class="card-header">
+        <span class="card-title">NETWORK</span>
+        <span id="circuit-badge" class="badge-status badge-active">Protected</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Anonymous routing</span>
+        <span id="net-anon-routing" class="metric-val val-green">Protected ✓</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Circuit</span>
+        <span id="net-circuit-status" class="metric-val val-green">Active (3 Hops)</span>
+      </div>
+      <div class="circuit-topology-view">
+        <div class="circuit-hop"><span class="hop-role">Guard</span><span id="hop-guard" class="hop-name">IS (Reykjavik)</span></div>
+        <div class="hop-arrow">→</div>
+        <div class="circuit-hop"><span class="hop-role">Relay</span><span id="hop-relay" class="hop-name">CH (Zurich)</span></div>
+        <div class="hop-arrow">→</div>
+        <div class="circuit-hop"><span class="hop-role">Exit</span><span id="hop-exit" class="hop-name">SE (Stockholm)</span></div>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">DNS</span>
+        <span id="net-dns" class="metric-val val-green">Protected (Zero Leak)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">WebRTC</span>
+        <span id="net-webrtc" class="metric-val val-green">Protected (Relay Only)</span>
+      </div>
+    </div>
+
+    <!-- CRYPTOGRAPHY SECTION -->
+    <div class="qualium-card">
+      <div class="card-header">
+        <span class="card-title">CRYPTOGRAPHY</span>
+        <span id="crypto-badge" class="badge-status badge-pqc">Hybrid PQ Ready</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">PQ capability</span>
+        <span id="crypto-pq-cap" class="metric-val val-pqc">Available (ML-KEM-768)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">PQ transport</span>
+        <span id="crypto-pq-trans" class="metric-val val-green">Negotiated (Relay)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Website TLS</span>
+        <span id="crypto-website-tls" class="metric-val">Host-Dependent (Hybrid/PQ)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">AEAD Cipher</span>
+        <span id="crypto-aead" class="metric-val">ChaCha20-Poly1305</span>
+      </div>
+    </div>
+
+    <!-- PRIVACY SECTION -->
+    <div class="qualium-card">
+      <div class="card-header">
+        <span class="card-title">PRIVACY</span>
+        <span id="privacy-level-badge" class="badge-status badge-level">Level 2: Private</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Ads blocked</span>
+        <span id="priv-ads" class="metric-val val-bold">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Trackers blocked</span>
+        <span id="priv-trackers" class="metric-val val-bold">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fingerprint defense</span>
+        <span id="priv-fp" class="metric-val val-green">Active (Bucket Normalized)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">History</span>
+        <span id="priv-history" class="metric-val val-mute">OFF (Zero Retention)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Telemetry</span>
+        <span id="priv-telemetry" class="metric-val val-mute">OFF (Zero Telemetry)</span>
+      </div>
+    </div>
+
+    <!-- THREATS SECTION -->
+    <div class="qualium-card">
+      <div class="card-header">
+        <span class="card-title">THREATS</span>
+        <span class="badge-status badge-green">Shields Up</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Phishing</span>
+        <span class="metric-val val-green">Protected</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Malware</span>
+        <span class="metric-val val-green">Protected</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Downloads</span>
+        <span class="metric-val val-green">Protected</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="qualium-panel-footer">
+    <a href="dashboard.xhtml" class="footer-link">Open Full Security Dashboard ↗</a>
+  </div>
+</body>
+</html>

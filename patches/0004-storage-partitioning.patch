@@ -1,0 +1,21 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 4/7] storage: Enforce strict first-party storage partitioning across cookies, LocalStorage, IndexedDB and Cache
+
+---
+ dom/quota/QuotaManager.cpp | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/dom/quota/QuotaManager.cpp b/dom/quota/QuotaManager.cpp
+index 8e9f0a1..2b3c4d5 100644
+--- a/dom/quota/QuotaManager.cpp
++++ b/dom/quota/QuotaManager.cpp
+@@ -1890,6 +1890,22 @@ nsresult QuotaManager::Init(const nsAString& aBasePath) {
+   // Qualium Strict Partitioning: Force Total Cookie Protection (dFPI) on all contexts
+   Preferences::SetBool("privacy.partition.always_partition_third_party_non_cookie_storage", true);
+   Preferences::SetBool("privacy.partition.serviceWorkers", true);
+   Preferences::SetInt("network.cookie.cookieBehavior", 5); // Reject cross-site tracking cookies and partition rest
+   return NS_OK;
+ }
+-- 
+2.45.0

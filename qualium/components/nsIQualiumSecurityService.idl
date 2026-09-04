@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(9a2f3fac-0d4a-44cd-8ddd-6713b30d9574)]
+interface nsIQualiumSecurityService : nsISupports
+{
+  /* Privacy Levels */
+  const unsigned long PRIVACY_LEVEL_BALANCED = 1;
+  const unsigned long PRIVACY_LEVEL_PRIVATE = 2;
+  const unsigned long PRIVACY_LEVEL_MAXIMUM = 3;
+
+  /* Current privacy operational level */
+  attribute unsigned long privacyLevel;
+
+  /* Live metrics in JSON format for the 🛡 Q Toolbar button */
+  AString getLiveSecurityMetricsJson();
+
+  /* Active circuit topology in JSON format */
+  AString getCircuitTopologyJson();
+
+  /* Coherent population-based Anti-Fingerprinting profile in JSON format */
+  AString getFingerprintProfileJson();
+
+  /* Check whether a request URL should be blocked by Necko */
+  boolean shouldBlockUrl(in AString aUrl, in AString aFirstPartyDomain);
+
+  /* Trigger Identity Reset (Wipe ephemeral state & rotate circuit) */
+  void rotateIdentity();
+};

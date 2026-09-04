@@ -1,0 +1,10 @@
+[package]
+name = "qualium-tests-network"
+version = "5.0.0"
+edition = "2021"
+
+[dependencies]
+qualium-core = { path = "../../crates/qualium-core" }
+qualium-network = { path = "../../crates/qualium-network" }
+qualium-filter = { path = "../../crates/qualium-filter" }
+tokio = { workspace = true }

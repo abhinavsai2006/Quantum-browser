@@ -1,0 +1,29 @@
+[package]
+name = "qualium-crypto"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qualium-core = { path = "../qualium-core" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+rand = { workspace = true }
+rand_core = { workspace = true }
+sha2 = { workspace = true }
+sha3 = { workspace = true }
+hmac = { workspace = true }
+hkdf = { workspace = true }
+chacha20poly1305 = { workspace = true }
+aes-gcm = { workspace = true }
+x25519-dalek = { workspace = true }
+ed25519-dalek = { workspace = true }
+subtle = { workspace = true }
+zeroize = { workspace = true }
+ml-kem = "0.2"
+
+[dev-dependencies]
+hex = "0.4"

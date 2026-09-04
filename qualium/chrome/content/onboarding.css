@@ -1,0 +1,103 @@
+/* Onboarding Center Styling */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--q-bg-window);
+  color: var(--q-text-primary);
+  font-family: var(--q-font-sans);
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboard-container {
+  width: 100%;
+  max-width: 520px;
+  padding: var(--q-space-6);
+}
+
+.step-card {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--q-space-4);
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-xl);
+  padding: var(--q-space-8);
+  box-shadow: var(--q-shadow-lg);
+}
+
+.step-card.active {
+  display: flex;
+}
+
+.onboard-icon {
+  margin-bottom: var(--q-space-2);
+}
+
+.step-card h2 {
+  font-size: var(--q-text-xl);
+  font-weight: 600;
+}
+
+.onboard-text {
+  font-size: var(--q-text-sm);
+  color: var(--q-text-secondary);
+  line-height: 1.5;
+}
+
+.level-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-3);
+  width: 100%;
+  text-align: left;
+}
+
+.q-radio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--q-space-3) var(--q-space-4);
+  background: var(--q-bg-elevated);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-md);
+  cursor: pointer;
+  transition: all var(--q-motion-fast);
+}
+
+.q-radio-card:hover {
+  border-color: var(--q-border-medium);
+}
+
+.q-radio-card.selected {
+  border-color: var(--q-accent-primary);
+  background: var(--q-bg-surface);
+}
+
+.card-level-title {
+  font-size: var(--q-text-sm);
+  font-weight: 600;
+  color: var(--q-text-primary);
+}
+
+.card-level-desc {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-muted);
+  line-height: 1.4;
+}
+
+.onboard-btn-row {
+  display: flex;
+  gap: var(--q-space-3);
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--q-space-4);
+}

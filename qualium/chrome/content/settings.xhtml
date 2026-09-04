@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings — Qaulium Quantum Browser</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/settings.css"/>
+  <script type="application/javascript"><![CDATA[
+    function switchTab(tabId) {
+      if (!tabId) tabId = "general";
+      tabId = tabId.replace("#", "").trim();
+
+      const targetPane = document.getElementById("pane-" + tabId) || document.getElementById("pane-general");
+      const activeTabName = targetPane ? targetPane.id.replace("pane-", "") : "general";
+
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        if (btn.dataset.tab === activeTabName) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+
+      document.querySelectorAll(".settings-pane").forEach(pane => {
+        pane.style.display = "none";
+      });
+
+      if (targetPane) {
+        targetPane.style.display = "block";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const tab = btn.dataset.tab;
+          window.location.hash = tab;
+          switchTab(tab);
+        });
+      });
+
+      window.addEventListener("hashchange", () => {
+        switchTab(window.location.hash);
+      });
+
+      const initialHash = window.location.hash || "general";
+      switchTab(initialHash);
+
+      const engineSelect = document.getElementById("search-engine-select");
+      if (engineSelect) {
+        try {
+          const saved = localStorage.getItem("qualium_search_engine") || "google";
+          engineSelect.value = saved;
+        } catch(e) {}
+
+        engineSelect.addEventListener("change", () => {
+          try {
+            localStorage.setItem("qualium_search_engine", engineSelect.value);
+          } catch(e) {}
+        });
+      }
+    });
+  ]]></script>
+  <style>
+    .settings-layout {
+      display: flex;
+      min-height: 100vh;
+      background: #111215;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+    .settings-sidebar {
+      width: 250px;
+      background: #16171b;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 0.5rem 1rem 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .sidebar-brand-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+    }
+    .sidebar-brand-badge {
+      font-size: 0.65rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #9ca3af;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .settings-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.12s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #f8fafc;
+    }
+    .nav-btn.active {
+      background: rgba(255, 255, 255, 0.09);
+      color: #ffffff;
+      font-weight: 600;
+      border-left: 3px solid #e2e8f0;
+      border-radius: 0 8px 8px 0;
+    }
+    .settings-content {
+      flex: 1;
+      padding: 2.5rem 3.5rem;
+      max-width: 860px;
+      overflow-y: auto;
+    }
+    .settings-header {
+      margin-bottom: 2rem;
+    }
+    .settings-header h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+      margin-bottom: 0.4rem;
+    }
+    .settings-header p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    .q-section {
+      margin-bottom: 2rem;
+    }
+    .q-section-title {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+    }
+    .q-card {
+      background: #18191e;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .q-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .q-row:last-child {
+      border-bottom: none;
+    }
+    .q-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-width: 520px;
+    }
+    .q-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #f8fafc;
+    }
+    .q-desc {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+    .q-badge-success {
+      font-size: 0.75rem;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .q-badge-pqc {
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.07);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .q-select {
+      background: #121316;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .q-select:focus {
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-layout">
+    <!-- Sidebar -->
+    <aside class="settings-sidebar">
+      <div class="sidebar-brand">
+        <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="12" fill="#18191e"/>
+          <path d="M24 10L35 15V23C35 30 29.5 35.5 24 38C18.5 35.5 13 30 13 23V15L24 10Z" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="24" cy="24" r="3.5" fill="#34d399"/>
+        </svg>
+        <span class="sidebar-brand-title">Qaulium</span>
+        <span class="sidebar-brand-badge">Settings</span>
+      </div>
+
+      <nav class="settings-nav">
+        <button class="nav-btn active" data-tab="general">General &amp; Tabs</button>
+        <button class="nav-btn" data-tab="search">Search Engine</button>
+        <button class="nav-btn" data-tab="privacy">Privacy &amp; Telemetry</button>
+        <button class="nav-btn" data-tab="security">Post-Quantum Security</button>
+        <button class="nav-btn" data-tab="network">Anonymous Routing</button>
+        <button class="nav-btn" data-tab="passwords">Encrypted Vault</button>
+        <button class="nav-btn" data-tab="downloads">Downloads</button>
+        <button class="nav-btn" data-tab="bookmarks">Bookmarks</button>
+        <button class="nav-btn" data-tab="history">History &amp; Retention</button>
+        <button class="nav-btn" data-tab="extensions">Extensions</button>
+        <button class="nav-btn" data-tab="about">About Qaulium</button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="settings-content">
+      <!-- 1. Section: General -->
+      <section id="pane-general" class="settings-pane">
+        <header class="settings-header">
+          <h1>General &amp; Browser Behavior</h1>
+          <p>Customize startup behaviors, tab policies, and default interfaces.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Startup</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Homepage &amp; New Windows</span>
+                <span class="q-desc">Opens Qaulium Quantum New Tab page with live anonymity circuit visualizer.</span>
+              </div>
+              <span class="q-badge-pqc">qaulium://newtab</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Session Memory Mode</span>
+                <span class="q-desc">Always start fresh in clean RAM memory mode; previous session tabs are erased for security.</span>
+              </div>
+              <span class="q-badge-success">Enabled</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-section">
+          <span class="q-section-title">Tabs</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Multi-Process Tab Segregation</span>
+                <span class="q-desc">Runs each web tab in a segregated OS sandbox process to prevent cross-site memory inspection.</span>
+              </div>
+              <span class="q-badge-success">Active</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Section: Search Engine -->
+      <section id="pane-search" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Search Engine &amp; Omnibox</h1>
+          <p>Choose your preferred private search engine used for omnibox queries.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Default Search Provider</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Active Provider</span>
+                <span class="q-desc">Address bar queries will be routed directly to this provider over the encrypted circuit.</span>
+              </div>
+              <select id="search-engine-select" class="q-select">
+                <option value="google">Google</option>
+                <option value="duckduckgo">DuckDuckGo (Private)</option>
+                <option value="brave">Brave Search (Private)</option>
+                <option value="bing">Bing</option>
+              </select>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Search Query Telemetry</span>
+                <span class="q-desc">Qaulium never logs, intercepts, or retains user search strings.</span>
+              </div>
+              <span class="q-badge-success">Zero Logging</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Section: Privacy & Telemetry -->
+      <section id="pane-privacy" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Privacy &amp; Data Protection</h1>
+          <p>Local content filtering, anti-tracking, and telemetry policy.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Tracking Defense</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Enhanced Tracking Protection</span>
+                <span class="q-desc">Blocks third-party tracking cookies, cryptominers, and fingerprinters natively.</span>
+              </div>
+              <span class="q-badge-success">Strict Mode Active</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Fingerprint Normalization</span>
+                <span class="q-desc">Normalizes Canvas, WebGL, system fonts, and screen dimensions to common buckets.</span>
+              </div>
+              <span class="q-badge-success">Protected</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Qaulium Telemetry</span>
+                <span class="q-desc">All crash reporting, telemetry, and usage submission are permanently removed.</span>
+              </div>
+              <span class="q-badge-success">Disabled</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Section: Post-Quantum Security -->
+      <section id="pane-security" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Post-Quantum Cryptography &amp; Security</h1>
+          <p>Cryptographic key encapsulation, cipher parameters, and zero-trust verification.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Hybrid Key Encapsulation (KEM)</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Primary Algorithm</span>
+                <span class="q-desc">NIST FIPS 203 standardized ML-KEM-768/1024 combined with classical X25519 for forward secrecy.</span>
+              </div>
+              <span class="q-badge-pqc">X25519 + ML-KEM-768</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Symmetric Cipher</span>
+                <span class="q-desc">Authenticated encryption via ChaCha20-Poly1305 and hardware AES-256-GCM.</span>
+              </div>
+              <span class="q-badge-pqc">ChaCha20-Poly1305</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-section">
+          <span class="q-section-title">Security Center</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Inspect Active Circuits</span>
+                <span class="q-desc">View real-time hop latency, node fingerprints, and crypto handshakes.</span>
+              </div>
+              <a href="dashboard.xhtml" style="color: #e2e8f0; text-decoration: none; font-size: 0.85rem; font-weight: 500;">Open Privacy Center &#8594;</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Section: Anonymous Routing & Network -->
+      <section id="pane-network" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Anonymous Network Routing</h1>
+          <p>Multi-hop encrypted onion circuits and network layer leak prevention.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Circuit Architecture</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">SOCKS5 Proxy Tunnel</span>
+                <span class="q-desc">All outbound web traffic is piped through qualium-daemon on 127.0.0.1:9050.</span>
+              </div>
+              <span class="q-badge-pqc">127.0.0.1:9050 Active</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">In-Circuit DNS (Remote DNS)</span>
+                <span class="q-desc">Domain queries are resolved at the exit node inside the encrypted circuit to prevent ISP DNS leaks.</span>
+              </div>
+              <span class="q-badge-success">Protected</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">WebRTC IP Leak Defense</span>
+                <span class="q-desc">Blocks ICE host candidates and non-proxied UDP bindings to guarantee real IP is hidden.</span>
+              </div>
+              <span class="q-badge-success">Isolated</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Section: Encrypted Vault (Passwords) -->
+      <section id="pane-passwords" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Encrypted Password Vault</h1>
+          <p>Local-first, zero-knowledge credential protection.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Vault Status</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Local Storage Encryption</span>
+                <span class="q-desc">Saved passwords are encrypted locally using ChaCha20-Poly1305 with user-derived key.</span>
+              </div>
+              <span class="q-badge-success">Encrypted</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Cloud Synchronization</span>
+                <span class="q-desc">Passwords are never uploaded to any remote server or cloud account.</span>
+              </div>
+              <span class="q-badge-success">Zero Cloud (Local Only)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Section: Downloads -->
+      <section id="pane-downloads" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Downloads &amp; File Safety</h1>
+          <p>Download locations and verification policies.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Preferences</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Save Files To</span>
+                <span class="q-desc">Default destination: standard system Downloads folder.</span>
+              </div>
+              <span class="q-badge-pqc">Downloads</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Malware Inspection</span>
+                <span class="q-desc">Local reputation verification of executable binaries prior to disk write.</span>
+              </div>
+              <span class="q-badge-success">Active</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Section: Bookmarks -->
+      <section id="pane-bookmarks" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Bookmarks &amp; Quick Access</h1>
+          <p>Organize saved websites and custom speed dials.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Storage</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Storage Location</span>
+                <span class="q-desc">Local SQLite database stored in your secure profile directory.</span>
+              </div>
+              <span class="q-badge-success">Local Only</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. Section: History & Retention -->
+      <section id="pane-history" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>History &amp; Retention Policy</h1>
+          <p>Control what session data is retained across browser launches.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Retention Settings</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Browsing History</span>
+                <span class="q-desc">Disabled by default per SRS specification. Browsing activities remain memory-only.</span>
+              </div>
+              <span class="q-badge-success">Disabled (Zero Retention)</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Wipe on Exit</span>
+                <span class="q-desc">Automatically purge cookies, cached files, and session storage when the window closes.</span>
+              </div>
+              <span class="q-badge-success">Automatic</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Section: Extensions -->
+      <section id="pane-extensions" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>Extensions &amp; WebExtensions</h1>
+          <p>Manage installed add-ons with strict sandbox boundaries.</p>
+        </header>
+
+        <div class="q-section">
+          <span class="q-section-title">Policy</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Network Permission Isolation</span>
+                <span class="q-desc">Restricts extensions from bypassing the SOCKS5 anonymous proxy tunnel.</span>
+              </div>
+              <span class="q-badge-success">Enforced</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. Section: About Qaulium -->
+      <section id="pane-about" class="settings-pane" style="display: none;">
+        <header class="settings-header">
+          <h1>About Qaulium Quantum Browser</h1>
+          <p>Next-generation post-quantum secure privacy browser.</p>
+        </header>
+
+        <div class="q-section">
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Application</span>
+                <span class="q-desc">Qaulium Quantum Browser</span>
+              </div>
+              <span class="q-badge-pqc">v5.0.0 (Release)</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Rendering Engine</span>
+                <span class="q-desc">Native Gecko Quantum Core</span>
+              </div>
+              <span style="color: #94a3b8; font-size: 0.85rem;">Gecko 140 ESR</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Post-Quantum Security Daemon</span>
+                <span class="q-desc">Qaulium Security Engine (ML-KEM / Multi-Hop Network Engine)</span>
+              </div>
+              <span class="q-badge-success">Running</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Telemetry &amp; Data Collection</span>
+                <span class="q-desc">Zero telemetry, zero user tracking, zero data submission.</span>
+              </div>
+              <span class="q-badge-success">Disabled Permanently</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

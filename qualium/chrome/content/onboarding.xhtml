@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome to Qaulium Quantum Browser</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/onboarding.css"/>
+  <script src="chrome://qualium/content/onboarding.js"></script>
+</head>
+<body>
+  <div class="onboard-container">
+    <!-- STEP 1: SRS SECTION 49 WELCOME CARD -->
+    <div class="step-card active" id="step-1">
+      <div class="onboard-icon" style="margin-bottom: 16px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--q-accent-primary)" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h1 style="font-size: 1.8rem; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; letter-spacing: -0.02em;">QAULIUM</h1>
+      <h2 style="font-size: 0.95rem; font-weight: 600; color: #94a3b8; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.08em;">QUANTUM PRIVACY BROWSER</h2>
+      
+      <div class="promise-list" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; text-align: left; max-width: 360px; margin-left: auto; margin-right: auto; background: #18191e; padding: 18px 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.07);">
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 0.92rem; color: #cbd5e1;">
+          <span style="font-size: 1.2rem;">&#128737;</span>
+          <span><strong>Quantum-safe privacy</strong> (ML-KEM-768)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 0.92rem; color: #cbd5e1;">
+          <span style="font-size: 1.2rem;">&#128683;</span>
+          <span><strong>Ads &amp; trackers blocked</strong> natively</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 0.92rem; color: #cbd5e1;">
+          <span style="font-size: 1.2rem;">&#128373;</span>
+          <span><strong>Anonymous routing</strong> (3-hop circuit)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 0.92rem; color: #cbd5e1;">
+          <span style="font-size: 1.2rem;">&#128274;</span>
+          <span><strong>No default browsing history</strong></span>
+        </div>
+      </div>
+
+      <div class="onboard-btn-row">
+        <button class="q-btn q-btn-primary" style="padding: 10px 32px; font-size: 0.95rem; font-weight: 600; border-radius: 20px; background: #28292e; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.12);" onclick="Onboarding.startConnecting()">Start Browsing</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: CONNECTING SEQUENCE -->
+    <div class="step-card" id="step-connecting" style="text-align: center;">
+      <div style="margin-bottom: 24px;">
+        <svg width="56" height="56" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="4"/>
+          <circle cx="25" cy="25" r="20" fill="none" stroke="#34d399" stroke-width="4" stroke-dasharray="70 50" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+      <h2 id="conn-title" style="font-size: 1.2rem; font-weight: 700; color: #f1f5f9; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px;">CONNECTING</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 0 auto 24px; text-align: left; background: #18191e; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.07);">
+        <div id="step-net" style="display: flex; align-items: center; gap: 10px; color: #64748b; font-size: 0.88rem; transition: all 0.3s ease;">
+          <span class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #475569;"></span>
+          <span>Privacy Network</span>
+        </div>
+        <div id="step-pqc" style="display: flex; align-items: center; gap: 10px; color: #64748b; font-size: 0.88rem; transition: all 0.3s ease;">
+          <span class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #475569;"></span>
+          <span>PQ Handshake (ML-KEM-768)</span>
+        </div>
+        <div id="step-circuit" style="display: flex; align-items: center; gap: 10px; color: #64748b; font-size: 0.88rem; transition: all 0.3s ease;">
+          <span class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #475569;"></span>
+          <span>Circuit Isolation</span>
+        </div>
+      </div>
+      <div id="conn-result" style="display: none; font-size: 1.15rem; font-weight: 700; color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);">
+        CONNECTED &#10003;
+      </div>
+    </div>
+  </div>
+</body>
+</html>

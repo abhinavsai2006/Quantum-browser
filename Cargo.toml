@@ -1,0 +1,51 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/qualium-core",
+    "crates/qualium-crypto",
+    "crates/qualium-filter",
+    "crates/qualium-network",
+    "crates/qualium-vault",
+    "crates/qualium-ipc",
+    "crates/qualium-daemon",
+    "crates/qualium-installer",
+    "crates/qualium-browser",
+    "tests/privacy",
+    "tests/crypto",
+    "tests/network",
+    "tests/fuzz",
+]
+
+[workspace.package]
+version = "5.0.0"
+edition = "2021"
+authors = ["Qualium AI Engineering Team <security@qualium.ai>"]
+license = "MPL-2.0"
+repository = "https://github.com/qualium-ai/qualium-quantum-browser"
+
+[workspace.dependencies]
+tokio = { version = "1.40", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rand = "0.8"
+rand_core = "0.6"
+sha2 = "0.10"
+sha3 = "0.10"
+hmac = "0.12"
+hkdf = "0.12"
+chacha20poly1305 = "0.10"
+aes-gcm = "0.10"
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+subtle = "2.5"
+zeroize = { version = "1.8", features = ["derive"] }
+argon2 = "0.5"
+url = "=2.5.0"
+regex = "1.10"
+async-trait = "0.1"
+bytes = "1.7"
+uuid = { version = "1.10", features = ["v4", "serde"] }

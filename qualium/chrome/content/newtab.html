@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Tab — Qaulium</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/newtab.css"/>
+  <script src="chrome://qualium/content/runtime-state.js"></script>
+  <script src="chrome://qualium/content/navigation.js"></script>
+  <script src="chrome://qualium/content/newtab.js"></script>
+</head>
+<body>
+  <div class="newtab-page">
+    <main class="newtab-main">
+      <!-- 1. Executive Logo Hero -->
+      <div class="brand-hero">
+        <div class="logo-wrap">
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="12" fill="#18191e"/>
+            <path d="M24 10L35 15V23C35 30 29.5 35.5 24 38C18.5 35.5 13 30 13 23V15L24 10Z" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24" cy="24" r="3.5" fill="#34d399"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          Qaulium
+          <span class="brand-badge">v5 QUANTUM</span>
+        </div>
+        <p class="brand-subtitle">Private browsing, made simple.</p>
+      </div>
+
+      <!-- 2. Centered Modern Chromium Private Search Bar -->
+      <div class="search-box-wrap">
+        <form class="search-form" id="search-form" onsubmit="event.preventDefault(); handleNewTabSearch();">
+          <div class="search-prefix">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <input type="text" id="search-input" class="search-input" placeholder="Search the web or enter address" autocomplete="off" autofocus="autofocus"/>
+          <button type="submit" class="search-btn" title="Search" aria-label="Search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- 3. Authoritative Post-Quantum Circuit Card -->
+      <div id="live-circuit-banner" class="quantum-circuit-card">
+        <div class="circuit-header">
+          <div class="circuit-headline-wrap">
+            <span id="circuit-dot" class="circuit-status-beacon"></span>
+            <span id="circuit-headline" class="circuit-status-text">POST-QUANTUM CIRCUIT ACTIVE</span>
+          </div>
+          <a href="dashboard.xhtml" class="circuit-action-btn">
+            Security Center &#8594;
+          </a>
+        </div>
+        <div class="circuit-nodes-row">
+          <div class="node-col">
+            <span class="node-role">Guard</span>
+            <span id="circuit-guard" class="node-val">SOCKS5 (127.0.0.1:9050)</span>
+          </div>
+          <span class="node-arrow">&#8594;</span>
+          <div class="node-col">
+            <span class="node-role">Relay</span>
+            <span id="circuit-relay" class="node-val">Anonymized Multi-Hop</span>
+          </div>
+          <span class="node-arrow">&#8594;</span>
+          <div class="node-col">
+            <span class="node-role">Exit</span>
+            <span id="circuit-exit" class="node-val-exit">Remote DNS Protected</span>
+          </div>
+        </div>
+        <div class="circuit-crypto-footer">
+          <span>Key Exchange: <strong class="crypto-spec">ML-KEM-768 + X25519 (Hybrid)</strong></span>
+          <span>Cipher: <strong class="crypto-spec">ChaCha20-Poly1305</strong></span>
+        </div>
+      </div>
+
+      <!-- 4. Quick Access Shortcuts Grid with Add Shortcut -->
+      <div class="shortcuts-section">
+        <div class="shortcuts-header">
+          <span class="shortcuts-label">Quick Access</span>
+        </div>
+        <div id="shortcuts-grid" class="shortcuts-grid">
+          <!-- Dynamically populated by newtab.js -->
+        </div>
+      </div>
+    </main>
+
+    <!-- 5. Add Shortcut Modal Dialog -->
+    <div id="add-shortcut-modal" class="modal-backdrop" onclick="if (event.target === this) closeAddShortcutModal();">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 class="modal-title">Add Shortcut</h3>
+          <button type="button" class="modal-close-btn" onclick="closeAddShortcutModal();" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-field">
+          <label for="shortcut-name-input">Name</label>
+          <input type="text" id="shortcut-name-input" class="modal-input" placeholder="e.g. YouTube, GitHub, DuckDuckGo" autocomplete="off"/>
+        </div>
+        <div class="modal-field">
+          <label for="shortcut-url-input">URL</label>
+          <input type="text" id="shortcut-url-input" class="modal-input" placeholder="https://example.com" autocomplete="off"/>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn-cancel" onclick="closeAddShortcutModal();">Cancel</button>
+          <button type="button" class="modal-btn-save" onclick="saveCustomShortcut();">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

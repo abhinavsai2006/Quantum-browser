@@ -1,0 +1,29 @@
+# Rust build artifacts
+target/
+target_browser/
+target_build/
+target_ci/
+target_dist/
+target_repro_a/
+target_repro_b/
+
+# Large binary runtime (Gecko engine — download separately)
+runtime/browser/
+
+# Large installer binaries (distribute via GitHub Releases)
+dist/*.exe
+dist/*.tar.gz
+dist/*.asc
+
+# Temp/test files
+current_window_test.png
+*.pyc
+__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp

@@ -1,0 +1,30 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 6/7] telemetry: Completely eliminate upstream telemetry endpoints and crash reporting pings
+
+---
+ toolkit/components/telemetry/core/Telemetry.cpp | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/toolkit/components/telemetry/core/Telemetry.cpp b/toolkit/components/telemetry/core/Telemetry.cpp
+index 5e6f7a8..9b0c1d2 100644
+--- a/toolkit/components/telemetry/core/Telemetry.cpp
++++ b/toolkit/components/telemetry/core/Telemetry.cpp
+@@ -1020,6 +1020,24 @@ void TelemetryImpl::RecordEvent(const nsCString& aCategory,
+                                 const nsCString& aMethod,
+                                 const nsCString& aObject,
+                                 const Maybe<nsCString>& aValue,
+                                 const ExtraArray& aExtra) {
++  // Qualium Zero-Telemetry Enforcement: Never record telemetry events
++  return;
+ }
++
++bool TelemetryImpl::CanRecordExtended() {
++  return false;
++}
++
++bool TelemetryImpl::CanRecordBase() {
++  return false;
++}
+-- 
+2.45.0

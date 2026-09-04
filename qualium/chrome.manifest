@@ -1,0 +1,8 @@
+# Qaulium Quantum Browser v5 Chrome Registration Manifest
+content qualium chrome/content/ contentaccessible=yes
+skin qualium classic/1.0 chrome/skin/
+content qaulium chrome/content/ contentaccessible=yes
+skin qaulium classic/1.0 chrome/skin/
+component {9e4a3b1c-7f2e-4d5a-8b3c-1a2b3c4d5e6f} components/QualiumModule.so
+contract @qualium.is/security-service;1 {9e4a3b1c-7f2e-4d5a-8b3c-1a2b3c4d5e6f}
+category profile-after-change QualiumSecurityService @qualium.is/security-service;1

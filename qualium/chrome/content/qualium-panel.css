@@ -1,0 +1,214 @@
+/* Qualium Security Hub - Human-Quality Native Styling */
+
+:root {
+  --bg-panel: #16171b;
+  --bg-card: #1c1d22;
+  --border-card: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-accent: #e2e8f0;
+  --accent-green: #34d399;
+  --accent-pqc: #e2e8f0;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body.qualium-panel-body {
+  margin: 0;
+  padding: 16px;
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  line-height: 1.4;
+  width: 360px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.qualium-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-card);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shield-badge {
+  font-size: 20px;
+}
+
+.brand-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.brand-tagline {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.btn-identity {
+  background: #28292e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-identity:hover {
+  background: #363840;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.qualium-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qualium-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.badge-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+
+.badge-active, .badge-green {
+  background-color: rgba(52, 211, 153, 0.12);
+  color: var(--accent-green);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.badge-pqc {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--accent-pqc);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.badge-level {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.metric-label {
+  color: var(--text-secondary);
+}
+
+.metric-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.val-green {
+  color: var(--accent-green);
+}
+
+.val-pqc {
+  color: var(--accent-pqc);
+}
+
+.val-bold {
+  font-weight: 700;
+}
+
+.val-mute {
+  color: #8b949e;
+}
+
+.circuit-topology-view {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #121316;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+.circuit-hop {
+  display: flex;
+  flex-direction: column;
+}
+
+.hop-role {
+  color: var(--text-secondary);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.hop-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.hop-arrow {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+
+.qualium-panel-footer {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-card);
+  text-align: center;
+}
+
+.footer-link {
+  color: var(--text-accent);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qaulium Browser</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
+  <link rel="stylesheet" href="browser.css"/>
+  <script src="chrome://qualium/content/runtime-state.js"></script>
+  <script src="chrome://qualium/content/navigation.js"></script>
+  <script src="browser.js"></script>
+</head>
+<body>
+  <div class="browser-window">
+    <!-- 1. TAB BAR & WINDOW CONTROLS -->
+    <header class="browser-titlebar" id="titlebar">
+      <div class="tab-strip" id="tab-strip" role="tablist">
+        <div class="tab active" data-url="newtab.xhtml" id="tab-1" role="tab" aria-selected="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+          <span class="tab-title">New Tab</span>
+          <button type="button" class="tab-close-btn" aria-label="Close tab">
+            <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="tab" data-url="dashboard.xhtml" id="tab-2" role="tab" aria-selected="false">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="tab-title">Privacy Center</span>
+          <button type="button" class="tab-close-btn" aria-label="Close tab">
+            <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <button type="button" class="q-icon-btn btn-new-tab" id="btn-add-tab" title="New Tab (Ctrl+T)" aria-label="New Tab">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- Window Caption Buttons (Native appearance) -->
+      <div class="window-controls">
+        <button type="button" class="win-btn win-minimize" id="btn-win-min" aria-label="Minimize">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/></svg>
+        </button>
+        <button type="button" class="win-btn win-maximize" id="btn-win-max" aria-label="Maximize">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+        <button type="button" class="win-btn win-close" id="btn-win-close" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. NAVIGATION TOOLBAR -->
+    <nav class="browser-toolbar" id="toolbar">
+      <div class="nav-cluster">
+        <button type="button" class="q-icon-btn" id="btn-back" title="Back (Alt+Left)" aria-label="Back">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="q-icon-btn" id="btn-forward" title="Forward (Alt+Right)" aria-label="Forward">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button type="button" class="q-icon-btn" id="btn-reload" title="Reload (Ctrl+R)" aria-label="Reload">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+
+      <!-- Omnibox & Address Bar -->
+      <div class="omnibox-wrapper" id="omnibox-wrapper">
+        <div class="omnibox-security-pill" id="security-pill" title="Connection Security Status">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" id="security-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="security-label" id="security-label">Private</span>
+        </div>
+
+        <input type="text" id="url-input" class="omnibox-input" value="qaulium://newtab" placeholder="Search privately or enter address" spellcheck="false" autocomplete="off"/>
+
+        <div class="omnibox-trailing">
+          <span class="q-chip q-chip-success" id="circuit-indicator">
+            <span class="q-dot q-dot-success"></span>
+            <span>Protected</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="action-cluster">
+        <!-- Q-Security Button -->
+        <button type="button" class="q-security-btn" id="btn-q-security" title="Qaulium Security Hub" aria-label="Security Details">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="q-security-text">Privacy</span>
+        </button>
+
+        <button type="button" class="q-icon-btn" id="btn-bookmark-star" title="Bookmark page (Ctrl+D)" aria-label="Bookmark">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
+
+        <button type="button" class="q-icon-btn" id="btn-downloads" title="Downloads (Ctrl+J)" aria-label="Downloads">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+
+        <button type="button" class="q-icon-btn" id="btn-menu-toggle" title="Qaulium Menu" aria-label="Main Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- 3. CALM QUALIUM SECURITY POPOVER -->
+    <div class="q-popover" id="q-popover" role="dialog" aria-label="Connection Security">
+      <div class="popover-header">
+        <div class="popover-title-row">
+          <span class="q-dot q-dot-success"></span>
+          <span class="popover-title">Connection Security</span>
+        </div>
+        <button type="button" class="q-icon-btn" id="btn-close-popover" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="popover-section">
+        <span class="popover-section-label">Cryptography</span>
+        <div class="popover-row">
+          <span class="row-label">Key Exchange</span>
+          <span class="q-chip q-chip-pqc">ML-KEM-768 Hybrid</span>
+        </div>
+        <div class="popover-row">
+          <span class="row-label">Cipher Suite</span>
+          <span class="row-value">ChaCha20-Poly1305</span>
+        </div>
+      </div>
+
+      <div class="popover-section">
+        <span class="popover-section-label">Protections</span>
+        <div class="popover-row">
+          <span class="row-label">Private Routing</span>
+          <span class="q-chip q-chip-success">Active</span>
+        </div>
+        <div class="popover-row">
+          <span class="row-label">Encrypted DNS</span>
+          <span class="q-chip q-chip-success">DoH Active</span>
+        </div>
+        <div class="popover-row">
+          <span class="row-label">WebRTC Defense</span>
+          <span class="q-chip q-chip-success">Isolated</span>
+        </div>
+        <div class="popover-row">
+          <span class="row-label">Tracker Blocking</span>
+          <span class="row-value" id="popover-trackers-count">Active</span>
+        </div>
+      </div>
+
+      <div class="popover-actions">
+        <button type="button" class="q-btn q-btn-secondary popover-btn" id="btn-popover-identity">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>New Identity</span>
+        </button>
+        <button type="button" class="q-btn q-btn-ghost popover-btn" id="btn-popover-privacy-center">
+          <span>Privacy Center →</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. NATIVE BROWSER MENU POPOVER -->
+    <div class="q-menu browser-menu-dropdown" id="browser-menu" role="menu">
+      <div class="q-menu-item" data-action="new-tab">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New Tab</span>
+        </div>
+        <span class="q-menu-shortcut">Ctrl+T</span>
+      </div>
+
+      <div class="q-menu-item" data-action="new-identity">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>New Identity</span>
+        </div>
+        <span class="q-menu-shortcut">Ctrl+Shift+U</span>
+      </div>
+
+      <div class="q-menu-separator"></div>
+
+      <div class="q-menu-item" data-action="bookmarks">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Bookmarks</span>
+        </div>
+        <span class="q-menu-shortcut">Ctrl+Shift+O</span>
+      </div>
+
+      <div class="q-menu-item" data-action="downloads">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Downloads</span>
+        </div>
+        <span class="q-menu-shortcut">Ctrl+J</span>
+      </div>
+
+      <div class="q-menu-item" data-action="history">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>History</span>
+        </div>
+        <span class="q-menu-shortcut">Ctrl+H</span>
+      </div>
+
+      <div class="q-menu-item" data-action="passwords">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Passwords</span>
+        </div>
+      </div>
+
+      <div class="q-menu-item" data-action="extensions">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span>Extensions</span>
+        </div>
+        <span class="q-menu-shortcut">Ctrl+Shift+A</span>
+      </div>
+
+      <div class="q-menu-separator"></div>
+
+      <div class="q-menu-item" data-action="privacy-center">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Privacy Center</span>
+        </div>
+      </div>
+
+      <div class="q-menu-item" data-action="settings">
+        <div class="q-menu-item-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. NATIVE GECKO WEB CONTENT VIEWPORT (TOP-LEVEL BROWSING CONTEXT) -->
+    <main class="browser-viewport" id="browser-deck">
+      <browser id="content-browser" type="content" remote="true" primary="true" src="newtab.xhtml" class="content-browser"/>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+</body>
+</html>

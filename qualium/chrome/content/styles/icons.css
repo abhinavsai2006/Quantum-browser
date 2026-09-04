@@ -1,0 +1,65 @@
+/* ==========================================================================
+   Qualium Quantum Browser v5 — Embedded Vector Icon System
+   ========================================================================== */
+
+.q-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.q-icon-xs { width: 12px; height: 12px; min-width: 12px; min-height: 12px; }
+.q-icon-sm { width: 14px; height: 14px; min-width: 14px; min-height: 14px; }
+.q-icon-md { width: 18px; height: 18px; min-width: 18px; min-height: 18px; }
+.q-icon-lg { width: 22px; height: 22px; min-width: 22px; min-height: 22px; }
+.q-icon-xl { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
+
+/* Status Dot Component */
+.q-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: var(--q-text-muted);
+  flex-shrink: 0;
+}
+
+.q-dot-success { 
+  background-color: var(--q-accent-success); 
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.4); 
+}
+.q-dot-info { background-color: var(--q-accent-primary); }
+.q-dot-warning { background-color: var(--q-accent-warning); }
+.q-dot-danger { background-color: var(--q-accent-danger); }
+.q-dot-pqc { background-color: var(--q-accent-pqc); }
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--q-bg-hover);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--q-bg-active);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--q-bg-hover) transparent;
+}

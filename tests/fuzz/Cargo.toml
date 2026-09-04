@@ -1,0 +1,16 @@
+[package]
+name = "qualium-tests-fuzz"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qualium-core = { path = "../../crates/qualium-core" }
+qualium-crypto = { path = "../../crates/qualium-crypto" }
+qualium-filter = { path = "../../crates/qualium-filter" }
+qualium-network = { path = "../../crates/qualium-network" }
+qualium-ipc = { path = "../../crates/qualium-ipc" }
+tokio = { workspace = true }
+rand = { workspace = true }
+uuid = { workspace = true }

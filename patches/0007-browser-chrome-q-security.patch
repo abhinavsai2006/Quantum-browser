@@ -1,0 +1,30 @@
+From: Qualium AI Security Engineering <security@qualium.ai>
+Date: Tue, 25 Aug 2026 12:00:00 +0000
+Subject: [PATCH 7/7] chrome: Register 🛡 Q Security Button in Firefox Browser Chrome Toolbar
+
+---
+ browser/base/content/browser.xhtml | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/browser/base/content/browser.xhtml b/browser/base/content/browser.xhtml
+index 1f2e3d4..7a8b9c0 100644
+--- a/browser/base/content/browser.xhtml
++++ b/browser/base/content/browser.xhtml
+@@ -620,6 +620,18 @@
+         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"/>
+         <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional" hidden="true"/>
++
++        <!-- Qualium Quantum Security Toolbar Button (🛡 Q) -->
++        <toolbarbutton id="qualium-security-button"
++                       class="toolbarbutton-1 chromeclass-toolbar-additional"
++                       label="🛡 Q"
++                       tooltiptext="Qualium Security Hub"
++                       oncommand="QualiumPanel.toggle(this, event)">
++          <image src="chrome://qualium/skin/qualium-shield.svg" width="16" height="16"/>
++        </toolbarbutton>
++
+         <toolbarbutton id="PanelUI-menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"/>
+       </hbox>
+     </toolbar>
+-- 
+2.45.0

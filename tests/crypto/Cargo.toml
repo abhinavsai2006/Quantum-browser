@@ -1,0 +1,9 @@
+[package]
+name = "qualium-tests-crypto"
+version = "5.0.0"
+edition = "2021"
+
+[dependencies]
+qualium-core = { path = "../../crates/qualium-core" }
+qualium-crypto = { path = "../../crates/qualium-crypto" }
+hex = "0.4"
