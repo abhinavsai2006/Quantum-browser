@@ -123,6 +123,7 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     import re
     orig_xhtml = re.sub(r'id="urlbar-search-button"(\s+hidden="true")*', 'id="urlbar-search-button"', orig_xhtml)
     orig_xhtml = re.sub(r'id="private-browsing-indicator-with-label"(\s+hidden="true")*', 'id="private-browsing-indicator-with-label"', orig_xhtml)
+    orig_xhtml = re.sub(r'id="appMenu-unified-extensions-button"(\s+style="display:none!important;")*', 'id="appMenu-unified-extensions-button"', orig_xhtml)
     while 'hidden="true" hidden="true"' in orig_xhtml:
         orig_xhtml = orig_xhtml.replace('hidden="true" hidden="true"', 'hidden="true"')
 
@@ -141,6 +142,9 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     ).replace(
         'id="urlbar-search-button"',
         'id="urlbar-search-button" hidden="true"'
+    ).replace(
+        'id="appMenu-unified-extensions-button"',
+        'id="appMenu-unified-extensions-button" style="display:none!important;"'
     )
 
     while 'hidden="true" hidden="true"' in mod_xhtml:

@@ -4,230 +4,125 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>New Tab — Qaulium</title>
+  <title>New Tab</title>
   <link rel="stylesheet" href="chrome://qualium/content/newtab.css"/>
   <script src="chrome://qualium/content/newtab.js" defer="defer"></script>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════
-     QAULIUM QUANTUM BROWSER v5 — PROFESSIONAL HOME PAGE
-     ═══════════════════════════════════════════════════════════ -->
+<div class="newtab-page">
 
-<div class="nt-root">
-
-  <!-- ── LEFT PANEL: Bookmarks ── -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <span>Bookmarks</span>
-      <button class="sidebar-add-btn" id="bm-add-btn" title="Add bookmark">+</button>
-    </div>
-    <div class="sidebar-scroll">
-      <div id="bookmark-list" class="bookmark-list">
-        <!-- populated by JS -->
-      </div>
-    </div>
-    <div class="sidebar-footer">
-      <a href="bookmarks.xhtml" class="sidebar-footer-link">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Manage Bookmarks
+  <!-- Top action buttons -->
+  <header class="top-nav">
+    <div class="nav-spacer"></div>
+    <div class="nav-actions">
+      <a href="dashboard.xhtml" class="nav-icon-link" title="Security Center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <circle cx="12" cy="11" r="2" fill="#34d399"/>
+        </svg>
+      </a>
+      <a href="settings.xhtml" class="nav-icon-link" title="Settings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
       </a>
     </div>
-  </aside>
+  </header>
 
-  <!-- ── MAIN CONTENT ── -->
-  <main class="nt-main">
+  <!-- Central Search & Shortcuts Area -->
+  <main class="content-container">
 
-    <!-- 1. Top brand strip -->
-    <div class="nt-topbar">
-      <div class="nt-logo-row">
-        <div class="nt-logo">
-          <svg width="26" height="26" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24 6L38 12V22C38 32 31 39.5 24 42C17 39.5 10 32 10 22V12L24 6Z" stroke="#34d399" stroke-width="2.5" stroke-linejoin="round" fill="rgba(52,211,153,0.08)"/>
-            <circle cx="24" cy="22" r="4" fill="#34d399"/>
-            <circle cx="24" cy="22" r="8" stroke="#34d399" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
+    <!-- Brand Header -->
+    <div class="brand-section">
+      <div class="logo-wrap">
+        <svg class="brand-logo" width="60" height="60" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="shieldGrad" x1="10" y1="6" x2="38" y2="42" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#34d399"/>
+              <stop offset="100%" stop-color="#059669"/>
+            </linearGradient>
+            <filter id="emeraldGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
+          </defs>
+          <path d="M24 6L38 12V22C38 32 31 39.5 24 42C17 39.5 10 32 10 22V12L24 6Z" stroke="url(#shieldGrad)" stroke-width="2.5" stroke-linejoin="round" fill="rgba(52,211,153,0.06)"/>
+          <circle cx="24" cy="22" r="4.5" fill="#34d399" filter="url(#emeraldGlow)"/>
+          <circle cx="24" cy="22" r="9" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.4"/>
+        </svg>
+      </div>
+      <h1 class="brand-title">Qaulium</h1>
+      <span class="brand-badge">Quantum Browser</span>
+    </div>
+
+    <!-- Search Form -->
+    <form class="search-form" id="search-form" autocomplete="off">
+      <div class="search-box">
+        <div class="search-icon-wrap">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </div>
-        <div class="nt-brand-text">
-          <span class="nt-brand-name">Qaulium</span>
-          <span class="nt-brand-tag">QUANTUM v5</span>
-        </div>
+        <input type="text" id="search-input" class="search-input" placeholder="Search with Google or enter address" autofocus="autofocus" autocomplete="off" spellcheck="false"/>
+        <button type="submit" class="search-submit-btn" title="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
       </div>
-      <div class="nt-topbar-right">
-        <div class="nt-time" id="nt-clock">00:00</div>
-        <a href="settings.xhtml" class="nt-icon-btn" title="Settings">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </a>
+    </form>
+
+    <!-- Top Sites / Shortcuts Grid -->
+    <section class="shortcuts-section">
+      <div id="shortcuts-grid" class="shortcuts-grid">
+        <!-- Dynamically populated by newtab.js -->
       </div>
-    </div>
-
-    <!-- 2. Centered Hero + Search -->
-    <div class="nt-hero">
-      <h1 class="nt-greeting" id="nt-greeting">Good morning</h1>
-      <p class="nt-tagline">Browse privately. Browse freely.</p>
-
-      <!-- Search bar with engine selector -->
-      <div class="nt-search-wrap">
-        <div class="nt-engine-btn" id="engine-btn" title="Change search engine">
-          <span id="engine-icon">🦆</span>
-        </div>
-        <div class="nt-engine-dropdown" id="engine-dropdown">
-          <div class="engine-opt" data-engine="duckduckgo" data-icon="🦆">DuckDuckGo</div>
-          <div class="engine-opt" data-engine="google" data-icon="🔍">Google</div>
-          <div class="engine-opt" data-engine="brave" data-icon="🦁">Brave Search</div>
-          <div class="engine-opt" data-engine="bing" data-icon="🅱">Bing</div>
-        </div>
-        <form class="nt-search-form" id="nt-search-form">
-          <svg class="nt-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="nt-search-input" class="nt-search-input" placeholder="Search or enter address…" autocomplete="off" autofocus="autofocus"/>
-          <button type="submit" class="nt-search-submit">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- 3. Post-Quantum Security Panel -->
-    <div class="pq-panel">
-      <div class="pq-panel-header">
-        <div class="pq-status-row">
-          <span class="pq-beacon" id="pq-beacon"></span>
-          <span class="pq-status-label" id="pq-status-label">POST-QUANTUM CIRCUIT ACTIVE</span>
-        </div>
-        <a href="dashboard.xhtml" class="pq-btn">Security Center →</a>
-      </div>
-
-      <div class="pq-metrics-grid">
-        <!-- Circuit route -->
-        <div class="pq-metric-block pq-circuit-block">
-          <div class="pq-metric-title">Anonymous Circuit</div>
-          <div class="pq-circuit-route">
-            <div class="pq-node">
-              <span class="pq-node-badge guard">G</span>
-              <div class="pq-node-info">
-                <span class="pq-node-role">Guard</span>
-                <span class="pq-node-val" id="c-guard">Reykjavik · IS</span>
-              </div>
-            </div>
-            <div class="pq-route-line"></div>
-            <div class="pq-node">
-              <span class="pq-node-badge relay">R</span>
-              <div class="pq-node-info">
-                <span class="pq-node-role">Relay</span>
-                <span class="pq-node-val" id="c-relay">Zurich · CH</span>
-              </div>
-            </div>
-            <div class="pq-route-line"></div>
-            <div class="pq-node">
-              <span class="pq-node-badge exit">E</span>
-              <div class="pq-node-info">
-                <span class="pq-node-role">Exit</span>
-                <span class="pq-node-val pq-exit-val" id="c-exit">Stockholm · SE</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Security indicators -->
-        <div class="pq-indicators">
-          <div class="pq-ind">
-            <span class="pq-ind-check ok">✓</span>
-            <span class="pq-ind-label">ML-KEM-768</span>
-          </div>
-          <div class="pq-ind">
-            <span class="pq-ind-check ok">✓</span>
-            <span class="pq-ind-label">X25519 Hybrid</span>
-          </div>
-          <div class="pq-ind">
-            <span class="pq-ind-check ok">✓</span>
-            <span class="pq-ind-label">ChaCha20-Poly1305</span>
-          </div>
-          <div class="pq-ind">
-            <span class="pq-ind-check ok">✓</span>
-            <span class="pq-ind-label">DNS Protected</span>
-          </div>
-          <div class="pq-ind">
-            <span class="pq-ind-check ok">✓</span>
-            <span class="pq-ind-label">WebRTC Blocked</span>
-          </div>
-          <div class="pq-ind">
-            <span class="pq-ind-check ok">✓</span>
-            <span class="pq-ind-label">Anti-Fingerprint</span>
-          </div>
-        </div>
-
-        <!-- Live counters -->
-        <div class="pq-counters">
-          <div class="pq-counter-item">
-            <span class="pq-counter-val" id="cnt-ads">0</span>
-            <span class="pq-counter-lbl">Ads Blocked</span>
-          </div>
-          <div class="pq-counter-divider"></div>
-          <div class="pq-counter-item">
-            <span class="pq-counter-val" id="cnt-trackers">0</span>
-            <span class="pq-counter-lbl">Trackers Blocked</span>
-          </div>
-          <div class="pq-counter-divider"></div>
-          <div class="pq-counter-item">
-            <span class="pq-counter-val" id="cnt-history">OFF</span>
-            <span class="pq-counter-lbl">History</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. Quick Access Shortcuts -->
-    <div class="nt-shortcuts-section">
-      <div class="nt-shortcuts-header">
-        <span class="nt-section-label">Quick Access</span>
-      </div>
-      <div id="shortcuts-grid" class="nt-shortcuts-grid">
-        <!-- populated by JS -->
-      </div>
-    </div>
+    </section>
 
   </main>
+
+  <!-- Bottom Privacy Status Pill (Chrome / Brave Minimal Style) -->
+  <footer class="bottom-footer">
+    <a href="dashboard.xhtml" class="security-status-pill" title="View Security Center">
+      <span class="status-dot"></span>
+      <span class="status-label">Post-Quantum Protected</span>
+      <span class="status-sep">·</span>
+      <span class="status-tech">ML-KEM-768 Hybrid</span>
+      <span class="status-sep">·</span>
+      <span class="status-tech">Zero Telemetry</span>
+    </a>
+  </footer>
+
 </div>
 
-<!-- ── Modals ── -->
-
-<!-- Add Bookmark Modal -->
-<div class="nt-modal-backdrop" id="bm-modal" onclick="if(event.target===this)closeBmModal()">
-  <div class="nt-modal">
-    <div class="nt-modal-header">
-      <span class="nt-modal-title">Add Bookmark</span>
-      <button class="nt-modal-close" onclick="closeBmModal()">✕</button>
+<!-- Add Shortcut Modal Dialog -->
+<div id="shortcut-modal" class="modal-overlay" onclick="if(event.target === this) closeShortcutModal();">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">Add shortcut</h3>
+      <button type="button" class="modal-close-btn" onclick="closeShortcutModal();" title="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
-    <div class="nt-modal-body">
-      <label class="nt-label">Title</label>
-      <input type="text" id="bm-name-input" class="nt-input" placeholder="My favourite site"/>
-      <label class="nt-label">URL</label>
-      <input type="text" id="bm-url-input" class="nt-input" placeholder="https://example.com"/>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="sc-name">Name</label>
+        <input type="text" id="sc-name" class="modal-input" placeholder="e.g. GitHub" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <label for="sc-url">URL</label>
+        <input type="text" id="sc-url" class="modal-input" placeholder="https://example.com" autocomplete="off"/>
+      </div>
     </div>
-    <div class="nt-modal-footer">
-      <button class="nt-btn-cancel" onclick="closeBmModal()">Cancel</button>
-      <button class="nt-btn-save" onclick="saveBm()">Add Bookmark</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add Shortcut Modal -->
-<div class="nt-modal-backdrop" id="sc-modal" onclick="if(event.target===this)closeScModal()">
-  <div class="nt-modal">
-    <div class="nt-modal-header">
-      <span class="nt-modal-title">Add Shortcut</span>
-      <button class="nt-modal-close" onclick="closeScModal()">✕</button>
-    </div>
-    <div class="nt-modal-body">
-      <label class="nt-label">Name</label>
-      <input type="text" id="sc-name-input" class="nt-input" placeholder="e.g. YouTube"/>
-      <label class="nt-label">URL</label>
-      <input type="text" id="sc-url-input" class="nt-input" placeholder="https://youtube.com"/>
-    </div>
-    <div class="nt-modal-footer">
-      <button class="nt-btn-cancel" onclick="closeScModal()">Cancel</button>
-      <button class="nt-btn-save" onclick="saveSc()">Add</button>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" onclick="closeShortcutModal();">Cancel</button>
+      <button type="button" class="btn-save" onclick="saveShortcut();">Done</button>
     </div>
   </div>
 </div>

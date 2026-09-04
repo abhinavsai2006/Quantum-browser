@@ -226,10 +226,11 @@
 .private-browsing-indicator,
 #pageActionButton,
 #translations-button,
+#appMenu-unified-extensions-button,
+#appMenu-translate-button,
 #appMenu-print-button2,
 #appMenu-save-file-button2,
 #appMenu-find-button2,
-#appMenu-translate-button,
 #appMenu-zoom-controls,
 #appMenu-more-button2,
 #appMenu-report-broken-site-button,
@@ -237,6 +238,17 @@
 #appMenu-profiles-button,
 #appMenu-addon-banners,
 #appMenu-update-banner {
+  display: none !important;
+  visibility: collapse !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+#appMenu-mainView toolbarseparator + toolbarseparator {
   display: none !important;
 }
 
