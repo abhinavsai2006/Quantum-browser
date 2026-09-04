@@ -145,14 +145,33 @@ impl QualiumLocalProxy {
         let target_addr = format!("{}:{}", destination_host, port);
         match tokio::net::TcpStream::connect(&target_addr).await {
             Ok(mut upstream) => {
-                // 0x00 = success, 0x01 = IPv4, 127.0.0.1:0
-                socket.write_all(&[0x05, 0x00, 0x00, 0x01, 127, 0, 0, 1, 0x00, 0x50]).await?;
-                let _ = tokio::io::copy_bidirectional(&mut socket, &mut upstream).await;
+                // SOCKS5 success reply: VER=5, REP=0 (success), RSV=0, ATYP=1 (IPv4)
+                // BND.ADDR = 0.0.0.0, BND.PORT = actual port (big-endian)
+                let port_hi = (port >> 8) as u8;
+                let port_lo = (port & 0xFF) as u8;
+                socket
+                    .write_all(&[0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, port_hi, port_lo])
+                    .await?;
+                // Bidirectional tunnel: proxy raw bytes between Gecko and upstream
+                match tokio::io::copy_bidirectional(&mut socket, &mut upstream).await {
+                    Ok((to_server, to_client)) => {
+                        info!(
+                            "Tunnel closed for {}: {}→server {}→client bytes",
+                            destination_host, to_server, to_client
+                        );
+                    }
+                    Err(e) => {
+                        // Tunnel closed by one side — not an error
+                        info!("Tunnel {} closed: {}", destination_host, e);
+                    }
+                }
             }
             Err(e) => {
-                error!("Failed to connect to upstream destination {}: {}", target_addr, e);
-                // 0x04 = Host unreachable
-                let _ = socket.write_all(&[0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await;
+                error!("Failed to connect to upstream {}: {}", target_addr, e);
+                // REP=0x04 Host unreachable
+                let _ = socket
+                    .write_all(&[0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
+                    .await;
             }
         }
 
