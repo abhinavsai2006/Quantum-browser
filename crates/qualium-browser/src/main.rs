@@ -98,14 +98,32 @@ fn get_profile_dir() -> PathBuf {
     p
 }
 
-fn configure_profile(app_dir: &Path, profile_dir: &Path) {
-    let user_js_content = r#"
-// Qualium Quantum Browser v5 — Profile Configuration
-user_pref("network.proxy.type", 1);
+fn wait_for_port_ready(port: u16, max_wait_ms: u64) -> bool {
+    let start = std::time::Instant::now();
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    while start.elapsed().as_millis() < max_wait_ms as u128 {
+        if std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(50)).is_ok() {
+            return true;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    false
+}
+
+fn configure_profile(app_dir: &Path, profile_dir: &Path, use_proxy: bool) {
+    let proxy_config = if use_proxy {
+        r#"user_pref("network.proxy.type", 1);
 user_pref("network.proxy.socks", "127.0.0.1");
 user_pref("network.proxy.socks_port", 9050);
 user_pref("network.proxy.socks_version", 5);
-user_pref("network.proxy.socks_remote_dns", true);
+user_pref("network.proxy.socks_remote_dns", true);"#
+    } else {
+        r#"user_pref("network.proxy.type", 0);"#
+    };
+
+    let user_js_content = format!(
+        r#"// Qualium Quantum Browser v5 — Profile Configuration
+{}
 user_pref("app.update.enabled", false);
 user_pref("app.update.auto", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
@@ -133,7 +151,9 @@ user_pref("privacy.trackingprotection.pbmode.enabled", true);
 user_pref("privacy.resistFingerprinting", true);
 user_pref("media.peerconnection.ice.default_address_only", true);
 user_pref("media.peerconnection.ice.no_host", true);
-"#;
+"#,
+        proxy_config
+    );
 
     let user_js_path = profile_dir.join("user.js");
     let _ = fs::write(&user_js_path, user_js_content);
@@ -385,11 +405,16 @@ fn main() -> anyhow::Result<()> {
 
         // 2. Start Post-Quantum Security Daemon
         let daemon_child = spawn_daemon(&app_dir);
-        log.push_str(&format!("Daemon spawned: {}\n", daemon_child.is_some()));
+        let daemon_ready = if daemon_child.is_some() {
+            wait_for_port_ready(9050, 2500)
+        } else {
+            wait_for_port_ready(9050, 500)
+        };
+        log.push_str(&format!("Daemon spawned: {}, SOCKS5 port 9050 ready: {}\n", daemon_child.is_some(), daemon_ready));
 
         // 3. Configure profile
-        configure_profile(&app_dir, &profile_dir);
-        log.push_str(&format!("Profile dir: {}\n", profile_dir.display()));
+        configure_profile(&app_dir, &profile_dir, daemon_ready);
+        log.push_str(&format!("Profile dir: {}, proxy_enabled: {}\n", profile_dir.display(), daemon_ready));
 
         // 4. Locate Gecko runtime
         let (gecko_exe, gecko_cwd) = match find_gecko_runtime(&app_dir) {

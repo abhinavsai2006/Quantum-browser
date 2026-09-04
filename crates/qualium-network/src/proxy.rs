@@ -83,66 +83,82 @@ impl QualiumLocalProxy {
         circuit_controller: Arc<CircuitController>,
         filter_engine: Arc<FilterEngine>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let mut buf = [0u8; 512];
-
-        // 1. Read SOCKS version and auth methods
-        let n = socket.read(&mut buf).await?;
-        if n < 2 || buf[0] != 0x05 {
+        // 1. Read SOCKS version and auth methods count
+        let mut ver_methods = [0u8; 2];
+        socket.read_exact(&mut ver_methods).await?;
+        if ver_methods[0] != 0x05 {
             return Err("Invalid SOCKS version: expected 0x05".into());
         }
+        let nmethods = ver_methods[1] as usize;
+        let mut methods = vec![0u8; nmethods];
+        socket.read_exact(&mut methods).await?;
 
-        // Method selection reply: 0x05 (version 5), 0x00 (no authentication required on local loopback)
+        // Reply: 0x05 (version 5), 0x00 (no authentication required on local loopback)
         socket.write_all(&[0x05, 0x00]).await?;
 
-        // 2. Read SOCKS5 request (VER, CMD, RSV, ATYP, DST.ADDR, DST.PORT)
-        let n = socket.read(&mut buf).await?;
-        if n < 4 || buf[0] != 0x05 || buf[1] != 0x01 {
+        // 2. Read SOCKS5 request header (VER, CMD, RSV, ATYP)
+        let mut req_header = [0u8; 4];
+        socket.read_exact(&mut req_header).await?;
+        if req_header[0] != 0x05 || req_header[1] != 0x01 {
             // CMD 0x01 is CONNECT
-            socket.write_all(&[0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await?;
+            let _ = socket.write_all(&[0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await;
             return Err("Unsupported SOCKS5 command (only CONNECT supported)".into());
         }
 
-        let atyp = buf[3];
-        let (destination_host, port) = match atyp {
+        let (destination_host, port) = match req_header[3] {
             0x01 => {
-                // IPv4: 4 bytes
-                if n < 10 {
-                    return Err("Truncated IPv4 SOCKS5 request".into());
-                }
-                let ip = format!("{}.{}.{}.{}", buf[4], buf[5], buf[6], buf[7]);
-                let port = u16::from_be_bytes([buf[8], buf[9]]);
+                // IPv4: 4 bytes IP + 2 bytes port
+                let mut addr_port = [0u8; 6];
+                socket.read_exact(&mut addr_port).await?;
+                let ip = format!("{}.{}.{}.{}", addr_port[0], addr_port[1], addr_port[2], addr_port[3]);
+                let port = u16::from_be_bytes([addr_port[4], addr_port[5]]);
                 (ip, port)
             }
             0x03 => {
-                // Domain name: 1 byte len + domain bytes
-                let len = buf[4] as usize;
-                if n < 5 + len + 2 {
-                    return Err("Truncated domain SOCKS5 request".into());
-                }
-                let domain = String::from_utf8_lossy(&buf[5..5 + len]).to_string();
-                let port = u16::from_be_bytes([buf[5 + len], buf[5 + len + 1]]);
+                // Domain: 1 byte len + domain bytes + 2 bytes port
+                let mut len_buf = [0u8; 1];
+                socket.read_exact(&mut len_buf).await?;
+                let domain_len = len_buf[0] as usize;
+                let mut domain_buf = vec![0u8; domain_len + 2];
+                socket.read_exact(&mut domain_buf).await?;
+                let domain = String::from_utf8_lossy(&domain_buf[..domain_len]).to_string();
+                let port = u16::from_be_bytes([domain_buf[domain_len], domain_buf[domain_len + 1]]);
                 (domain, port)
             }
             0x04 => {
-                // IPv6
-                ("::1".to_string(), 443)
+                // IPv6: 16 bytes IP + 2 bytes port
+                let mut addr_port = [0u8; 18];
+                socket.read_exact(&mut addr_port).await?;
+                let mut octets = [0u8; 16];
+                octets.copy_from_slice(&addr_port[..16]);
+                let ip = std::net::Ipv6Addr::from(octets);
+                let port = u16::from_be_bytes([addr_port[16], addr_port[17]]);
+                (format!("[{}]", ip), port)
             }
-            _ => return Err("Unknown SOCKS5 address type".into()),
+            _ => {
+                let _ = socket.write_all(&[0x05, 0x08, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await;
+                return Err("Unknown SOCKS5 address type".into());
+            }
         };
 
         // 3. Filter check: intercept and block if ad or tracker
-        if let FilterAction::Block(cat) = filter_engine.check_url(&format!("https://{}/", destination_host), &destination_host) {
+        let check_host = destination_host.trim_matches('[').trim_matches(']');
+        if let FilterAction::Block(cat) = filter_engine.check_url(&format!("https://{}/", check_host), check_host) {
             info!("SOCKS5 request to {} blocked by filter ({:?})", destination_host, cat);
             // 0x02 = connection not allowed by ruleset
-            socket.write_all(&[0x05, 0x02, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await?;
+            let _ = socket.write_all(&[0x05, 0x02, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await;
             return Ok(());
         }
 
         // 4. Allocate isolated circuit for destination domain (Stream Isolation)
-        let _circuit = circuit_controller.get_circuit_for_destination(&destination_host).await;
+        let _circuit = circuit_controller.get_circuit_for_destination(check_host).await;
 
         // 5. Connect to upstream destination
-        let target_addr = format!("{}:{}", destination_host, port);
+        let target_addr = if destination_host.starts_with('[') {
+            format!("{}:{}", destination_host, port)
+        } else {
+            format!("{}:{}", destination_host, port)
+        };
         match tokio::net::TcpStream::connect(&target_addr).await {
             Ok(mut upstream) => {
                 // SOCKS5 success reply: VER=5, REP=0 (success), RSV=0, ATYP=1 (IPv4)
@@ -161,7 +177,7 @@ impl QualiumLocalProxy {
                         );
                     }
                     Err(e) => {
-                        // Tunnel closed by one side — not an error
+                        // Tunnel closed by one side — normal stream termination
                         info!("Tunnel {} closed: {}", destination_host, e);
                     }
                 }
@@ -184,5 +200,59 @@ impl QualiumLocalProxy {
 
     pub async fn stop(&self) {
         *self.is_running.write().await = false;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_socks5_http_proxy() {
+        // 1. Setup local mock HTTP server
+        let mock_server = TcpListener::bind("127.0.0.1:0").await.expect("bind mock server");
+        let mock_port = mock_server.local_addr().expect("mock addr").port();
+        tokio::spawn(async move {
+            if let Ok((mut stream, _)) = mock_server.accept().await {
+                let mut req_buf = [0u8; 512];
+                let _ = stream.read(&mut req_buf).await;
+                let _ = stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello Qualium").await;
+            }
+        });
+
+        // 2. Setup SOCKS5 proxy
+        let circuit_ctrl = Arc::new(CircuitController::new());
+        let dns = Arc::new(PrivacyDnsResolver::default());
+        let filter = Arc::new(FilterEngine::default());
+        let mut proxy = QualiumLocalProxy::new(0, circuit_ctrl, dns, filter);
+        let addr = proxy.start().await.expect("bind proxy");
+
+        // 3. Connect to proxy as client
+        let mut client = TcpStream::connect(addr).await.expect("connect client");
+
+        // SOCKS5 greeting: 1 auth method (none)
+        client.write_all(&[0x05, 0x01, 0x00]).await.expect("send auth");
+        let mut auth_resp = [0u8; 2];
+        client.read_exact(&mut auth_resp).await.expect("read auth");
+        assert_eq!(auth_resp, [0x05, 0x00]);
+
+        // Connect to 127.0.0.1:mock_port (ATYP=0x01 IPv4)
+        let mut req = vec![0x05, 0x01, 0x00, 0x01, 127, 0, 0, 1];
+        req.extend_from_slice(&mock_port.to_be_bytes());
+        client.write_all(&req).await.expect("send connect");
+
+        let mut conn_resp = [0u8; 10];
+        client.read_exact(&mut conn_resp).await.expect("read conn resp");
+        assert_eq!(conn_resp[0], 0x05);
+        assert_eq!(conn_resp[1], 0x00); // REP = success
+
+        // Send HTTP request
+        let http_req = b"GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+        client.write_all(http_req).await.expect("send http");
+
+        let mut buf = vec![0u8; 1024];
+        let n = client.read(&mut buf).await.expect("read http resp");
+        let resp_str = String::from_utf8_lossy(&buf[..n]);
+        assert!(resp_str.contains("HTTP/1.1 200 OK") && resp_str.contains("Hello Qualium"));
     }
 }

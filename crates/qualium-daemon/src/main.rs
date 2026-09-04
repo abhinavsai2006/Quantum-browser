@@ -148,14 +148,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         filter_engine.clone(),
     );
 
-    // Establish initial primary anonymity circuit
-    let init_circuit = circuit_controller.establish_circuit().await;
-    info!(
-        "Primary circuit established: ID={}, Guard={}, Exit={}",
-        init_circuit.circuit_id, init_circuit.guard.nickname, init_circuit.exit.nickname
-    );
-
-    // Bind local proxy service with automatic fallback for error 10048
+    // 1. Bind local proxy service immediately so Gecko / Necko can connect instantly
     let actual_addr = match local_proxy.start().await {
         Ok(addr) => {
             info!("Qualium Daemon operational on {}. Ready for Gecko IPC.", addr);
@@ -174,6 +167,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             addr
         }
     };
+
+    // 2. Establish initial primary anonymity circuit concurrently in background
+    let cc = circuit_controller.clone();
+    tokio::spawn(async move {
+        let init_circuit = cc.establish_circuit().await;
+        info!(
+            "Primary circuit established: ID={}, Guard={}, Exit={}",
+            init_circuit.circuit_id, init_circuit.guard.nickname, init_circuit.exit.nickname
+        );
+    });
 
     // Qualium Native Browser Runtime Status
     println!("\n========================================================");

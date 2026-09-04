@@ -1,4 +1,4 @@
-ar        const s = QualiumRuntimeState.getState();
+        const s = QualiumRuntimeState.getState();
 const adsEl = document.getElementById("priv-ads");
 const trackEl = document.getElementById("priv-trackers");
 if (adsEl) adsEl.textContent = s.adsBlockedCount.toString();

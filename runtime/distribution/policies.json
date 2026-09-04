@@ -11,9 +11,6 @@
     "DontCheckDefaultBrowser": true,
     "SearchEngines": {
       "PreventInstalls": true
-    },
-    "Proxy": {
-      "Mode": "none"
     }
   }
 }

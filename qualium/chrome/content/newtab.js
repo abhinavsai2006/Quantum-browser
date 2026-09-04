@@ -1,30 +1,242 @@
 // Qaulium Quantum Browser v5 — Official New Tab Controller
 
-const DEFAULT_SHORTCUTS = [
-  { id: "def-privacy", title: "Privacy", url: "dashboard.xhtml", type: "privacy" },
-  { id: "def-bookmarks", title: "Bookmarks", url: "bookmarks.xhtml", type: "bookmarks" },
-  { id: "def-downloads", title: "Downloads", url: "downloads.xhtml", type: "downloads" },
-  { id: "def-github", title: "GitHub", url: "https://github.com", type: "github" },
-  { id: "def-wikipedia", title: "Wikipedia", url: "https://wikipedia.org", type: "wikipedia" },
-  { id: "def-settings", title: "Settings", url: "settings.xhtml", type: "settings" }
-];
-
-const SVG_ICONS = {
-  privacy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
-  bookmarks: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  downloads: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
-  github: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`,
-  wikipedia: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
-  settings: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-  add: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`
+// ── Search Engines ──
+const ENGINES = {
+  duckduckgo: { name: "DuckDuckGo", icon: "🦆", url: "https://duckduckgo.com/?q=" },
+  google: { name: "Google", icon: "🔍", url: "https://www.google.com/search?q=" },
+  brave: { name: "Brave Search", icon: "🦁", url: "https://search.brave.com/search?q=" },
+  bing: { name: "Bing", icon: "🅱", url: "https://www.bing.com/search?q=" }
 };
 
-function createSVGElement(svgString) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(svgString, "image/svg+xml");
-  return document.importNode(doc.documentElement, true);
+// ── Default Bookmarks ──
+const DEFAULT_BOOKMARKS = [
+  { id: "bm-ddg", title: "DuckDuckGo", url: "https://duckduckgo.com" },
+  { id: "bm-wiki", title: "Wikipedia", url: "https://wikipedia.org" },
+  { id: "bm-gh", title: "GitHub", url: "https://github.com" },
+  { id: "bm-mdn", title: "MDN Web Docs", url: "https://developer.mozilla.org" },
+  { id: "bm-reddit", title: "Reddit", url: "https://reddit.com" },
+  { id: "bm-rust", title: "Rust Language", url: "https://www.rust-lang.org" }
+];
+
+// ── Default Shortcuts ──
+const DEFAULT_SHORTCUTS = [
+  { id: "sc-privacy", title: "Privacy", url: "dashboard.xhtml", icon: "shield", color: "#34d399" },
+  { id: "sc-bookmarks", title: "Bookmarks", url: "bookmarks.xhtml", icon: "star", color: "#fbbf24" },
+  { id: "sc-downloads", title: "Downloads", url: "downloads.xhtml", icon: "download", color: "#38bdf8" },
+  { id: "sc-settings", title: "Settings", url: "settings.xhtml", icon: "settings", color: "#94a3b8" },
+  { id: "sc-github", title: "GitHub", url: "https://github.com", icon: "github", color: "#e2e8f0" },
+  { id: "sc-youtube", title: "YouTube", url: "https://youtube.com", icon: "play", color: "#ef4444" }
+];
+
+// ── Clock & Greeting ──
+function updateClockAndGreeting() {
+  const now = new Date();
+  const hours = now.getHours();
+  const mins = String(now.getMinutes()).padStart(2, "0");
+
+  const clockEl = document.getElementById("nt-clock");
+  if (clockEl) {
+    clockEl.textContent = `${hours}:${mins}`;
+  }
+
+  const greetingEl = document.getElementById("nt-greeting");
+  if (greetingEl) {
+    let greeting = "Good evening";
+    if (hours < 12) {
+      greeting = "Good morning";
+    } else if (hours < 17) {
+      greeting = "Good afternoon";
+    }
+    greetingEl.textContent = greeting;
+  }
 }
 
+// ── Search Engine Selector ──
+function initSearchEngine() {
+  const savedKey = localStorage.getItem("qaulium_search_engine") || "duckduckgo";
+  setSearchEngine(savedKey);
+
+  const engineBtn = document.getElementById("engine-btn");
+  const dropdown = document.getElementById("engine-dropdown");
+
+  if (engineBtn && dropdown) {
+    engineBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.classList.remove("open");
+    });
+
+    dropdown.querySelectorAll(".engine-opt").forEach(opt => {
+      opt.addEventListener("click", () => {
+        const engine = opt.getAttribute("data-engine");
+        if (engine && ENGINES[engine]) {
+          setSearchEngine(engine);
+          dropdown.classList.remove("open");
+        }
+      });
+    });
+  }
+
+  const searchForm = document.getElementById("nt-search-form");
+  if (searchForm) {
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleSearch();
+    });
+  }
+}
+
+function setSearchEngine(key) {
+  const engine = ENGINES[key] || ENGINES.duckduckgo;
+  localStorage.setItem("qaulium_search_engine", key);
+  const iconEl = document.getElementById("engine-icon");
+  if (iconEl) {
+    iconEl.textContent = engine.icon;
+  }
+  const inputEl = document.getElementById("nt-search-input");
+  if (inputEl) {
+    inputEl.placeholder = `Search with ${engine.name} or enter address…`;
+  }
+}
+
+function handleSearch() {
+  const input = document.getElementById("nt-search-input");
+  if (!input) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+
+  let targetUrl = "";
+
+  if (/^https?:\/\//i.test(raw)) {
+    targetUrl = raw;
+  } else if (!raw.includes(" ") && raw.includes(".") && !raw.startsWith(".")) {
+    targetUrl = "https://" + raw;
+  } else {
+    const key = localStorage.getItem("qaulium_search_engine") || "duckduckgo";
+    const engine = ENGINES[key] || ENGINES.duckduckgo;
+    targetUrl = engine.url + encodeURIComponent(raw);
+  }
+
+  if (targetUrl) {
+    window.location.href = targetUrl;
+  }
+}
+
+// ── Bookmarks ──
+function getStoredBookmarks() {
+  try {
+    const raw = localStorage.getItem("qaulium_bookmarks");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return DEFAULT_BOOKMARKS;
+}
+
+function saveStoredBookmarks(bms) {
+  try {
+    localStorage.setItem("qaulium_bookmarks", JSON.stringify(bms));
+  } catch (e) {}
+}
+
+function renderBookmarks() {
+  const container = document.getElementById("bookmark-list");
+  if (!container) return;
+
+  const bookmarks = getStoredBookmarks();
+  container.innerHTML = "";
+
+  bookmarks.forEach(bm => {
+    const item = document.createElement("div");
+    item.className = "bookmark-item";
+
+    const link = document.createElement("a");
+    link.className = "bookmark-link";
+    link.href = bm.url;
+    link.title = `${bm.title}\n${bm.url}`;
+
+    const icon = document.createElement("span");
+    icon.className = "bookmark-icon";
+    icon.textContent = "🔖";
+
+    const title = document.createElement("span");
+    title.className = "bookmark-title";
+    title.textContent = bm.title;
+
+    link.appendChild(icon);
+    link.appendChild(title);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "bookmark-del-btn";
+    delBtn.title = "Delete bookmark";
+    delBtn.textContent = "✕";
+    delBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteBookmark(bm.id);
+    });
+
+    item.appendChild(link);
+    item.appendChild(delBtn);
+    container.appendChild(item);
+  });
+}
+
+function deleteBookmark(id) {
+  let bms = getStoredBookmarks().filter(b => b.id !== id);
+  saveStoredBookmarks(bms);
+  renderBookmarks();
+}
+
+function openBmModal() {
+  const modal = document.getElementById("bm-modal");
+  if (modal) {
+    modal.classList.add("open");
+    const nameInput = document.getElementById("bm-name-input");
+    const urlInput = document.getElementById("bm-url-input");
+    if (nameInput) { nameInput.value = ""; nameInput.focus(); }
+    if (urlInput) urlInput.value = "";
+  }
+}
+
+function closeBmModal() {
+  const modal = document.getElementById("bm-modal");
+  if (modal) modal.classList.remove("open");
+}
+
+function saveBm() {
+  const nameInput = document.getElementById("bm-name-input");
+  const urlInput = document.getElementById("bm-url-input");
+  if (!nameInput || !urlInput) return;
+
+  const title = nameInput.value.trim();
+  let url = urlInput.value.trim();
+
+  if (!title || !url) {
+    alert("Please enter both a title and URL.");
+    return;
+  }
+
+  if (!/^https?:\/\//i.test(url) && !url.endsWith(".xhtml") && !url.endsWith(".html")) {
+    url = "https://" + url;
+  }
+
+  const bms = getStoredBookmarks();
+  bms.push({
+    id: "bm-" + Date.now(),
+    title,
+    url
+  });
+
+  saveStoredBookmarks(bms);
+  closeBmModal();
+  renderBookmarks();
+}
+
+// ── Shortcuts ──
 function getStoredShortcuts() {
   try {
     const raw = localStorage.getItem("qaulium_shortcuts");
@@ -32,18 +244,14 @@ function getStoredShortcuts() {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch (e) {
-    console.warn("Could not read qaulium_shortcuts from localStorage", e);
-  }
+  } catch (e) {}
   return DEFAULT_SHORTCUTS;
 }
 
-function saveStoredShortcuts(shortcuts) {
+function saveStoredShortcuts(scs) {
   try {
-    localStorage.setItem("qaulium_shortcuts", JSON.stringify(shortcuts));
-  } catch (e) {
-    console.warn("Could not save qaulium_shortcuts", e);
-  }
+    localStorage.setItem("qaulium_shortcuts", JSON.stringify(scs));
+  } catch (e) {}
 }
 
 function renderShortcuts() {
@@ -55,39 +263,33 @@ function renderShortcuts() {
 
   shortcuts.forEach(item => {
     const card = document.createElement("a");
-    card.className = "shortcut-card";
+    card.className = "nt-shortcut-card";
     card.href = item.url;
     card.title = item.title;
 
     const iconWrap = document.createElement("div");
-    iconWrap.className = "shortcut-icon-wrap" + (item.type ? ` icon-${item.type}` : "");
+    iconWrap.className = "nt-shortcut-icon";
 
-    if (item.type && SVG_ICONS[item.type]) {
-      iconWrap.appendChild(createSVGElement(SVG_ICONS[item.type]));
-    } else {
-      // Dynamic Letter Badge for custom shortcut
-      const initial = (item.title || "W").charAt(0).toUpperCase();
-      const badge = document.createElement("div");
-      badge.className = "shortcut-avatar-badge";
-      const hue = Math.abs(item.title.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) * 47) % 360;
-      badge.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${(hue + 40) % 360}, 75%, 45%))`;
-      badge.textContent = initial;
-      iconWrap.appendChild(badge);
-    }
+    const initial = (item.title || "W").charAt(0).toUpperCase();
+    const hue = Math.abs(item.title.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) * 53) % 360;
+    iconWrap.style.background = item.color 
+      ? `linear-gradient(135deg, ${item.color}33, ${item.color}66)`
+      : `linear-gradient(135deg, hsl(${hue}, 65%, 45%), hsl(${(hue + 40) % 360}, 70%, 35%))`;
+    iconWrap.style.color = item.color || "#fff";
+    iconWrap.textContent = initial;
 
     const titleSpan = document.createElement("span");
-    titleSpan.className = "shortcut-title";
+    titleSpan.className = "nt-shortcut-title";
     titleSpan.textContent = item.title;
 
     card.appendChild(iconWrap);
     card.appendChild(titleSpan);
 
-    // If it is a custom item (not default), add delete button
-    if (!item.id.startsWith("def-")) {
+    if (!item.id.startsWith("sc-privacy") && !item.id.startsWith("sc-bookmarks") && !item.id.startsWith("sc-settings")) {
       const delBtn = document.createElement("button");
-      delBtn.className = "shortcut-del-btn";
-      delBtn.title = "Remove shortcut";
-      delBtn.innerHTML = "&#10005;";
+      delBtn.className = "nt-shortcut-del";
+      delBtn.title = "Remove";
+      delBtn.textContent = "✕";
       delBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -96,70 +298,61 @@ function renderShortcuts() {
       card.appendChild(delBtn);
     }
 
-    card.addEventListener("click", (e) => {
-      const href = card.getAttribute("href");
-      if (!href) return;
-      if (href.startsWith("http://") || href.startsWith("https://")) {
-        return; // standard navigation
-      }
-      e.preventDefault();
-      window.location.href = href;
-    });
-
     container.appendChild(card);
   });
 
-  // Always append the [+ Add Shortcut] tile
-  const addCard = document.createElement("div");
-  addCard.className = "shortcut-card shortcut-add-card";
-  addCard.title = "Add custom shortcut";
+  // Append Add Shortcut button
+  const addBtn = document.createElement("div");
+  addBtn.className = "nt-shortcut-card nt-shortcut-add";
+  addBtn.title = "Add Shortcut";
 
-  const addIconWrap = document.createElement("div");
-  addIconWrap.className = "shortcut-icon-wrap";
-  addIconWrap.appendChild(createSVGElement(SVG_ICONS.add));
+  const addIcon = document.createElement("div");
+  addIcon.className = "nt-shortcut-icon";
+  addIcon.textContent = "+";
 
   const addTitle = document.createElement("span");
-  addTitle.className = "shortcut-title";
+  addTitle.className = "nt-shortcut-title";
   addTitle.textContent = "Add";
 
-  addCard.appendChild(addIconWrap);
-  addCard.appendChild(addTitle);
+  addBtn.appendChild(addIcon);
+  addBtn.appendChild(addTitle);
+  addBtn.addEventListener("click", () => openScModal());
 
-  addCard.addEventListener("click", () => {
-    openAddShortcutModal();
-  });
-
-  container.appendChild(addCard);
+  container.appendChild(addBtn);
 }
 
-function openAddShortcutModal() {
-  const modal = document.getElementById("add-shortcut-modal");
-  if (!modal) return;
-  modal.classList.add("open");
-  const nameInput = document.getElementById("shortcut-name-input");
-  const urlInput = document.getElementById("shortcut-url-input");
-  if (nameInput) {
-    nameInput.value = "";
-    nameInput.focus();
+function deleteShortcut(id) {
+  let scs = getStoredShortcuts().filter(s => s.id !== id);
+  saveStoredShortcuts(scs);
+  renderShortcuts();
+}
+
+function openScModal() {
+  const modal = document.getElementById("sc-modal");
+  if (modal) {
+    modal.classList.add("open");
+    const nameInput = document.getElementById("sc-name-input");
+    const urlInput = document.getElementById("sc-url-input");
+    if (nameInput) { nameInput.value = ""; nameInput.focus(); }
+    if (urlInput) urlInput.value = "";
   }
-  if (urlInput) urlInput.value = "";
 }
 
-function closeAddShortcutModal() {
-  const modal = document.getElementById("add-shortcut-modal");
+function closeScModal() {
+  const modal = document.getElementById("sc-modal");
   if (modal) modal.classList.remove("open");
 }
 
-function saveCustomShortcut() {
-  const nameInput = document.getElementById("shortcut-name-input");
-  const urlInput = document.getElementById("shortcut-url-input");
+function saveSc() {
+  const nameInput = document.getElementById("sc-name-input");
+  const urlInput = document.getElementById("sc-url-input");
   if (!nameInput || !urlInput) return;
 
-  const name = nameInput.value.trim();
+  const title = nameInput.value.trim();
   let url = urlInput.value.trim();
 
-  if (!name || !url) {
-    alert("Please enter both a shortcut name and URL.");
+  if (!title || !url) {
+    alert("Please enter both a name and URL.");
     return;
   }
 
@@ -167,115 +360,62 @@ function saveCustomShortcut() {
     url = "https://" + url;
   }
 
-  const shortcuts = getStoredShortcuts();
-  shortcuts.push({
+  const scs = getStoredShortcuts();
+  scs.push({
     id: "custom-" + Date.now(),
-    title: name,
-    url: url
+    title,
+    url
   });
 
-  saveStoredShortcuts(shortcuts);
-  closeAddShortcutModal();
+  saveStoredShortcuts(scs);
+  closeScModal();
   renderShortcuts();
 }
 
-function deleteShortcut(id) {
-  let shortcuts = getStoredShortcuts();
-  shortcuts = shortcuts.filter(s => s.id !== id);
-  saveStoredShortcuts(shortcuts);
-  renderShortcuts();
-}
+// ── Post-Quantum Status & Metrics ──
+function initSecurityMetrics() {
+  const guardEl = document.getElementById("c-guard");
+  const relayEl = document.getElementById("c-relay");
+  const exitEl = document.getElementById("c-exit");
+  const adsEl = document.getElementById("cnt-ads");
+  const trackersEl = document.getElementById("cnt-trackers");
 
-function handleNewTabSearch() {
-  const searchInput = document.getElementById("search-input");
-  if (!searchInput) return;
-  const rawInput = searchInput.value.trim();
-  if (!rawInput) return;
+  if (guardEl) guardEl.textContent = "Reykjavik · IS";
+  if (relayEl) relayEl.textContent = "Zurich · CH";
+  if (exitEl) exitEl.textContent = "Stockholm · SE";
 
-  let targetUrl = "";
-  if (typeof classifyInput === "function") {
-    const classified = classifyInput(rawInput);
-    targetUrl = classified.url;
-  } else {
-    if (/^https?:\/\//i.test(rawInput)) {
-      targetUrl = rawInput;
-    } else if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(rawInput)) {
-      targetUrl = "https://" + rawInput;
-    } else {
-      const savedEngine = localStorage.getItem("qualium_search_engine") || "duckduckgo";
-      const engines = {
-        google: "https://www.google.com/search?q=",
-        duckduckgo: "https://duckduckgo.com/?q=",
-        brave: "https://search.brave.com/search?q=",
-        bing: "https://www.bing.com/search?q="
-      };
-      const base = engines[savedEngine] || engines.duckduckgo;
-      targetUrl = base + encodeURIComponent(rawInput);
-    }
-  }
-
-  if (targetUrl) {
-    window.location.href = targetUrl;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  // 1. Subscribe to Live Runtime State
+  // Check Qualium Runtime IPC state if present
   if (typeof QualiumRuntimeState !== "undefined") {
     QualiumRuntimeState.subscribe(state => {
-      const headline = document.getElementById("circuit-headline");
-      const dot = document.getElementById("circuit-dot");
-      const guard = document.getElementById("circuit-guard");
-      const relay = document.getElementById("circuit-relay");
-      const exit = document.getElementById("circuit-exit");
-
-      if (headline && dot) {
-        if (state.connectionState === "CONNECTED" && state.circuitState === "ACTIVE") {
-          headline.textContent = "POST-QUANTUM CIRCUIT ACTIVE";
-          headline.style.color = "#f1f5f9";
-          dot.style.background = "#34d399";
-          dot.style.boxShadow = "0 0 10px #34d399";
-        } else if (state.connectionState === "CONNECTING") {
-          headline.textContent = "CIRCUIT CONNECTING";
-          headline.style.color = "#f59e0b";
-          dot.style.background = "#f59e0b";
-          dot.style.boxShadow = "0 0 8px #f59e0b";
-        } else {
-          headline.textContent = "CIRCUIT UNAVAILABLE";
-          headline.style.color = "#ef4444";
-          dot.style.background = "#ef4444";
-          dot.style.boxShadow = "0 0 8px #ef4444";
-        }
-      }
-
-      if (guard) guard.textContent = state.guard;
-      if (relay) relay.textContent = state.relay;
-      if (exit) exit.textContent = state.exit;
+      if (guardEl && state.guard) guardEl.textContent = state.guard;
+      if (relayEl && state.relay) relayEl.textContent = state.relay;
+      if (exitEl && state.exit) exitEl.textContent = state.exit;
+      if (adsEl && state.adsBlocked != null) adsEl.textContent = state.adsBlocked;
+      if (trackersEl && state.trackersBlocked != null) trackersEl.textContent = state.trackersBlocked;
     });
   }
+}
 
-  // 2. Render all Shortcuts (Defaults + Custom + Add Tile)
+// ── Initialization ──
+document.addEventListener("DOMContentLoaded", () => {
+  updateClockAndGreeting();
+  setInterval(updateClockAndGreeting, 10000);
+
+  initSearchEngine();
+  renderBookmarks();
   renderShortcuts();
+  initSecurityMetrics();
 
-  // 3. Modal Keydown Listener (Escape / Enter)
+  const bmAddBtn = document.getElementById("bm-add-btn");
+  if (bmAddBtn) {
+    bmAddBtn.addEventListener("click", () => openBmModal());
+  }
+
+  // Keyboard Escape listener for modals
   document.addEventListener("keydown", (e) => {
-    const modal = document.getElementById("add-shortcut-modal");
-    if (modal && modal.classList.contains("open")) {
-      if (e.key === "Escape") {
-        closeAddShortcutModal();
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        saveCustomShortcut();
-      }
+    if (e.key === "Escape") {
+      closeBmModal();
+      closeScModal();
     }
   });
-
-  // 4. Search Form listener
-  const searchForm = document.getElementById("search-form");
-  if (searchForm) {
-    searchForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      handleNewTabSearch();
-    });
-  }
 });
