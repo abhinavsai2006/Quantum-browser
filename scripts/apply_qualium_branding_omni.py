@@ -127,8 +127,17 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     while 'hidden="true" hidden="true"' in orig_xhtml:
         orig_xhtml = orig_xhtml.replace('hidden="true" hidden="true"', 'hidden="true"')
 
-    # Wire Bookmarks, History, Downloads, Passwords to open in tabs instead of popups/dialogs
+    # Wire Commands so Bookmarks, History, Downloads NEVER open modal dialogs
     mod_xhtml = orig_xhtml.replace(
+        '<command id="Browser:ShowAllBookmarks"/>',
+        '<command id="Browser:ShowAllBookmarks" oncommand="openTrustedLinkIn(\'chrome://qualium/content/bookmarks.xhtml\', \'tab\')"/>'
+    ).replace(
+        '<command id="Browser:ShowAllHistory"/>',
+        '<command id="Browser:ShowAllHistory" oncommand="openTrustedLinkIn(\'chrome://qualium/content/history.xhtml\', \'tab\')"/>'
+    ).replace(
+        '<command id="Tools:Downloads" />',
+        '<command id="Tools:Downloads" oncommand="openTrustedLinkIn(\'chrome://qualium/content/downloads.xhtml\', \'tab\')"/>'
+    ).replace(
         'id="appMenu-bookmarks-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="library-bookmarks-menu"\n                     closemenu="none"\n                     />',
         'id="appMenu-bookmarks-button"\n                     class="subviewbutton"\n                     data-l10n-id="library-bookmarks-menu"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/bookmarks.xhtml\', \'tab\')"\n                     />'
     ).replace(
@@ -155,28 +164,23 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     ).replace(
         'id="urlbar-search-button"',
         'id="urlbar-search-button" hidden="true"'
-    ).replace(
-        'id="appMenu-unified-extensions-button"',
-        'id="appMenu-unified-extensions-button" style="display:none!important;"'
-    ).replace(
-        'command="cmd_openUnifiedExtensionsPanel"\n                     hidden="true"\n                     />\n      <toolbarseparator/>',
-        'command="cmd_openUnifiedExtensionsPanel"\n                     hidden="true"\n                     />\n      <toolbarseparator id="appMenu-sep-hidden" hidden="true"/>'
-    ).replace(
-        'id="appMenu-zoom-controls" class="subviewbutton toolbaritem-combined-buttons"',
-        'id="appMenu-zoom-controls" hidden="true" class="subviewbutton toolbaritem-combined-buttons"'
-    ).replace(
-        'id="appMenu-print-button2"\n                     class="subviewbutton"',
-        'id="appMenu-print-button2" hidden="true"\n                     class="subviewbutton"'
-    ).replace(
-        'id="appMenu-save-file-button2"\n                     class="subviewbutton"',
-        'id="appMenu-save-file-button2" hidden="true"\n                     class="subviewbutton"'
-    ).replace(
-        'id="appMenu-find-button2"\n                     class="subviewbutton"',
-        'id="appMenu-find-button2" hidden="true"\n                     class="subviewbutton"'
-    ).replace(
-        'id="appMenu-translate-button"\n                     class="subviewbutton"',
-        'id="appMenu-translate-button" hidden="true"\n                     class="subviewbutton"'
     )
+
+    # Physically remove the gap elements between Extensions and Settings
+    ext_idx = mod_xhtml.find('id="appMenu-extensions-themes-button"')
+    if ext_idx != -1:
+        end_ext = mod_xhtml.find('/>', ext_idx) + 2
+        settings_idx = mod_xhtml.find('<toolbarbutton id="appMenu-settings-button"')
+        if settings_idx != -1:
+            mod_xhtml = mod_xhtml[:end_ext] + "\n      <toolbarseparator/>\n      " + mod_xhtml[settings_idx:]
+
+    # Physically remove more-tools and report-broken-site between Settings and Help
+    settings_btn_pos = mod_xhtml.find('id="appMenu-settings-button"')
+    if settings_btn_pos != -1:
+        end_settings = mod_xhtml.find('/>', settings_btn_pos) + 2
+        help_btn_pos = mod_xhtml.find('<toolbarbutton id="appMenu-help-button2"')
+        if help_btn_pos != -1:
+            mod_xhtml = mod_xhtml[:end_settings] + "\n      " + mod_xhtml[help_btn_pos:]
 
     while 'hidden="true" hidden="true"' in mod_xhtml:
         mod_xhtml = mod_xhtml.replace('hidden="true" hidden="true"', 'hidden="true"')

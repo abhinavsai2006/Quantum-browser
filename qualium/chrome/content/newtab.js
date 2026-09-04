@@ -44,7 +44,7 @@ const DEFAULT_SHORTCUTS = [
 
 function getStoredShortcuts() {
   try {
-    const raw = localStorage.getItem("qaulium_clean_shortcuts");
+    const raw = localStorage.getItem("qaulium_clean_shortcuts_v5");
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -55,7 +55,7 @@ function getStoredShortcuts() {
 
 function saveStoredShortcuts(shortcuts) {
   try {
-    localStorage.setItem("qaulium_clean_shortcuts", JSON.stringify(shortcuts));
+    localStorage.setItem("qaulium_clean_shortcuts_v5", JSON.stringify(shortcuts));
   } catch (e) {}
 }
 
@@ -221,11 +221,24 @@ function handleSearch(e) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  window.scrollTo(0, 0);
   renderShortcuts();
 
   const searchForm = document.getElementById("search-form");
   if (searchForm) {
     searchForm.addEventListener("submit", handleSearch);
+  }
+
+  const searchInput = document.getElementById("search-input");
+  if (searchInput) {
+    setTimeout(() => {
+      try {
+        searchInput.focus({ preventScroll: true });
+      } catch (e) {
+        searchInput.focus();
+      }
+      window.scrollTo(0, 0);
+    }, 50);
   }
 
   document.addEventListener("keydown", (e) => {

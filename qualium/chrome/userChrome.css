@@ -253,6 +253,14 @@
   overflow: hidden !important;
 }
 
+#appMenu-mainView toolbarseparator {
+  margin: 4px 6px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
 #appMenu-mainView toolbarseparator + toolbarseparator {
   display: none !important;
 }
