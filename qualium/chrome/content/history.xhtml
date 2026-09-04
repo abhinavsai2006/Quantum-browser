@@ -8,6 +8,17 @@
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/history.css"/>
+  <script>
+    //<![CDATA[
+    // If opened in a standalone dialog/modal window, immediately redirect to a tab in the main window
+    if (window.opener && window.opener.openTrustedLinkIn) {
+      try {
+        window.opener.openTrustedLinkIn("chrome://qualium/content/history.xhtml", "tab");
+        window.close();
+      } catch (e) {}
+    }
+    //]]>
+  </script>
   <style>
     .history-search-bar {
       margin: 1.5rem 0;

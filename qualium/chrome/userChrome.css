@@ -226,18 +226,22 @@
 .private-browsing-indicator,
 #pageActionButton,
 #translations-button,
-#appMenu-unified-extensions-button,
-#appMenu-translate-button,
-#appMenu-print-button2,
-#appMenu-save-file-button2,
-#appMenu-find-button2,
-#appMenu-zoom-controls,
-#appMenu-more-button2,
-#appMenu-report-broken-site-button,
-#appMenu-empty-profiles-button,
-#appMenu-profiles-button,
-#appMenu-addon-banners,
-#appMenu-update-banner {
+#appMenu-mainView .subviewbutton[hidden="true"],
+#appMenu-mainView toolbaritem[hidden="true"],
+#appMenu-mainView toolbarseparator[hidden="true"],
+#appMenu-mainView #appMenu-unified-extensions-button,
+#appMenu-mainView #appMenu-translate-button,
+#appMenu-mainView #appMenu-print-button2,
+#appMenu-mainView #appMenu-save-file-button2,
+#appMenu-mainView #appMenu-find-button2,
+#appMenu-mainView #appMenu-zoom-controls,
+#appMenu-mainView #appMenu-zoom-controls *,
+#appMenu-mainView #appMenu-more-button2,
+#appMenu-mainView #appMenu-report-broken-site-button,
+#appMenu-mainView #appMenu-empty-profiles-button,
+#appMenu-mainView #appMenu-profiles-button,
+#appMenu-mainView #appMenu-addon-banners,
+#appMenu-mainView #appMenu-update-banner {
   display: none !important;
   visibility: collapse !important;
   height: 0 !important;
@@ -246,6 +250,7 @@
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
+  overflow: hidden !important;
 }
 
 #appMenu-mainView toolbarseparator + toolbarseparator {

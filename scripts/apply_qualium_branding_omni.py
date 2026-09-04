@@ -127,7 +127,20 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     while 'hidden="true" hidden="true"' in orig_xhtml:
         orig_xhtml = orig_xhtml.replace('hidden="true" hidden="true"', 'hidden="true"')
 
+    # Wire Bookmarks, History, Downloads, Passwords to open in tabs instead of popups/dialogs
     mod_xhtml = orig_xhtml.replace(
+        'id="appMenu-bookmarks-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="library-bookmarks-menu"\n                     closemenu="none"\n                     />',
+        'id="appMenu-bookmarks-button"\n                     class="subviewbutton"\n                     data-l10n-id="library-bookmarks-menu"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/bookmarks.xhtml\', \'tab\')"\n                     />'
+    ).replace(
+        'id="appMenu-history-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="appmenuitem-history"\n                     closemenu="none"\n                     />',
+        'id="appMenu-history-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-history"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/history.xhtml\', \'tab\')"\n                     />'
+    ).replace(
+        'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     command="Tools:Downloads"/>',
+        'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/downloads.xhtml\', \'tab\')"/>'
+    ).replace(
+        'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     />',
+        'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     oncommand="openTrustedLinkIn(\'about:logins\', \'tab\')"\n                     />'
+    ).replace(
         'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     />',
         'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/settings.xhtml\', \'tab\')"\n                     />'
     ).replace(
@@ -145,6 +158,24 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     ).replace(
         'id="appMenu-unified-extensions-button"',
         'id="appMenu-unified-extensions-button" style="display:none!important;"'
+    ).replace(
+        'command="cmd_openUnifiedExtensionsPanel"\n                     hidden="true"\n                     />\n      <toolbarseparator/>',
+        'command="cmd_openUnifiedExtensionsPanel"\n                     hidden="true"\n                     />\n      <toolbarseparator id="appMenu-sep-hidden" hidden="true"/>'
+    ).replace(
+        'id="appMenu-zoom-controls" class="subviewbutton toolbaritem-combined-buttons"',
+        'id="appMenu-zoom-controls" hidden="true" class="subviewbutton toolbaritem-combined-buttons"'
+    ).replace(
+        'id="appMenu-print-button2"\n                     class="subviewbutton"',
+        'id="appMenu-print-button2" hidden="true"\n                     class="subviewbutton"'
+    ).replace(
+        'id="appMenu-save-file-button2"\n                     class="subviewbutton"',
+        'id="appMenu-save-file-button2" hidden="true"\n                     class="subviewbutton"'
+    ).replace(
+        'id="appMenu-find-button2"\n                     class="subviewbutton"',
+        'id="appMenu-find-button2" hidden="true"\n                     class="subviewbutton"'
+    ).replace(
+        'id="appMenu-translate-button"\n                     class="subviewbutton"',
+        'id="appMenu-translate-button" hidden="true"\n                     class="subviewbutton"'
     )
 
     while 'hidden="true" hidden="true"' in mod_xhtml:

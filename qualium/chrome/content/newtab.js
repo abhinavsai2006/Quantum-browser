@@ -9,12 +9,17 @@ const OFFICIAL_SVGS = {
   reddit: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FF4500"/><path fill="#ffffff" d="M16.67 13.12a1.36 1.36 0 0 0-.87-.4 5.86 5.86 0 0 0-3.8-1.2l.65-3.05 2.12.45a1 1 0 1 0 .22-.68l-2.43-.52a.23.23 0 0 0-.27.18l-.75 3.53a5.83 5.83 0 0 0-3.87 1.29 1.36 1.36 0 1 0-1.2 2.25 2.87 2.87 0 0 0 0 .54c0 2.37 2.5 4.3 5.58 4.3s5.58-1.93 5.58-4.3a2.9 2.9 0 0 0 0-.54 1.36 1.36 0 0 0-.96-1.85zM9.05 14.19a.9.9 0 1 1 .9.9.9.9 0 0 1-.9-.9zm5.9 3a3.48 3.48 0 0 1-2.95.77 3.48 3.48 0 0 1-2.95-.77.19.19 0 0 1 .28-.26 3.1 3.1 0 0 0 2.67.69 3.1 3.1 0 0 0 2.67-.69.19.19 0 1 1 .28.26zm-.9-2.1a.9.9 0 1 1 .9-.9.9.9 0 0 1-.9.9z"/></svg>`,
   twitter: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#f1f5f9"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
   amazon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#f1f5f9"><path d="M13.9 12.8c-.8 0-1.4.3-1.6.8-.2.5-.1 1.2.3 1.5.4.3 1 .4 1.5.2.6-.2 1-.6 1-1.3v-.6c-.4-.4-.8-.6-1.2-.6zm2.8 3.9c-.3.4-.7.6-1.1.8-.5.2-1 .3-1.6.3-1.1 0-2.1-.4-2.8-1.1-.7-.8-.9-1.9-.6-2.9.3-1.1 1.1-1.8 2.3-2.1.8-.2 1.8-.2 2.6-.3v-.4c0-.7-.2-1.3-.7-1.6-.5-.4-1.3-.4-2.1-.2-.6.2-1.1.5-1.5 1l-.9-1.2c.6-.7 1.3-1.1 2.2-1.3 1-.3 2.1-.3 3 .1 1 .4 1.5 1.1 1.7 2.1.1.5.1 1.1.1 1.6v3.7c0 .5.1.9.2 1.3h-1.5c-.1-.3-.2-.6-.2-.9z"/><path fill="#FF9900" d="M18.8 19.3c-3.1 2.3-7.5 3-11.2 1.8-2.6-.8-4.8-2.5-6.3-4.7-.2-.3 0-.7.3-.8.3-.1.6 0 .8.3 1.3 1.9 3.3 3.4 5.6 4.1 3.2 1 7.1.4 9.8-1.5.3-.2.7-.1.9.2.2.3.1.7-.1.9z"/><path fill="#FF9900" d="M19.7 18.2c-.3-.4-1.9-.8-2.7-.9-.3 0-.4-.2-.2-.4.7-.7 2.4-.5 2.7-.2.3.3.3 1.9-.1 2.6-.1.2-.3.2-.4.1-.1-.2.4-.8.7-1.2z"/></svg>`,
-  security: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2" fill="#34d399"/></svg>`,
+  security: `<img src="chrome://qualium/content/qaulium_logo_128.png" width="28" height="28" style="border-radius: 7px; display: block;" alt="Security"/>`,
   add: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`
 };
 
 function createSVGElement(svgStr) {
   try {
+    if (svgStr.trim().startsWith("<img")) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgStr, "application/xhtml+xml");
+      return document.importNode(doc.documentElement, true);
+    }
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgStr, "image/svg+xml");
     if (doc.documentElement && doc.documentElement.nodeName === "svg") {
@@ -70,7 +75,16 @@ function renderShortcuts() {
     const iconBox = document.createElement("div");
     iconBox.className = "shortcut-icon-box";
 
-    if (item.iconKey && OFFICIAL_SVGS[item.iconKey]) {
+    if (item.iconKey === "security") {
+      const img = document.createElement("img");
+      img.src = "chrome://qualium/content/qaulium_logo_128.png";
+      img.width = 28;
+      img.height = 28;
+      img.style.borderRadius = "7px";
+      img.style.display = "block";
+      img.alt = "Security";
+      iconBox.appendChild(img);
+    } else if (item.iconKey && OFFICIAL_SVGS[item.iconKey]) {
       iconBox.appendChild(createSVGElement(OFFICIAL_SVGS[item.iconKey]));
     } else {
       // Clean letter badge for custom bookmarks
