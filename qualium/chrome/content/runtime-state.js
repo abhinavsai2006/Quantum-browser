@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v5 — Unified Authoritative Native Security & Runtime State Pipeline
+// Qualium Quantum Browser v1 — Unified Authoritative Native Security & Runtime State Pipeline
 // Zero Fake Status · Cryptographic Handshake Driven
 
 (function(global) {

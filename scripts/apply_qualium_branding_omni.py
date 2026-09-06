@@ -140,28 +140,31 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     ).replace(
         '<command id="Tools:Addons" />',
         '<command id="Tools:Addons" oncommand="openTrustedLinkIn(\'qualium://extensions\', \'tab\')"/>'
-    ).replace(
-        'id="appMenu-extensions-themes-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-extensions-and-themes"\n                     key="key_openAddons"\n                     command="Tools:Addons"\n                     />',
-        'id="appMenu-extensions-themes-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-extensions-and-themes"\n                     key="key_openAddons"\n                     oncommand="openTrustedLinkIn(\'qualium://extensions\', \'tab\')"\n                     />'
-    ).replace(
-        'id="appMenu-bookmarks-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="library-bookmarks-menu"\n                     closemenu="none"\n                     />',
-        'id="appMenu-bookmarks-button"\n                     class="subviewbutton"\n                     data-l10n-id="library-bookmarks-menu"\n                     oncommand="openTrustedLinkIn(\'qualium://bookmarks\', \'tab\')"\n                     />'
-    ).replace(
-        'id="appMenu-history-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="appmenuitem-history"\n                     closemenu="none"\n                     />',
-        'id="appMenu-history-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-history"\n                     oncommand="openTrustedLinkIn(\'qualium://history\', \'tab\')"\n                     />'
-    ).replace(
-        'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     command="Tools:Downloads"/>',
-        'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     oncommand="openTrustedLinkIn(\'qualium://downloads\', \'tab\')"/>'
-    ).replace(
-        'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     />',
-        'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     oncommand="openTrustedLinkIn(\'qualium://passwords\', \'tab\')"\n                     />'
-    ).replace(
-        'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     />',
-        'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     oncommand="openTrustedLinkIn(\'qualium://settings\', \'tab\')"\n                     />'
-    ).replace(
-        'id="appMenu-help-button2"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="appmenuitem-help"\n                     closemenu="none"\n                     />',
-        'id="appMenu-help-button2"\n                     class="subviewbutton"\n                     label="About Qaulium"\n                     data-l10n-id="appmenuitem-help"\n                     oncommand="openTrustedLinkIn(\'qualium://about\', \'tab\')"\n                     />'
-    ).replace(
+    )
+
+    # Robust regex-based menu toolbarbutton replacements
+    def replace_toolbarbutton(xhtml_content, button_id, new_attrs):
+        pattern = re.compile(rf'(<toolbarbutton\b[^>]*?\bid="{button_id}"[^>]*?/>)', re.DOTALL)
+        def _repl(m):
+            tag = m.group(1)
+            tag = re.sub(r'\s+oncommand="[^"]*"', '', tag)
+            tag = re.sub(r'\s+label="[^"]*"', '', tag)
+            tag = re.sub(r'\s+closemenu="[^"]*"', '', tag)
+            tag = re.sub(r'\s+command="[^"]*"', '', tag)
+            tag = re.sub(r'\s+key="[^"]*"', '', tag)
+            tag = re.sub(r'\s*/>$', '', tag.strip())
+            return f'{tag}\n                     {new_attrs}/>'
+        return pattern.sub(_repl, xhtml_content)
+
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-bookmarks-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://bookmarks', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-history-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://history', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-downloads-button", "key=\"key_openDownloads\"\n                     oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://downloads', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-passwords-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://passwords', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-extensions-themes-button", "key=\"key_openAddons\"\n                     oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://extensions', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-settings-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://settings', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-help-button2", "label=\"About Qualium\"\n                     oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://about', 'tab');\"")
+
+    mod_xhtml = mod_xhtml.replace(
         'oncommand="openPreferences()"',
         'oncommand="openTrustedLinkIn(\'qualium://settings\', \'tab\')"'
     ).replace(
@@ -261,7 +264,7 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
         let v = val.trim();
         if (v.startsWith("chrome://qualium/content/newtab.xhtml") || v === "about:newtab" || v === "about:home" || v === "about:privatebrowsing" || v === "chrome://browser/content/blanktab.html") {
           val = "qualium://newtab";
-        } else if (v.startsWith("chrome://qualium/content/settings.xhtml#about")) {
+        } else if (v.startsWith("chrome://qualium/content/about.xhtml") || v.startsWith("chrome://qualium/content/settings.xhtml#about")) {
           val = "qualium://about";
         } else if (v.startsWith("chrome://qualium/content/settings.xhtml") || v === "about:preferences") {
           val = "qualium://settings";
@@ -273,12 +276,14 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
           val = "qualium://bookmarks";
         } else if (v.startsWith("chrome://qualium/content/history.xhtml") || v.includes("places/history.xhtml")) {
           val = "qualium://history";
-        } else if (v === "about:logins") {
+        } else if (v.startsWith("chrome://qualium/content/passwords.xhtml") || v === "about:logins") {
           val = "qualium://passwords";
-        } else if (v === "about:addons") {
+        } else if (v.startsWith("chrome://qualium/content/extensions.xhtml") || v === "about:addons") {
           val = "qualium://extensions";
         } else if (v.startsWith("chrome://qualium/content/onboarding.xhtml") || v === "about:welcome") {
           val = "qualium://welcome";
+        } else if (v.startsWith("chrome://qualium/content/diagnostics.xhtml")) {
+          val = "qualium://diagnostics";
         } else if (v.startsWith("chrome://qualium/content/error.xhtml")) {
           let m = v.match(/route=([^&]+)/);
           val = m ? decodeURIComponent(m[1]) : "qualium://error";
@@ -290,12 +295,16 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
         untrimmedValue = this.window.QualiumRouteRegistry.internalToPublic(untrimmedValue);
       } else if (untrimmedValue.includes("chrome://qualium/content/")) {
         if (untrimmedValue.includes("newtab.xhtml")) untrimmedValue = "qualium://newtab";
+        else if (untrimmedValue.includes("about.xhtml")) untrimmedValue = "qualium://about";
         else if (untrimmedValue.includes("settings.xhtml#about")) untrimmedValue = "qualium://about";
         else if (untrimmedValue.includes("settings.xhtml")) untrimmedValue = "qualium://settings";
         else if (untrimmedValue.includes("dashboard.xhtml")) untrimmedValue = "qualium://privacy";
         else if (untrimmedValue.includes("downloads.xhtml")) untrimmedValue = "qualium://downloads";
         else if (untrimmedValue.includes("bookmarks.xhtml")) untrimmedValue = "qualium://bookmarks";
         else if (untrimmedValue.includes("history.xhtml")) untrimmedValue = "qualium://history";
+        else if (untrimmedValue.includes("passwords.xhtml")) untrimmedValue = "qualium://passwords";
+        else if (untrimmedValue.includes("extensions.xhtml")) untrimmedValue = "qualium://extensions";
+        else if (untrimmedValue.includes("diagnostics.xhtml")) untrimmedValue = "qualium://diagnostics";
         else if (untrimmedValue.includes("error.xhtml")) {
           let m = untrimmedValue.match(/route=([^&]+)/);
           untrimmedValue = m ? decodeURIComponent(m[1]) : "qualium://error";
@@ -333,10 +342,11 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
           "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
           "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
           "qualium://history": "chrome://qualium/content/history.xhtml",
-          "qualium://passwords": "about:logins",
-          "qualium://extensions": "about:addons",
+          "qualium://passwords": "chrome://qualium/content/passwords.xhtml",
+          "qualium://extensions": "chrome://qualium/content/extensions.xhtml",
           "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
-          "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+          "qualium://about": "chrome://qualium/content/about.xhtml",
+          "qualium://diagnostics": "chrome://qualium/content/diagnostics.xhtml",
           "qualium://error": "chrome://qualium/content/error.xhtml",
         };
         let lower = origQualiumUrl.toLowerCase().replace("qaulium://", "qualium://");
@@ -387,10 +397,11 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
           "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
           "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
           "qualium://history": "chrome://qualium/content/history.xhtml",
-          "qualium://passwords": "about:logins",
-          "qualium://extensions": "about:addons",
+          "qualium://passwords": "chrome://qualium/content/passwords.xhtml",
+          "qualium://extensions": "chrome://qualium/content/extensions.xhtml",
           "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
-          "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+          "qualium://about": "chrome://qualium/content/about.xhtml",
+          "qualium://diagnostics": "chrome://qualium/content/diagnostics.xhtml",
           "qualium://error": "chrome://qualium/content/error.xhtml",
         };
         let lower = origQualiumUrl.toLowerCase().replace("qaulium://", "qualium://");
@@ -440,6 +451,7 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
   "qualium://passwords",
   "qualium://extensions",
   "qualium://about",
+  "qualium://diagnostics",
   "qualium://error",
 ];"""
     if "qualium://bookmarks" not in orig_browser_js:
@@ -522,7 +534,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
       "qualium://extensions": "chrome://qualium/content/extensions.xhtml",
       "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
       "qualium://about": "chrome://qualium/content/about.xhtml",
-      "qualium://diagnostics": "chrome://qualium/content/settings.xhtml#diagnostics",
+      "qualium://diagnostics": "chrome://qualium/content/diagnostics.xhtml",
       "qualium://error": "chrome://qualium/content/error.xhtml",
     };
     let lower = aArgument.toLowerCase().replace("qaulium://", "qualium://");

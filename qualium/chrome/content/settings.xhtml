@@ -413,21 +413,49 @@
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">Hybrid Key Encapsulation (KEM)</span>
+          <span class="q-section-title">Post-Quantum Key Encapsulation (NIST FIPS 203 ML-KEM)</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Primary Algorithm</span>
-                <span class="q-desc">NIST FIPS 203 standardized ML-KEM-768/1024 combined with classical X25519 for forward secrecy.</span>
+                <span class="q-label">Hybrid Key Establishment (Default)</span>
+                <span class="q-desc">Standardized NIST FIPS 203 ML-KEM-768 combined with classical X25519 ECDH via HKDF-SHA384 transcript binding.</span>
               </div>
               <span class="q-badge-pqc">X25519 + ML-KEM-768</span>
             </div>
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Symmetric Cipher</span>
-                <span class="q-desc">Authenticated encryption via ChaCha20-Poly1305 and hardware AES-256-GCM.</span>
+                <span class="q-label">High-Security PQC Mode (NIST Level 5)</span>
+                <span class="q-desc">NIST Category 5 maximum security parameter set equivalent to AES-256 quantum brute-force resistance.</span>
               </div>
-              <span class="q-badge-pqc">ChaCha20-Poly1305</span>
+              <span class="q-badge-pqc">ML-KEM-1024 (Kyber-1024)</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Low-Latency PQC Mode (NIST Level 1)</span>
+                <span class="q-desc">NIST Category 1 lightweight parameter set optimized for constrained or high-throughput connections.</span>
+              </div>
+              <span class="q-badge-pqc">ML-KEM-512 (Kyber-512)</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Symmetric Data Encryption</span>
+                <span class="q-desc">High-speed authenticated encryption with 256-bit keys and hardware AES acceleration fallback.</span>
+              </div>
+              <span class="q-badge-pqc">ChaCha20-Poly1305 / AES-256-GCM</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Hash &amp; Key Derivation Functions</span>
+                <span class="q-desc">Cryptographically secure SHA-384, SHA3-256/512, and HKDF transcript derivation.</span>
+              </div>
+              <span class="q-badge-success">SHA3 / HKDF-SHA384</span>
+            </div>
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Digital Signatures &amp; Manifest Integrity</span>
+                <span class="q-desc">High-assurance signature authentication for browser binaries, updates, and IPC channels.</span>
+              </div>
+              <span class="q-badge-success">Ed25519 / ML-DSA Ready</span>
             </div>
           </div>
         </div>
@@ -566,6 +594,19 @@
         </header>
 
         <div class="q-section">
+          <span class="q-section-title">History Management</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Session History Manager</span>
+                <span class="q-desc">View, search, or clear your private browsing and search history.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-open-history" onclick="if(window.opener &amp;&amp; window.opener.openTrustedLinkIn){ window.opener.openTrustedLinkIn('qualium://history', 'tab'); } else if(window.parent &amp;&amp; window.parent.qualiumNav){ window.parent.qualiumNav.navigateInternal('qualium://history'); } else if(typeof QualiumNavigationController !== 'undefined' &amp;&amp; window.QualiumNavigationController.navigateTo){ window.QualiumNavigationController.navigateTo('qualium://history'); } else { window.location.href='chrome://qualium/content/history.xhtml'; }">Open History Manager</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-section">
           <span class="q-section-title">Retention Settings</span>
           <div class="q-card">
             <div class="q-row">
@@ -594,6 +635,19 @@
         </header>
 
         <div class="q-section">
+          <span class="q-section-title">Add-ons Management</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Manage Extensions</span>
+                <span class="q-desc">Install, configure, enable, or remove WebExtensions and add-ons.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-primary" id="btn-manage-extensions" onclick="if(window.opener &amp;&amp; window.opener.openTrustedLinkIn){ window.opener.openTrustedLinkIn('qualium://extensions', 'tab'); } else if(window.parent &amp;&amp; window.parent.qualiumNav){ window.parent.qualiumNav.navigateInternal('qualium://extensions'); } else if(typeof QualiumNavigationController !== 'undefined' &amp;&amp; window.QualiumNavigationController.navigateTo){ window.QualiumNavigationController.navigateTo('qualium://extensions'); } else { window.location.href='chrome://qualium/content/extensions.xhtml'; }">Manage Extensions</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-section">
           <span class="q-section-title">Policy</span>
           <div class="q-card">
             <div class="q-row">
@@ -615,13 +669,14 @@
         </header>
 
         <div class="q-section">
+          <span class="q-section-title">System &amp; Engine Overview</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
                 <span class="q-label">Application</span>
-                <span class="q-desc">Qaulium Quantum Browser</span>
+                <span class="q-desc">Qualium Quantum Browser</span>
               </div>
-              <span class="q-badge-pqc">v5.0.0 (Release)</span>
+              <span class="q-badge-pqc">v1.0.0 (Release)</span>
             </div>
             <div class="q-row">
               <div class="q-info">
@@ -643,6 +698,19 @@
                 <span class="q-desc">Zero telemetry, zero user tracking, zero data submission.</span>
               </div>
               <span class="q-badge-success">Disabled Permanently</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-section">
+          <span class="q-section-title">Detailed Information</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">System Diagnostics &amp; Updates</span>
+                <span class="q-desc">Check for browser updates, inspect platform build IDs, and copy system diagnostic reports.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-open-about-page" onclick="if(window.opener &amp;&amp; window.opener.openTrustedLinkIn){ window.opener.openTrustedLinkIn('qualium://about', 'tab'); } else if(window.parent &amp;&amp; window.parent.qualiumNav){ window.parent.qualiumNav.navigateInternal('qualium://about'); } else if(typeof QualiumNavigationController !== 'undefined' &amp;&amp; window.QualiumNavigationController.navigateTo){ window.QualiumNavigationController.navigateTo('qualium://about'); } else { window.location.href='chrome://qualium/content/about.xhtml'; }">View Full About Page</button>
             </div>
           </div>
         </div>

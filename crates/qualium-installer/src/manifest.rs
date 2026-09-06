@@ -31,7 +31,7 @@ impl InstallManifest {
     pub fn new(install_dir: PathBuf, user_data_dir: PathBuf) -> Self {
         Self {
             product_name: "Qualium Quantum Browser".to_string(),
-            version: "5.0.0".to_string(),
+            version: "1.0.0".to_string(),
             publisher: "Qualium AI".to_string(),
             install_dir,
             installed_at_utc: chrono_stub_timestamp(),

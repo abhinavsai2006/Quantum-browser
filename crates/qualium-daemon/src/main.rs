@@ -156,7 +156,7 @@ async fn save_state_to_all(circuit_controller: &CircuitController, paths: &[std:
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing_subscriber::fmt::init();
-    info!("Starting Qualium Quantum Browser & Network Daemon v5.0.0...");
+    info!("Starting Qualium Quantum Browser & Network Daemon v1.0.0...");
 
     // Parse CLI arguments
     let args: Vec<String> = std::env::args().collect();
@@ -209,7 +209,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Qualium Native Browser Runtime Status Output
     println!("\n========================================================");
-    println!("  QUALIUM QUANTUM BROWSER v5.0.0");
+    println!("  QUALIUM QUANTUM BROWSER v1.0.0");
     println!("  Post-Quantum Security Daemon & Anonymity Circuit Active");
     println!("  Privacy Proxy Endpoint: {}", actual_addr);
     println!("  PQC State: {:?}", sec_state.pqc_state);

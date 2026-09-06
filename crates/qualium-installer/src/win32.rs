@@ -255,7 +255,7 @@ pub fn register_uninstall(
     };
 
     set_str("DisplayName", "Qualium Quantum Browser");
-    set_str("DisplayVersion", "5.0.0");
+    set_str("DisplayVersion", "1.0.0");
     set_str("Publisher", "Qualium AI");
     set_str("InstallLocation", &install_dir.to_string_lossy());
     set_str("DisplayIcon", &format!("{},0", icon_path.display()));

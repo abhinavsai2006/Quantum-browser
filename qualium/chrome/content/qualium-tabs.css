@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Qualium Quantum Browser v5 — 100% Qualium-Owned Browser Chrome & Tab System
+   Qualium Quantum Browser v1 — 100% Qualium-Owned Browser Chrome & Tab System
    Eliminates all Firefox Proton/Photon theme leakage, blue sprites, and stock UI
    ========================================================================== */
 
@@ -315,7 +315,10 @@
   border-top: none !important;
   box-shadow: none !important;
   padding: 4px 10px !important;
-  gap: 4px !important;
+}
+
+#nav-bar-customization-target {
+  flex: 1 !important;
 }
 
 /* Navigation Buttons (Back, Forward, Reload, Stop) */
@@ -340,8 +343,51 @@
 
 /* 9. Qualium Pill Omnibox / Address Bar */
 #urlbar-container {
+  flex: 1 !important;
   max-width: 840px !important;
-  margin: 0 auto !important;
+  margin-inline: 8px !important;
+}
+
+/* 10. Qualium Action Buttons */
+#star-button-box,
+#downloads-button,
+#unified-extensions-button,
+#PanelUI-menu-button {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  color: #94a3b8 !important;
+  fill: #94a3b8 !important;
+  margin-inline: 2px !important;
+  padding: 5px !important;
+  transition: all 0.12s ease !important;
+}
+
+#star-button-box:hover,
+#downloads-button:hover,
+#unified-extensions-button:hover,
+#PanelUI-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+#PanelUI-menu-button {
+  list-style-image: url("chrome://qualium/skin/menu.svg") !important;
+}
+
+#PanelUI-menu-button .toolbarbutton-icon {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  opacity: 0.9 !important;
+  fill: currentColor !important;
+}
+
+#PanelUI-button {
+  margin-inline-end: 8px !important;
 }
 
 #urlbar-background {
@@ -426,4 +472,151 @@
   height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* 12. Qualium AppMenu Popup & Panels */
+#appMenu-popup {
+  --arrowpanel-border-radius: 12px !important;
+  --arrowpanel-background: transparent !important;
+  --arrowpanel-color: #f1f5f9 !important;
+  --arrowpanel-border-color: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-inline-end: 18px !important;
+  margin-right: 18px !important;
+  margin-top: 8px !important;
+}
+
+#appMenu-popup .panel-arrowbox,
+#appMenu-popup .panel-arrow {
+  display: none !important;
+  visibility: collapse !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
+#appMenu-popup::part(content) {
+  background-color: #1c1d22 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  color: #f1f5f9 !important;
+  padding: 6px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+#appMenu-popup panelview {
+  width: 360px !important;
+  min-width: 340px !important;
+  max-width: calc(100vw - 36px) !important;
+  max-height: calc(100vh - 36px) !important;
+  overflow-y: auto !important;
+}
+
+#appMenu-mainView {
+  width: 360px !important;
+  min-width: 340px !important;
+  max-width: calc(100vw - 36px) !important;
+  background: transparent !important;
+}
+
+#appMenu-mainView .subviewbutton {
+  color: #e2e8f0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  margin: 2px 0 !important;
+  border-radius: 8px !important;
+  min-height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+#appMenu-mainView .subviewbutton:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+#appMenu-mainView .subviewbutton:active {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+#appMenu-mainView .subviewbutton .toolbarbutton-icon {
+  display: flex !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-inline-end: 12px !important;
+  opacity: 0.9 !important;
+  flex-shrink: 0 !important;
+}
+
+#appMenu-mainView .subviewbutton:hover .toolbarbutton-icon {
+  opacity: 1 !important;
+}
+
+#appMenu-mainView .subviewbutton .toolbarbutton-text {
+  flex: 1 !important;
+  text-align: start !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#appMenu-mainView .subviewbutton .toolbarbutton-accel {
+  color: #64748b !important;
+  font-size: 11.5px !important;
+  margin-inline-start: 12px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  flex-shrink: 0 !important;
+}
+
+#appMenu-mainView .subviewbutton:hover .toolbarbutton-accel {
+  color: #94a3b8 !important;
+}
+
+/* Official Qualium Menu Icons */
+#appMenu-new-tab-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-tab.svg") !important;
+}
+#appMenu-new-window-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-window.svg") !important;
+}
+#appMenu-new-private-window-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-private.svg") !important;
+}
+#appMenu-bookmarks-button {
+  list-style-image: url("chrome://qualium/skin/menu-bookmark.svg") !important;
+}
+#appMenu-history-button {
+  list-style-image: url("chrome://qualium/skin/menu-history.svg") !important;
+}
+#appMenu-downloads-button {
+  list-style-image: url("chrome://qualium/skin/menu-downloads.svg") !important;
+}
+#appMenu-passwords-button {
+  list-style-image: url("chrome://qualium/skin/menu-passwords.svg") !important;
+}
+#appMenu-extensions-themes-button {
+  list-style-image: url("chrome://qualium/skin/menu-extensions.svg") !important;
+}
+#appMenu-settings-button {
+  list-style-image: url("chrome://qualium/skin/menu-settings.svg") !important;
+}
+#appMenu-help-button2 {
+  list-style-image: url("chrome://qualium/skin/qualium-shield.svg") !important;
+}
+#appMenu-quit-button2 {
+  list-style-image: url("chrome://qualium/skin/menu-quit.svg") !important;
+}
+
+#appMenu-mainView toolbarseparator {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin: 4px 6px !important;
 }

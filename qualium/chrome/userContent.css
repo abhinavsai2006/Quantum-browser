@@ -1,4 +1,4 @@
-/* Qualium Quantum Browser v5 — In-Content Styling (userContent.css) */
+/* Qualium Quantum Browser v1 — In-Content Styling (userContent.css) */
 @-moz-document url-prefix("about:preferences"), url-prefix("chrome://browser/content/preferences") {
   /* Hide any stock Mozilla promotional banners */
   #defaultBrowserBox,

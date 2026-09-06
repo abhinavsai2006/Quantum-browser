@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v5 — Real Native Gecko Navigation & Internal Route Engine
+// Qaulium Quantum Browser v1 — Real Native Gecko Navigation & Internal Route Engine
 
 const SEARCH_ENGINES = {
   google: {
@@ -30,9 +30,9 @@ const INTERNAL_ROUTES = {
   "qaulium://passwords": { file: "passwords.xhtml", title: "Encrypted Vault", icon: "lock" },
   "qaulium://extensions": { file: "extensions.xhtml", title: "Extensions", icon: "extensions" },
   "qaulium://onboarding": { file: "onboarding.xhtml", title: "Welcome to Qaulium", icon: "shield" },
-  "qaulium://about": { file: "settings.xhtml", title: "About Qaulium", icon: "info" },
-  "qaulium://help": { file: "settings.xhtml", title: "Help & Documentation", icon: "info" },
-  "qaulium://diagnostics": { file: "settings.xhtml", title: "System Diagnostics", icon: "settings" },
+  "qaulium://about": { file: "about.xhtml", title: "About Qaulium", icon: "info" },
+  "qaulium://help": { file: "about.xhtml", title: "Help & Documentation", icon: "info" },
+  "qaulium://diagnostics": { file: "diagnostics.xhtml", title: "System Diagnostics", icon: "settings" },
   "qaulium://icon-test": { file: "icon-test.xhtml", title: "Icon System Test", icon: "settings" },
 
   "qualium://newtab": { file: "newtab.xhtml", title: "New Tab", icon: "tab" },
@@ -45,9 +45,9 @@ const INTERNAL_ROUTES = {
   "qualium://passwords": { file: "passwords.xhtml", title: "Encrypted Vault", icon: "lock" },
   "qualium://extensions": { file: "extensions.xhtml", title: "Extensions", icon: "extensions" },
   "qualium://onboarding": { file: "onboarding.xhtml", title: "Welcome to Qaulium", icon: "shield" },
-  "qualium://about": { file: "settings.xhtml", title: "About Qaulium", icon: "info" },
-  "qualium://help": { file: "settings.xhtml", title: "Help & Documentation", icon: "info" },
-  "qualium://diagnostics": { file: "settings.xhtml", title: "System Diagnostics", icon: "settings" },
+  "qualium://about": { file: "about.xhtml", title: "About Qaulium", icon: "info" },
+  "qualium://help": { file: "about.xhtml", title: "Help & Documentation", icon: "info" },
+  "qualium://diagnostics": { file: "diagnostics.xhtml", title: "System Diagnostics", icon: "settings" },
   "qualium://icon-test": { file: "icon-test.xhtml", title: "Icon System Test", icon: "settings" }
 };
 

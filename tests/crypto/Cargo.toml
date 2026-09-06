@@ -1,6 +1,6 @@
 [package]
 name = "qualium-tests-crypto"
-version = "5.0.0"
+version.workspace = true
 edition = "2021"
 
 [dependencies]

@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 
-//! Qualium Quantum Browser v5 — Native Gecko Desktop Browser Host
+//! Qualium Quantum Browser v1 — Native Gecko Desktop Browser Host
 //!
 //! Architecture:
 //! QualiumQuantumBrowser.exe
@@ -37,19 +37,43 @@ fn append_boot_log(msg: &str) {
 fn get_app_dir() -> PathBuf {
     if let Ok(current_exe) = env::current_exe() {
         if let Some(parent) = current_exe.parent() {
-            if parent.join("runtime").exists() || parent.join("qualium-core.exe").exists() {
+            // Check macOS bundle structure: Qualium Quantum Browser.app/Contents/MacOS/../Resources
+            if parent.ends_with("MacOS") {
+                let resources = parent.parent().map(|p| p.join("Resources")).unwrap_or_default();
+                if resources.exists() {
+                    return resources;
+                }
+            }
+            if parent.join("runtime").exists() || parent.join("qualium-core.exe").exists() || parent.join("qualium-core").exists() {
                 return parent.to_path_buf();
             }
         }
     }
-    if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
-        let p_qua = PathBuf::from(&local_appdata).join("Programs").join("Qualium");
-        if p_qua.exists() {
-            return p_qua;
+    #[cfg(windows)]
+    {
+        if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
+            let p_qua = PathBuf::from(&local_appdata).join("Programs").join("Qualium");
+            if p_qua.exists() {
+                return p_qua;
+            }
+            let p_qau = PathBuf::from(&local_appdata).join("Programs").join("Qaulium");
+            if p_qau.exists() {
+                return p_qau;
+            }
         }
-        let p_qau = PathBuf::from(&local_appdata).join("Programs").join("Qaulium");
-        if p_qau.exists() {
-            return p_qau;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let mac_app = PathBuf::from("/Applications/Qualium Quantum Browser.app/Contents/Resources");
+        if mac_app.exists() {
+            return mac_app;
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let opt_app = PathBuf::from("/opt/qualium-quantum-browser");
+        if opt_app.exists() {
+            return opt_app;
         }
     }
     if let Ok(current_exe) = env::current_exe() {
@@ -57,22 +81,45 @@ fn get_app_dir() -> PathBuf {
             return parent.to_path_buf();
         }
     }
-    PathBuf::from("C:\\Qaulium")
+    PathBuf::from(".")
 }
 
 fn get_profile_dir() -> PathBuf {
-    if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
-        let p_qau = PathBuf::from(&local_appdata).join("Qaulium").join("Profile");
-        let p_qua = PathBuf::from(&local_appdata).join("Qualium").join("Profile");
-        if p_qau.exists() {
-            return p_qau;
-        } else if p_qua.exists() {
+    #[cfg(windows)]
+    {
+        if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
+            let p_qau = PathBuf::from(&local_appdata).join("Qaulium").join("Profile");
+            let p_qua = PathBuf::from(&local_appdata).join("Qualium").join("Profile");
+            if p_qau.exists() {
+                return p_qau;
+            } else if p_qua.exists() {
+                return p_qua;
+            }
+            let _ = fs::create_dir_all(&p_qua);
             return p_qua;
         }
-        let _ = fs::create_dir_all(&p_qau);
-        return p_qau;
     }
-    let p = env::temp_dir().join("qaulium_profile");
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(home) = env::var("HOME") {
+            let p_mac = PathBuf::from(&home).join("Library").join("Application Support").join("Qualium").join("Profile");
+            let _ = fs::create_dir_all(&p_mac);
+            return p_mac;
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(xdg_config) = env::var("XDG_CONFIG_HOME") {
+            let p_xdg = PathBuf::from(&xdg_config).join("qualium").join("profile");
+            let _ = fs::create_dir_all(&p_xdg);
+            return p_xdg;
+        } else if let Ok(home) = env::var("HOME") {
+            let p_lin = PathBuf::from(&home).join(".config").join("qualium").join("profile");
+            let _ = fs::create_dir_all(&p_lin);
+            return p_lin;
+        }
+    }
+    let p = env::temp_dir().join("qualium_profile");
     let _ = fs::create_dir_all(&p);
     p
 }
@@ -134,7 +181,7 @@ user_pref("network.trr.mode", 5);"#,
     };
 
     let user_js_content = format!(
-        r#"// Qualium Quantum Browser v5 — Profile Configuration
+        r#"// Qualium Quantum Browser v1 — Profile Configuration
 {}
 user_pref("app.update.enabled", false);
 user_pref("app.update.auto", false);
@@ -242,13 +289,29 @@ fn get_target_url_from_args() -> Option<String> {
 fn spawn_daemon(app_dir: &Path, profile_dir: &Path) -> Option<Child> {
     let mut candidate_paths = vec![
         app_dir.join("qualium-daemon.exe"),
+        app_dir.join("qualium-daemon"),
+        app_dir.join("bin").join("qualium-daemon"),
         PathBuf::from("target").join("release").join("qualium-daemon.exe"),
+        PathBuf::from("target").join("release").join("qualium-daemon"),
         PathBuf::from("target").join("debug").join("qualium-daemon.exe"),
+        PathBuf::from("target").join("debug").join("qualium-daemon"),
     ];
 
+    #[cfg(windows)]
     if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
         candidate_paths.push(PathBuf::from(&local_appdata).join("Programs").join("Qualium").join("qualium-daemon.exe"));
         candidate_paths.push(PathBuf::from(&local_appdata).join("Programs").join("Qaulium").join("qualium-daemon.exe"));
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        candidate_paths.push(PathBuf::from("/Applications/Qualium Quantum Browser.app/Contents/Resources/bin/qualium-daemon"));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        candidate_paths.push(PathBuf::from("/opt/qualium-quantum-browser/bin/qualium-daemon"));
+        candidate_paths.push(PathBuf::from("/usr/bin/qualium-daemon"));
     }
 
     for daemon_exe in candidate_paths {
@@ -269,19 +332,20 @@ fn spawn_daemon(app_dir: &Path, profile_dir: &Path) -> Option<Child> {
 }
 
 fn find_gecko_runtime(app_dir: &Path) -> Option<(PathBuf, PathBuf)> {
-    // 1. Check app_dir/runtime/qualium-core.exe
-    let p1 = app_dir.join("runtime").join("qualium-core.exe");
-    if p1.exists() {
-        return Some((p1, app_dir.join("runtime")));
+    // 1. Check runtime/qualium-core or root binaries
+    for name in &["qualium-core.exe", "qualium-core", "firefox.exe", "firefox"] {
+        let p1 = app_dir.join("runtime").join(name);
+        if p1.exists() {
+            return Some((p1, app_dir.join("runtime")));
+        }
+        let p2 = app_dir.join(name);
+        if p2.exists() {
+            return Some((p2, app_dir.to_path_buf()));
+        }
     }
 
-    // 2. Check app_dir/qualium-core.exe
-    let p2 = app_dir.join("qualium-core.exe");
-    if p2.exists() {
-        return Some((p2, app_dir.to_path_buf()));
-    }
-
-    // 3. Check installed app directory in LocalAppData
+    // 2. Windows LocalAppData
+    #[cfg(windows)]
     if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
         let p3 = PathBuf::from(&local_appdata).join("Programs").join("Qualium").join("runtime").join("qualium-core.exe");
         if p3.exists() {
@@ -295,21 +359,59 @@ fn find_gecko_runtime(app_dir: &Path) -> Option<(PathBuf, PathBuf)> {
         }
     }
 
-    // 4. Check current working directory runtime
-    let p_cwd = PathBuf::from("runtime").join("qualium-core.exe");
-    if p_cwd.exists() {
-        if let Ok(full) = p_cwd.canonicalize() {
-            let cwd = full.parent().unwrap().to_path_buf();
-            return Some((full, cwd));
+    // 3. macOS system Firefox or embedded runtime
+    #[cfg(target_os = "macos")]
+    {
+        let mac_paths = [
+            PathBuf::from("/Applications/Qualium Quantum Browser.app/Contents/Resources/runtime/qualium-core"),
+            PathBuf::from("/Applications/Firefox.app/Contents/MacOS/firefox"),
+            PathBuf::from("/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox"),
+            PathBuf::from("/Applications/Firefox Nightly.app/Contents/MacOS/firefox"),
+        ];
+        for mp in &mac_paths {
+            if mp.exists() {
+                let cwd = mp.parent().unwrap().to_path_buf();
+                return Some((mp.clone(), cwd));
+            }
         }
     }
 
-    // 5. Check repo root runtime/qualium-core.exe during development
+    // 4. Linux system Firefox or /opt runtime
+    #[cfg(target_os = "linux")]
+    {
+        let linux_paths = [
+            PathBuf::from("/opt/qualium-quantum-browser/runtime/qualium-core"),
+            PathBuf::from("/usr/lib/firefox/firefox"),
+            PathBuf::from("/usr/lib64/firefox/firefox"),
+            PathBuf::from("/usr/bin/firefox"),
+        ];
+        for lp in &linux_paths {
+            if lp.exists() {
+                let cwd = lp.parent().unwrap().to_path_buf();
+                return Some((lp.clone(), cwd));
+            }
+        }
+    }
+
+    // 5. Check current working directory runtime
+    for name in &["qualium-core.exe", "qualium-core", "firefox"] {
+        let p_cwd = PathBuf::from("runtime").join(name);
+        if p_cwd.exists() {
+            if let Ok(full) = p_cwd.canonicalize() {
+                let cwd = full.parent().unwrap().to_path_buf();
+                return Some((full, cwd));
+            }
+        }
+    }
+
+    // 6. Check repo root runtime during development
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let p4 = PathBuf::from(manifest_dir).join("..").join("..").join("runtime").join("qualium-core.exe");
-        if p4.exists() {
-            let cwd = p4.parent().unwrap().to_path_buf();
-            return Some((p4, cwd));
+        for name in &["qualium-core.exe", "qualium-core", "firefox"] {
+            let p4 = PathBuf::from(&manifest_dir).join("..").join("..").join("runtime").join(name);
+            if p4.exists() {
+                let cwd = p4.parent().unwrap().to_path_buf();
+                return Some((p4, cwd));
+            }
         }
     }
 
@@ -381,7 +483,11 @@ fn is_gecko_running() -> bool {
     }
     #[cfg(not(windows))]
     {
-        false
+        Command::new("pgrep")
+            .args(["-f", "qualium-core"])
+            .output()
+            .map(|o| o.status.success() && !o.stdout.is_empty())
+            .unwrap_or(false)
     }
 }
 
@@ -403,7 +509,15 @@ fn is_primary_instance() -> bool {
     }
     #[cfg(not(windows))]
     {
-        true
+        let output = Command::new("pgrep")
+            .args(["-f", "qualium-browser"])
+            .output();
+        if let Ok(out) = output {
+            let count = String::from_utf8_lossy(&out.stdout).lines().count();
+            count <= 1
+        } else {
+            true
+        }
     }
 }
 
@@ -432,6 +546,12 @@ fn main() -> anyhow::Result<()> {
             let _ = Command::new("taskkill")
                 .args(["/F", "/IM", "qualium-daemon.exe", "/T"])
                 .creation_flags(CREATE_NO_WINDOW)
+                .status();
+        }
+        #[cfg(not(windows))]
+        {
+            let _ = Command::new("pkill")
+                .args(["-f", "qualium-daemon"])
                 .status();
         }
 

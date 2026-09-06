@@ -3,14 +3,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Qualium Downloads</title>
+  <title>Downloads — Qualium</title>
   <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/downloads.css"/>
+  <script src="chrome://qualium/content/qualium-routes.js"></script>
   <script>
     //<![CDATA[
-    // If opened in a standalone dialog/modal window, immediately redirect to a tab in the main window
     if (window.opener && window.opener.openTrustedLinkIn) {
       try {
         window.opener.openTrustedLinkIn("qualium://downloads", "tab");
@@ -24,19 +24,330 @@
   <div class="page-container">
     <header class="page-header">
       <div class="header-title-row">
-        <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <h1>Downloads</h1>
+        <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-md" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <h1>Downloads Manager</h1>
       </div>
-      <p class="header-desc">Downloaded files are verified with SHA-256 hash checks and protected from automatic execution.</p>
+      <p class="header-desc">Downloaded files are verified with SHA-256 hash checks and protected from unauthorized script execution.</p>
     </header>
 
-    <div class="empty-state">
+    <div class="downloads-bar">
+      <div class="downloads-search-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="downloads-search" class="downloads-search-input" placeholder="Search downloads by name or URL..."/>
+      </div>
+      <div class="downloads-actions">
+        <button type="button" class="card-btn" id="btn-open-folder">Open Downloads Folder</button>
+        <button type="button" class="card-btn" id="btn-clear-downloads">Clear List</button>
+      </div>
+    </div>
+
+    <div class="downloads-list" id="downloads-list">
+      <!-- Populated dynamically from Gecko Downloads API -->
+    </div>
+
+    <div class="empty-state" id="empty-state" style="display:none;">
       <div class="empty-icon">
         <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </div>
       <h3>No downloads yet</h3>
-      <p>Files you download during this private session will appear here.</p>
+      <p>Files you download during this private session will appear here with verification state and progress tracking.</p>
     </div>
   </div>
+
+  <script>
+    //<![CDATA[
+    let currentDownloads = [];
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return "0 B";
+      const units = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return (bytes / Math.pow(1024, i)).toFixed(1) + " " + units[i];
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return "Recent";
+      const d = new Date(ts);
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      if (isToday) return `Today, ${timeStr}`;
+      const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return `${dateStr}, ${timeStr}`;
+    }
+
+    async function queryDownloads() {
+      // 1. Direct ChromeUtils Downloads API
+      try {
+        if (typeof ChromeUtils !== "undefined") {
+          let Downloads;
+          try {
+            const mod = ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
+            Downloads = mod.Downloads;
+          } catch(e) {
+            try {
+              const scope = {};
+              ChromeUtils.import("resource://gre/modules/Downloads.jsm", scope);
+              Downloads = scope.Downloads;
+            } catch(e2) {}
+          }
+
+          if (Downloads && typeof Downloads.getList === "function") {
+            const list = await Downloads.getList(Downloads.ALL);
+            const rawAll = await list.getAll();
+            return rawAll.map(d => {
+              const path = d.target && d.target.path ? d.target.path : "";
+              const filename = path ? path.split(/[\\/]/).pop() : (d.source ? d.source.url.split("/").pop() : "download");
+              let state = "completed";
+              if (d.error) state = "failed";
+              else if (d.canceled) state = "canceled";
+              else if (!d.succeeded) state = "downloading";
+
+              return {
+                id: d.source ? d.source.url + "_" + (d.startTime ? d.startTime.getTime() : 0) : Math.random(),
+                filename,
+                path,
+                url: d.source ? d.source.url : "",
+                state,
+                currentBytes: d.currentBytes || (d.totalBytes || 0),
+                totalBytes: d.totalBytes || 0,
+                startTime: d.startTime ? d.startTime.getTime() : Date.now(),
+                _raw: d,
+                _list: list
+              };
+            });
+          }
+        }
+      } catch(e) {
+        console.warn("[QUALIUM:DOWNLOADS] Direct ChromeUtils failed:", e);
+      }
+
+      // 2. Check window.top or window.parent QualiumDownloadsBridge
+      try {
+        const bridge = window.QualiumDownloadsBridge || (window.top && window.top.QualiumDownloadsBridge) || (window.opener && window.opener.QualiumDownloadsBridge);
+        if (bridge && typeof bridge.getDownloads === "function") {
+          return await bridge.getDownloads();
+        }
+      } catch(e) {}
+
+      // 3. Check localStorage session store
+      try {
+        const stored = localStorage.getItem("qualium_downloads_v5");
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch(e) {}
+
+      return [];
+    }
+
+    async function executeAction(action, item) {
+      try {
+        if (action === "open") {
+          if (item._raw && typeof item._raw.launch === "function") {
+            await item._raw.launch();
+            return;
+          }
+          const bridge = window.QualiumDownloadsBridge || (window.top && window.top.QualiumDownloadsBridge);
+          if (bridge && typeof bridge.openFile === "function") {
+            await bridge.openFile(item.path);
+            return;
+          }
+          if (typeof Cc !== "undefined" && typeof Ci !== "undefined" && item.path) {
+            const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            file.initWithPath(item.path);
+            if (file.exists()) file.launch();
+          }
+        } else if (action === "show") {
+          if (item._raw && typeof item._raw.showContainingDirectory === "function") {
+            await item._raw.showContainingDirectory();
+            return;
+          }
+          const bridge = window.QualiumDownloadsBridge || (window.top && window.top.QualiumDownloadsBridge);
+          if (bridge && typeof bridge.showInFolder === "function") {
+            await bridge.showInFolder(item.path);
+            return;
+          }
+          if (typeof Cc !== "undefined" && typeof Ci !== "undefined" && item.path) {
+            const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            file.initWithPath(item.path);
+            if (file.exists()) file.reveal();
+          }
+        } else if (action === "retry") {
+          if (item._raw && typeof item._raw.start === "function") {
+            await item._raw.start();
+          }
+        } else if (action === "remove") {
+          if (item._list && item._raw && typeof item._list.remove === "function") {
+            await item._list.remove(item._raw);
+          }
+          const bridge = window.QualiumDownloadsBridge || (window.top && window.top.QualiumDownloadsBridge);
+          if (bridge && typeof bridge.removeDownload === "function") {
+            await bridge.removeDownload(item.path);
+          }
+        }
+      } catch(e) {
+        console.error("[QUALIUM:DOWNLOADS] Action error:", action, e);
+      }
+      refreshList();
+    }
+
+    async function refreshList(filter = "") {
+      const listEl = document.getElementById("downloads-list");
+      const emptyEl = document.getElementById("empty-state");
+      if (!listEl) return;
+
+      currentDownloads = await queryDownloads();
+
+      let items = currentDownloads;
+      if (filter) {
+        const q = filter.toLowerCase();
+        items = items.filter(d => 
+          (d.filename && d.filename.toLowerCase().includes(q)) ||
+          (d.url && d.url.toLowerCase().includes(q))
+        );
+      }
+
+      listEl.innerHTML = "";
+      if (!items || items.length === 0) {
+        if (emptyEl) emptyEl.style.display = "flex";
+        return;
+      }
+
+      if (emptyEl) emptyEl.style.display = "none";
+
+      for (const item of items) {
+        const card = document.createElement("div");
+        card.className = "download-card";
+
+        let badgeClass = "status-completed";
+        let statusText = "Completed";
+        if (item.state === "downloading") {
+          badgeClass = "status-downloading";
+          statusText = "Downloading";
+        } else if (item.state === "failed") {
+          badgeClass = "status-failed";
+          statusText = "Failed";
+        } else if (item.state === "canceled") {
+          badgeClass = "status-canceled";
+          statusText = "Canceled";
+        }
+
+        const sizeStr = item.totalBytes > 0
+          ? `${formatBytes(item.currentBytes)} / ${formatBytes(item.totalBytes)}`
+          : formatBytes(item.currentBytes);
+
+        const progressPercent = item.totalBytes > 0
+          ? Math.min(100, Math.round((item.currentBytes / item.totalBytes) * 100))
+          : (item.state === "completed" ? 100 : 0);
+
+        const showProgressBar = item.state === "downloading";
+
+        card.innerHTML = `
+          <div class="download-row-main">
+            <div class="file-icon-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="file-info">
+              <div class="file-title-row">
+                <span class="file-name" title="${escapeHtml(item.filename)}">${escapeHtml(item.filename)}</span>
+              </div>
+              <div class="file-url" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</div>
+              <div class="file-meta-row">
+                <span class="status-badge ${badgeClass}">${statusText}</span>
+                <span>${sizeStr}</span>
+                <span>•</span>
+                <span>${formatTimestamp(item.startTime)}</span>
+              </div>
+              ${showProgressBar ? `
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="download-actions">
+              ${item.state === "completed" ? `
+                <button type="button" class="card-btn card-btn-primary btn-open">Open</button>
+                <button type="button" class="card-btn btn-show">Show in folder</button>
+              ` : ''}
+              ${item.state === "downloading" ? `
+                <button type="button" class="card-btn btn-cancel">Cancel</button>
+              ` : ''}
+              ${item.state === "failed" || item.state === "canceled" ? `
+                <button type="button" class="card-btn card-btn-primary btn-retry">Retry</button>
+              ` : ''}
+              <button type="button" class="card-btn card-btn-icon btn-remove" title="Remove from list">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const openBtn = card.querySelector(".btn-open");
+        if (openBtn) openBtn.addEventListener("click", () => executeAction("open", item));
+
+        const showBtn = card.querySelector(".btn-show");
+        if (showBtn) showBtn.addEventListener("click", () => executeAction("show", item));
+
+        const retryBtn = card.querySelector(".btn-retry");
+        if (retryBtn) retryBtn.addEventListener("click", () => executeAction("retry", item));
+
+        const removeBtn = card.querySelector(".btn-remove");
+        if (removeBtn) removeBtn.addEventListener("click", () => executeAction("remove", item));
+
+        listEl.appendChild(card);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      refreshList();
+
+      const searchInput = document.getElementById("downloads-search");
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          refreshList(e.target.value.trim());
+        });
+      }
+
+      const openFolderBtn = document.getElementById("btn-open-folder");
+      if (openFolderBtn) {
+        openFolderBtn.addEventListener("click", () => {
+          try {
+            if (typeof Services !== "undefined" && Services.dirsvc && typeof Ci !== "undefined") {
+              const dlDir = Services.dirsvc.get("DfltDwnld", Ci.nsIFile);
+              if (dlDir && dlDir.exists()) dlDir.launch();
+            }
+          } catch(e) {}
+        });
+      }
+
+      const clearBtn = document.getElementById("btn-clear-downloads");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", async () => {
+          for (const d of currentDownloads) {
+            await executeAction("remove", d);
+          }
+          refreshList();
+        });
+      }
+
+      // Auto-poll every 3 seconds for live active downloads
+      setInterval(() => {
+        const searchInput = document.getElementById("downloads-search");
+        const q = searchInput ? searchInput.value.trim() : "";
+        refreshList(q);
+      }, 3000);
+    });
+    //]]>
+  </script>
 </body>
 </html>

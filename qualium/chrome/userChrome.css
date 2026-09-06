@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Qualium Quantum Browser v5 — Production Browser Chrome & Tab Styling
+   Qualium Quantum Browser v1 — Production Browser Chrome & Tab Styling
    ========================================================================== */
 
 @import url("chrome://qualium/content/qualium-tabs.css");
@@ -90,7 +90,8 @@
 #nav-bar {
   background-color: #1c1d22 !important;
   padding: 4px 10px !important;
-  gap: 4px !important;
+  border-top: none !important;
+  box-shadow: none !important;
 }
 
 #back-button, #forward-button, #reload-button, #stop-button {
@@ -117,9 +118,14 @@
 }
 
 /* 5. Qualium Address Bar */
+#nav-bar-customization-target {
+  flex: 1 !important;
+}
+
 #urlbar-container {
+  flex: 1 !important;
   max-width: 840px !important;
-  margin: 0 auto !important;
+  margin-inline: 8px !important;
 }
 
 #urlbar-background {
@@ -178,29 +184,43 @@
 /* 7. Action Buttons */
 #star-button-box,
 #downloads-button,
+#unified-extensions-button,
 #PanelUI-menu-button {
   background-color: transparent !important;
   border: none !important;
-  border-radius: 50% !important;
+  border-radius: 8px !important;
   width: 32px !important;
   height: 32px !important;
+  color: #94a3b8 !important;
   fill: #94a3b8 !important;
-  margin-inline: 1px !important;
+  margin-inline: 2px !important;
   padding: 5px !important;
   transition: all 0.12s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
 #star-button-box:hover,
 #downloads-button:hover,
+#unified-extensions-button:hover,
 #PanelUI-menu-button:hover {
   background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
   fill: #ffffff !important;
 }
 
-#star-button-box:active,
-#downloads-button:active,
-#PanelUI-menu-button:active {
-  background-color: rgba(255, 255, 255, 0.14) !important;
+#PanelUI-menu-button {
+  list-style-image: url("chrome://qualium/skin/menu.svg") !important;
+}
+
+#PanelUI-menu-button .toolbarbutton-icon {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  opacity: 0.9 !important;
+  fill: currentColor !important;
+}
+
+#PanelUI-button {
+  margin-inline-end: 8px !important;
 }
 
 /* 8. Complete Removal of Firefox Default Loading & Promotional Chrome */
@@ -286,13 +306,32 @@
 }
 
 /* 11. Qualium Context Menus & Popups */
-menupopup, #appMenu-popup, #protections-popup, .panel-arrowcontent {
+#appMenu-popup {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-inline-end: 18px !important;
+  margin-right: 18px !important;
+  margin-top: 8px !important;
+}
+
+#appMenu-popup .panel-arrowbox,
+#appMenu-popup .panel-arrow {
+  display: none !important;
+  visibility: collapse !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+menupopup, #protections-popup, #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent, .panel-arrowcontent {
   background-color: #1c1d22 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 12px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
   color: #f1f5f9 !important;
-  padding: 4px !important;
+  padding: 6px !important;
+  overflow: hidden !important;
 }
 
 menuitem, menu {

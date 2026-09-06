@@ -46,8 +46,8 @@
       <div class="empty-icon">
         <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
       </div>
-      <h3>No extensions installed</h3>
-      <p>Qualium comes with built-in quantum-resistant privacy, anti-fingerprinting, and native shield protection without requiring third-party extensions.</p>
+      <h3 id="empty-title">No extensions installed</h3>
+      <p id="empty-desc">Qualium comes with built-in quantum-resistant privacy, anti-fingerprinting, and native shield protection without requiring third-party extensions.</p>
     </div>
   </div>
 
@@ -63,6 +63,8 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
     }
+
+    let addonManagerAvailable = true;
 
     async function getAddons() {
       // Attempt to retrieve addons from Gecko AddonManager
@@ -87,6 +89,7 @@
         }
       } catch(e) {
         console.warn("[QUALIUM:EXTENSIONS] AddonManager not available:", e);
+        addonManagerAvailable = false;
       }
       return [];
     }
@@ -109,7 +112,15 @@
 
       listEl.innerHTML = "";
       if (!filtered || filtered.length === 0) {
-        if (emptyEl) emptyEl.style.display = "flex";
+        if (emptyEl) {
+          emptyEl.style.display = "flex";
+          const titleEl = document.getElementById("empty-title");
+          const descEl = document.getElementById("empty-desc");
+          if (!addonManagerAvailable) {
+            if (titleEl) titleEl.textContent = "Extension Management";
+            if (descEl) descEl.textContent = "Extension management is not currently available in this build.";
+          }
+        }
         return;
       }
 

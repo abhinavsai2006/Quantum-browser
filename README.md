@@ -1,78 +1,92 @@
-# Qaulium Quantum Browser
+# Qualium Quantum Browser v1
 
 <p align="center">
-  <img src="qaulium_icon_1024.png" width="128" alt="Qaulium Icon"/>
+  <img src="qaulium_icon_1024.png" width="128" alt="Qualium Icon"/>
 </p>
 
 <p align="center">
-  <strong>A true independent desktop web browser powered by Gecko</strong><br/>
-  Engineered for privacy, speed, and a premium user experience.
+  <strong>The Post-Quantum Secure, Privacy-First Desktop Web Browser</strong><br/>
+  Engineered for zero telemetry, ML-KEM-512/768/1024 post-quantum cryptography, and full cross-platform compatibility across Windows, Linux, and macOS.
 </p>
 
 ---
 
-## Features
+## 🚀 Key Features
 
-- 🛡️ **Privacy-First** — Built-in tracker blocking, DNS-over-HTTPS, quantum-resistant cryptography
-- ⚡ **Gecko Engine** — Full web standards support via embedded Mozilla Gecko (no Firefox required)
-- 🎨 **Premium UI** — Dark obsidian theme, Chromium-style menus, custom New Tab page
-- 🔒 **Encrypted Sync** — Zero-knowledge encrypted bookmark and history sync
-- 🌐 **Cross-Platform** — Windows, Linux, macOS installers
+- 🛡️ **Post-Quantum Cryptography (PQC)** — NIST FIPS 203 ML-KEM-512, ML-KEM-768, and ML-KEM-1024 hybrid key exchange with X25519 and ChaCha20-Poly1305.
+- ⚡ **Zero Telemetry & Zero History Retention** — Pure local session memory, automated cookie/state partitioning, and zero-leak DNS-over-HTTPS.
+- 🌐 **Anonymous Multi-Hop Routing** — Embedded post-quantum security daemon (`qualium-daemon`) managing isolated local SOCKS5 proxy circuits.
+- 🎨 **Modern Browser Chrome** — Obsidian glassmorphism UI, Chromium-style app menu, integrated `qualium://history`, `qualium://extensions`, `qualium://about` internal pages.
+- 🖥️ **Full Multi-Platform Support** — Dedicated native distribution packages for **Windows**, **Linux**, and **macOS**.
 
-## Architecture
+---
 
-```
-Qaulium Quantum Browser
-├── crates/              Rust core (network daemon, crypto, UI shell)
-├── qualium/             Browser chrome (XUL/XHTML/CSS/JS UI layer)
-│   └── chrome/
-│       ├── content/     New Tab page, panels, modals
-│       └── userChrome.css
-├── scripts/             Build, branding, and packaging scripts
-├── patches/             Gecko customisation patches
-└── dist/                Release binaries and installers
-```
+## 📦 Multi-Platform Downloads & Packages
 
-## Building
+| Platform | Format | Release Artifact / Path | Installation & Usage |
+| :--- | :--- | :--- | :--- |
+| **Windows x64** | Installer (`.exe`) | [`dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe`](dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe) | Run installer wizard or execute [`QualiumQuantumBrowser.exe`](QualiumQuantumBrowser.exe) directly |
+| **Linux x86_64** | Tarball (`.tar.gz`) | [`dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz) | Extract and run `./AppRun` or run `sudo ./install.sh` |
+| **Linux (Debian/Ubuntu)** | Package (`.deb`) | `dist/linux/qualium-deb/` | Run `bash dist/linux/build-deb.sh` to produce `.deb` |
+| **macOS Universal** | App Bundle (`.app`) | [`dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz) | Drag `Qualium Quantum Browser.app` to `/Applications` |
+| **macOS Disk Image** | DMG (`.dmg`) | `dist/macos/create-dmg.sh` | Run `bash dist/macos/create-dmg.sh` on macOS |
+
+---
+
+## 🛠️ Building From Source
 
 ### Prerequisites
-- Rust 1.75+ (`rustup`)
-- Python 3.10+
-- Gecko runtime (placed in `runtime/browser/`)
+- **Rust Toolchain**: 1.75+ (`rustup default stable`)
+- **Python**: 3.10+
+- **C/C++ Build Tools**: `clang`, `lld`, `pkg-config`, `libssl-dev` (Linux) or Xcode Command Line Tools (macOS)
 
-### Build
-```powershell
-# Build the Rust shell
-cargo build --release
+### 1. Build and Test Core Workspace
+```bash
+# Run 42 security, cryptographic, and privacy unit tests
+cargo test --workspace --all-targets --all-features
 
-# Apply Qaulium branding to omni.ja
-py -3 scripts/apply_qualium_branding_omni.py
-
-# Package installer
-py -3 scripts/build_installer.py
+# Compile release binaries
+cargo build --release --workspace
 ```
 
-## Download
+### 2. Build for Linux
+```bash
+# Native Linux build & package script
+bash scripts/build-linux.sh
 
-Download the latest pre-built Windows standalone installer:
+# Or install directly:
+tar -xzf dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz
+cd qualium-quantum-browser
+sudo ./install.sh
+qualium
+```
 
-[![Download Windows Installer](https://img.shields.io/badge/Download-Windows_Installer_(.exe)-00c853?style=for-the-badge&logo=windows)](https://github.com/Qaulium-AI-Browser/Abhinav-s-repo-for-qualium-browser-backend/releases/download/v5.0.0/Qaulium-Quantum-Browser-v5.0.0-Setup.exe)
+### 3. Build for macOS
+```bash
+# Native macOS build & package script
+bash scripts/build-macos.sh
 
-**Direct Download Link:**  
-👉 **[Qaulium-Quantum-Browser-v5.0.0-Setup.exe](https://github.com/Qaulium-AI-Browser/Abhinav-s-repo-for-qualium-browser-backend/releases/download/v5.0.0/Qaulium-Quantum-Browser-v5.0.0-Setup.exe)**
+# Mount DMG or launch app:
+open "dist/macos/Qualium Quantum Browser.app"
+```
 
-| Platform | File / Download Link | Description |
-|----------|----------------------|-------------|
-| **Windows (Installer)** | [Qaulium-Quantum-Browser-v5.0.0-Setup.exe](https://github.com/Qaulium-AI-Browser/Abhinav-s-repo-for-qualium-browser-backend/releases/download/v5.0.0/Qaulium-Quantum-Browser-v5.0.0-Setup.exe) | Complete standalone installer with embedded Gecko runtime & daemon |
-| **Windows (Runner)** | [`QauliumQuantumBrowser.exe`](QauliumQuantumBrowser.exe) | Standalone host shell executable in repository root |
-| **Network Daemon** | [`qualium-daemon.exe`](qualium-daemon.exe) | Post-quantum ML-KEM-768 privacy proxy executable |
+### 4. Build for Windows
+```powershell
+# Apply branding to omni.ja runtime
+py scripts/apply_qualium_branding_omni.py
 
-## License
-
-Qaulium is proprietary software. The Gecko rendering engine is used under the Mozilla Public License 2.0.
+# Package all cross-platform distribution bundles
+py scripts/package-cross-platform.py
+```
 
 ---
 
-<p align="center">© 2025 Qaulium. All rights reserved.</p>
+## 🔒 Verification & Supply Chain Security
 
-# Abhinav-s-repo-for-qualium-browser-backend
+Every release package is indexed in the signed SHA-256 verification manifest and SPDX Software Bill of Materials (SBOM):
+- Checksum Manifest: [`dist/SHA256SUMS.asc`](dist/SHA256SUMS.asc)
+- SPDX SBOM: [`dist/sbom-v1.0.0.spdx.json`](dist/sbom-v1.0.0.spdx.json)
+
+---
+
+<p align="center">© 2026 Qualium AI. Built for the Quantum Era.</p>

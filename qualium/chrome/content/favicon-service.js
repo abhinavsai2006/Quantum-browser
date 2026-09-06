@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v5 — Authoritative Favicon & Bookmark Subsystem
+// Qaulium Quantum Browser v1 — Authoritative Favicon & Bookmark Subsystem
 // Pure Vector Architecture · Zero Mock Data · Real Gecko Integration
 
 (function(global) {

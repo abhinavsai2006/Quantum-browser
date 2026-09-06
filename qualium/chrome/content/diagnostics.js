@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v5 — Diagnostics Telemetry Controller
+// Qualium Quantum Browser v1 — Diagnostics Telemetry Controller
 
 (function() {
   "use strict";

@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v5 — "Qualium Quiet Precision" Browser Controller
+// Qualium Quantum Browser v1 — "Qualium Quiet Precision" Browser Controller
 document.addEventListener("DOMContentLoaded", () => {
   const browserDeck = document.getElementById("browser-deck");
   const contentBrowser = document.getElementById("content-browser") || document.getElementById("content-frame");
@@ -230,6 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
           case "extensions": navCtrl.navigateInternal("qualium://extensions"); break;
           case "privacy-center": navCtrl.navigateInternal("qualium://privacy"); break;
           case "settings": navCtrl.navigateInternal("qualium://settings"); break;
+          case "about": navCtrl.navigateInternal("qualium://about"); break;
         }
       });
     });
@@ -348,6 +349,12 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (e.key === "h" || e.key === "H") {
         e.preventDefault();
         navCtrl.navigateInternal("qualium://history");
+      } else if (e.shiftKey && (e.key === "a" || e.key === "A")) {
+        e.preventDefault();
+        navCtrl.navigateInternal("qualium://extensions");
+      } else if (e.shiftKey && (e.key === "o" || e.key === "O")) {
+        e.preventDefault();
+        navCtrl.navigateInternal("qualium://bookmarks");
       } else if (e.key === "d" || e.key === "D") {
         e.preventDefault();
         showToast("Page bookmarked locally");

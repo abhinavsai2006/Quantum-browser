@@ -14,7 +14,9 @@ pub use hybrid::{
     HybridSessionKeys,
 };
 pub use kem::{
-    CryptoError, MlKem768Ciphertext, MlKem768Engine, MlKem768PrivateKey, MlKem768PublicKey,
+    CryptoError, MlKem1024Ciphertext, MlKem1024Engine, MlKem1024PrivateKey, MlKem1024PublicKey,
+    MlKem512Ciphertext, MlKem512Engine, MlKem512PrivateKey, MlKem512PublicKey,
+    MlKem768Ciphertext, MlKem768Engine, MlKem768PrivateKey, MlKem768PublicKey,
     X25519Exchange,
 };
 pub use signature::{
@@ -26,11 +28,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_kem_roundtrip() {
+    fn test_kem_512_roundtrip() {
+        let (sk, pk) = MlKem512Engine::generate_keypair();
+        let (ss1, ct) = MlKem512Engine::encapsulate(&pk).expect("encapsulation");
+        let ss2 = MlKem512Engine::decapsulate(&sk, &ct).expect("decapsulation");
+        assert_eq!(ss1, ss2, "Shared secrets from ML-KEM-512 must match");
+    }
+
+    #[test]
+    fn test_kem_768_roundtrip() {
         let (sk, pk) = MlKem768Engine::generate_keypair();
         let (ss1, ct) = MlKem768Engine::encapsulate(&pk).expect("encapsulation");
         let ss2 = MlKem768Engine::decapsulate(&sk, &ct).expect("decapsulation");
-        assert_eq!(ss1, ss2, "Shared secrets from ML-KEM must match");
+        assert_eq!(ss1, ss2, "Shared secrets from ML-KEM-768 must match");
+    }
+
+    #[test]
+    fn test_kem_1024_roundtrip() {
+        let (sk, pk) = MlKem1024Engine::generate_keypair();
+        let (ss1, ct) = MlKem1024Engine::encapsulate(&pk).expect("encapsulation");
+        let ss2 = MlKem1024Engine::decapsulate(&sk, &ct).expect("decapsulation");
+        assert_eq!(ss1, ss2, "Shared secrets from ML-KEM-1024 must match");
     }
 
     #[test]

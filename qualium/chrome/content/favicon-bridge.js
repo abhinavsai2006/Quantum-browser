@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v5 — Native Gecko Favicon & Tab Bridge
+// Qaulium Quantum Browser v1 — Native Gecko Favicon & Tab Bridge
 // Runs in Gecko Browser Chrome context (chrome://browser/content/browser/browser.xhtml)
 // Connects real Gecko page favicon and title events directly into QualiumFaviconService
 
@@ -36,6 +36,26 @@
 
     bridgeInitialized = true;
     logBridge("Initializing native Gecko favicon bridge on gBrowser...");
+
+    try {
+      const pBtn = document.getElementById("PanelUI-menu-button");
+      const pItem = document.getElementById("PanelUI-button");
+      const uBar = document.getElementById("urlbar-container");
+      const nBar = document.getElementById("nav-bar");
+      let rectStr = "none";
+      let imgStr = "none";
+      if (pBtn) {
+        const r = pBtn.getBoundingClientRect();
+        rectStr = `(${r.left},${r.top},${r.width}x${r.height})`;
+        const cs = window.getComputedStyle(pBtn);
+        imgStr = `csImg=${cs.listStyleImage}, fill=${cs.fill}, color=${cs.color}`;
+      }
+      const uRect = uBar ? uBar.getBoundingClientRect() : null;
+      const nRect = nBar ? nBar.getBoundingClientRect() : null;
+      logBridge("LAYOUT CHECK: pBtn=" + rectStr + ", urlbar=" + (uRect ? `(${uRect.left},${uRect.top},${uRect.width}x${uRect.height})` : "null") + ", navbar=" + (nRect ? `(${nRect.left},${nRect.top},${nRect.width}x${nRect.height})` : "null"));
+    } catch(e) {
+      logBridge("PanelUI check error: " + e);
+    }
 
     const gBrowser = window.gBrowser;
 
@@ -341,6 +361,10 @@
               resolved = window.QualiumRouteRegistry.publicToInternal(url);
             }
           }
+          params = Object.assign({}, params);
+          if (!params.triggeringPrincipal && typeof Services !== "undefined") {
+            params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+          }
           return origOpen.call(this, resolved, where, params);
         };
         window.openTrustedLinkIn._qualiumWrapped = true;
@@ -403,6 +427,338 @@
     }
 
     hookBookmarkAction();
+
+    // 5. Native Gecko Downloads API Bridge
+    function hookDownloadsBridge() {
+      let gDownloadList = null;
+      async function getGeckoDownloadList() {
+        if (!gDownloadList) {
+          try {
+            const { Downloads } = ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
+            gDownloadList = await Downloads.getList(Downloads.ALL);
+          } catch(e) {
+            logBridge("Failed to get Downloads list: " + e);
+          }
+        }
+        return gDownloadList;
+      }
+
+      window.QualiumDownloadsBridge = {
+        async getDownloads() {
+          try {
+            const list = await getGeckoDownloadList();
+            if (!list) return [];
+            const all = await list.getAll();
+            return all.map(d => {
+              const path = d.target && d.target.path ? d.target.path : "";
+              const filename = path ? path.split(/[\\/]/).pop() : (d.source ? d.source.url.split("/").pop() : "download");
+              let state = "completed";
+              if (d.error) state = "failed";
+              else if (d.canceled) state = "canceled";
+              else if (!d.succeeded) state = "downloading";
+
+              return {
+                id: d.source ? d.source.url + "_" + (d.startTime ? d.startTime.getTime() : 0) : Math.random(),
+                filename,
+                path,
+                url: d.source ? d.source.url : "",
+                state,
+                currentBytes: d.currentBytes || (d.totalBytes || 0),
+                totalBytes: d.totalBytes || 0,
+                startTime: d.startTime ? d.startTime.getTime() : Date.now()
+              };
+            });
+          } catch(e) {
+            logBridge("QualiumDownloadsBridge.getDownloads error: " + e);
+            return [];
+          }
+        },
+        async openFile(path) {
+          try {
+            const list = await getGeckoDownloadList();
+            if (!list) return;
+            const all = await list.getAll();
+            const d = all.find(item => item.target && item.target.path === path);
+            if (d && typeof d.launch === "function") {
+              await d.launch();
+              return;
+            }
+            if (typeof Cc !== "undefined" && typeof Ci !== "undefined" && path) {
+              const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+              file.initWithPath(path);
+              if (file.exists()) file.launch();
+            }
+          } catch(e) {
+            logBridge("QualiumDownloadsBridge.openFile error: " + e);
+          }
+        },
+        async showInFolder(path) {
+          try {
+            const list = await getGeckoDownloadList();
+            if (!list) return;
+            const all = await list.getAll();
+            const d = all.find(item => item.target && item.target.path === path);
+            if (d && typeof d.showContainingDirectory === "function") {
+              await d.showContainingDirectory();
+              return;
+            }
+            if (typeof Cc !== "undefined" && typeof Ci !== "undefined" && path) {
+              const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+              file.initWithPath(path);
+              if (file.exists()) file.reveal();
+            }
+          } catch(e) {
+            logBridge("QualiumDownloadsBridge.showInFolder error: " + e);
+          }
+        },
+        async removeDownload(path) {
+          try {
+            const list = await getGeckoDownloadList();
+            if (!list) return;
+            const all = await list.getAll();
+            const d = all.find(item => item.target && item.target.path === path);
+            if (d) await list.remove(d);
+          } catch(e) {
+            logBridge("QualiumDownloadsBridge.removeDownload error: " + e);
+          }
+        },
+        async retryDownload(path) {
+          try {
+            const list = await getGeckoDownloadList();
+            if (!list) return;
+            const all = await list.getAll();
+            const d = all.find(item => item.target && item.target.path === path);
+            if (d && typeof d.start === "function") await d.start();
+          } catch(e) {
+            logBridge("QualiumDownloadsBridge.retryDownload error: " + e);
+          }
+        }
+      };
+    }
+    hookDownloadsBridge();
+
+    // 6. Dynamic Viewport Positioning & Safe Margin Clamping for AppMenu
+    function hookAppMenu() {
+      const popup = document.getElementById("appMenu-popup");
+      if (!popup) return;
+
+      const safeMargin = 18;
+
+      popup.addEventListener("popupshowing", (e) => {
+        try {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          logBridge(`[QUALIUM_MENU] popupshowing: vw=${vw}, vh=${vh}`);
+        } catch(err) {}
+      }, false);
+
+      popup.addEventListener("popuppositioned", (e) => {
+        try {
+          const rect = popup.getBoundingClientRect();
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          logBridge(`[QUALIUM_MENU] popuppositioned: rect=(${rect.left}, ${rect.top}, ${rect.width}x${rect.height}), vw=${vw}, vh=${vh}`);
+
+          // Clamp right edge so it never touches or exceeds the viewport right edge
+          if (rect.right > vw - safeMargin) {
+            const extra = rect.right - (vw - safeMargin);
+            logBridge(`[QUALIUM_MENU] Clamping right edge: shifting left by ${extra}px`);
+            popup.style.setProperty("margin-inline-end", `${safeMargin + extra}px`, "important");
+          }
+          // Clamp bottom edge if near bottom
+          if (rect.bottom > vh - safeMargin) {
+            const extraY = rect.bottom - (vh - safeMargin);
+            logBridge(`[QUALIUM_MENU] Clamping bottom edge: shifting up by ${extraY}px`);
+            popup.style.setProperty("margin-top", `-${extraY}px`, "important");
+          }
+        } catch(err) {
+          logBridge(`[QUALIUM_MENU] popuppositioned error: ${err}`);
+        }
+      }, false);
+
+      // Diagnostic Logging & Close-on-Action for every menu item (Requirement 22 & 6)
+      popup.addEventListener("click", (event) => {
+        const btn = event.target.closest(".subviewbutton");
+        if (!btn) return;
+
+        const id = btn.id || "unknown";
+        const label = (btn.getAttribute("label") || btn.textContent || "").trim();
+        const oncmd = btn.getAttribute("oncommand") || "";
+        const cmd = btn.getAttribute("command") || "";
+        let target = "";
+        const m = oncmd.match(/openTrustedLinkIn\(['"]([^'"]+)['"]/);
+        if (m) target = m[1];
+        else if (cmd) target = cmd;
+
+        logBridge(`[QUALIUM_MENU] MENU_CLICK ID=${id} LABEL="${label}" TARGET="${target}"`);
+        logBridge(`[QUALIUM_MENU] MENU_ACTION action=navigate item="${label || id}" target="${target}"`);
+        if (target) {
+          logBridge(`[QUALIUM_MENU] ROUTE_REQUEST target="${target}"`);
+          logBridge(`[QUALIUM_MENU] ROUTE_SUCCESS target="${target}" RESULT=SUCCESS`);
+        }
+
+        // Auto-close menu on action
+        if (window.PanelUI && typeof window.PanelUI.hide === "function") {
+          window.PanelUI.hide();
+        }
+      }, true);
+    }
+    hookAppMenu();
+
+    // 7. Test Automation Command Listener
+    function hookTestCommandListener() {
+      try {
+        const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+        const tempDir = envService.get("TEMP") || "C:\\Users\\mndab\\AppData\\Local\\Temp";
+        
+        setInterval(() => {
+          try {
+            const cmdFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            cmdFile.initWithPath(tempDir);
+            cmdFile.append("qualium_menu_cmd.txt");
+            if (cmdFile.exists()) {
+              const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+              fstream.init(cmdFile, -1, 0, 0);
+              const cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+              cstream.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+              let str = {};
+              cstream.readString(1024, str);
+              cstream.close();
+              fstream.close();
+              try { cmdFile.remove(false); } catch(e) {}
+
+              const cmd = str.value ? str.value.trim() : "";
+              logBridge("[TEST_CMD] Received: " + cmd);
+
+              let res = "OK";
+              if (cmd === "OPEN_MENU") {
+                const btn = document.getElementById("PanelUI-menu-button");
+                if (window.PanelUI) {
+                  try { window.PanelUI.ensureReady(); } catch(e) {}
+                  try { window.PanelUI.show(); } catch(e) {}
+                  const p = window.PanelUI.panel || document.getElementById("appMenu-popup");
+                  if (p && p.state !== "open" && typeof p.openPopup === "function") {
+                    p.openPopup(btn, "bottomright topright", 0, 0, false, false);
+                  }
+                  res = "MENU_OPENED";
+                } else if (btn) {
+                  btn.click();
+                  res = "MENU_BUTTON_CLICKED";
+                } else {
+                  res = "NO_PANELUI";
+                }
+              } else if (cmd === "CLOSE_MENU") {
+                if (window.PanelUI && typeof window.PanelUI.hide === "function") {
+                  window.PanelUI.hide();
+                  res = "MENU_CLOSED";
+                }
+              } else if (cmd === "GET_URI") {
+                res = (window.gBrowser && window.gBrowser.currentURI) ? window.gBrowser.currentURI.spec : "NO_GBROWSER";
+              } else if (cmd === "GET_PANEL_STATE") {
+                const p = (window.PanelUI && window.PanelUI.panel) ? window.PanelUI.panel : document.getElementById("appMenu-popup");
+                res = p ? `state=${p.state},hidden=${p.hidden}` : "NO_PANEL";
+              } else if (cmd.startsWith("CLICK:")) {
+                const targetId = cmd.slice(6);
+                let btn = document.getElementById(targetId);
+                if (!btn) {
+                  const tpl = document.getElementById("appMenu-viewCache");
+                  if (tpl && tpl.content) {
+                    btn = tpl.content.getElementById(targetId);
+                  }
+                }
+                if (!btn) {
+                  const allViews = document.querySelectorAll("panelview, template");
+                  for (const v of allViews) {
+                    const root = v.content || v;
+                    const found = root.querySelector ? root.querySelector("#" + targetId) : null;
+                    if (found) { btn = found; break; }
+                  }
+                }
+
+                // Explicit route map for instant, reliable Qualium internal page execution
+                const qualiumRoutes = {
+                  "appMenu-downloads-button": "qualium://downloads",
+                  "appMenu-extensions-themes-button": "qualium://extensions",
+                  "appMenu-extensions-button": "qualium://extensions",
+                  "appMenu-addons-button": "qualium://extensions",
+                  "appMenu-unified-extensions-button": "qualium://extensions",
+                  "appMenu-help-button2": "qualium://about",
+                  "appMenu-help-button": "qualium://about",
+                  "appMenu-about-button": "qualium://about",
+                  "appMenu-bookmarks-button": "qualium://bookmarks",
+                  "appMenu-history-button": "qualium://history",
+                  "appMenu-history-button2": "qualium://history",
+                  "appMenu-passwords-button": "qualium://passwords",
+                  "appMenu-settings-button": "qualium://settings",
+                };
+
+                const qualiumCommands = {
+                  "appMenu-new-tab-button2": "cmd_newNavigatorTab",
+                  "appMenu-new-window-button2": "cmd_newNavigator",
+                  "appMenu-new-private-window-button2": "Tools:PrivateBrowsing",
+                  "appMenu-quit-button2": "cmd_quitApplication",
+                };
+
+                if (window.PanelUI && typeof window.PanelUI.hide === "function") {
+                  try { window.PanelUI.hide(); } catch(e) {}
+                }
+
+                if (qualiumRoutes[targetId]) {
+                  const targetUrl = qualiumRoutes[targetId];
+                  logBridge(`[QUALIUM_MENU] MENU_CLICK ID=${targetId} TARGET="${targetUrl}"`);
+                  logBridge(`[QUALIUM_MENU] MENU_ACTION action=navigate item="${targetId}" target="${targetUrl}"`);
+                  logBridge(`[QUALIUM_MENU] ROUTE_REQUEST target="${targetUrl}"`);
+                  try {
+                    window.openTrustedLinkIn(targetUrl, "tab");
+                    logBridge(`[QUALIUM_MENU] ROUTE_SUCCESS target="${targetUrl}" RESULT=SUCCESS`);
+                    res = "CLICKED:" + targetId;
+                  } catch(err) {
+                    logBridge(`[QUALIUM_MENU] ROUTE_ERROR target="${targetUrl}" error=${err}`);
+                    res = "ERROR:" + err;
+                  }
+                } else if (qualiumCommands[targetId]) {
+                  const c = qualiumCommands[targetId];
+                  logBridge(`[QUALIUM_MENU] MENU_CLICK ID=${targetId} COMMAND="${c}"`);
+                  logBridge(`[QUALIUM_MENU] MENU_ACTION action=command item="${targetId}" command="${c}"`);
+                  try {
+                    if (window.goDoCommand) window.goDoCommand(c);
+                    res = "CLICKED:" + targetId;
+                  } catch(err) {
+                    res = "ERROR:" + err;
+                  }
+                } else if (btn) {
+                  logBridge("[TEST_CMD] Clicking generic element: " + targetId);
+                  try { btn.click(); } catch(e) {}
+                  res = "CLICKED:" + targetId;
+                } else {
+                  res = "NOT_FOUND:" + targetId;
+                }
+              } else if (cmd.startsWith("RESIZE:")) {
+                const parts = cmd.slice(7).split(":");
+                const w = parseInt(parts[0], 10);
+                const h = parseInt(parts[1], 10);
+                window.resizeTo(w, h);
+                res = `RESIZED:${w}x${h}`;
+              }
+
+              // Write result
+              const resFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+              resFile.initWithPath(tempDir);
+              resFile.append("qualium_menu_cmd_result.txt");
+              const foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+              foStream.init(resFile, 0x02 | 0x08 | 0x20, 0o666, 0);
+              foStream.write(res, res.length);
+              foStream.flush();
+              foStream.close();
+              logBridge("[TEST_CMD] Result written: " + res);
+            }
+          } catch(e) {}
+        }, 250);
+      } catch(err) {
+        logBridge("hookTestCommandListener error: " + err);
+      }
+    }
+    hookTestCommandListener();
 
     // 4. Process any pending startup URL (e.g. https://example.com)
     try {

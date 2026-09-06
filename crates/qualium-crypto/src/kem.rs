@@ -40,7 +40,89 @@ impl X25519Exchange {
     }
 }
 
-/// Post-Quantum ML-KEM-768 Encapsulation / Decapsulation (NIST FIPS 203)
+// ============================================================================
+// NIST FIPS 203 Module-Lattice Key Encapsulation Mechanisms (ML-KEM)
+// ============================================================================
+
+/// Post-Quantum ML-KEM-512 (NIST Security Category 1 / AES-128 Equivalent)
+pub struct MlKem512Engine;
+
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+pub struct MlKem512PrivateKey {
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone)]
+pub struct MlKem512PublicKey {
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone)]
+pub struct MlKem512Ciphertext {
+    pub bytes: Vec<u8>,
+}
+
+impl MlKem512Engine {
+    pub fn generate_keypair() -> (MlKem512PrivateKey, MlKem512PublicKey) {
+        let (dk, ek) = ml_kem::MlKem512::generate(&mut OsRng);
+        (
+            MlKem512PrivateKey {
+                bytes: dk.as_bytes().to_vec(),
+            },
+            MlKem512PublicKey {
+                bytes: ek.as_bytes().to_vec(),
+            },
+        )
+    }
+
+    pub fn encapsulate(
+        public_key: &MlKem512PublicKey,
+    ) -> Result<([u8; 32], MlKem512Ciphertext), CryptoError> {
+        let ek_encoded = Encoded::<EncapsulationKey<ml_kem::MlKem512Params>>::try_from(
+            public_key.bytes.as_slice(),
+        )
+        .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-512 public key bytes".into()))?;
+
+        let enc_key = EncapsulationKey::<ml_kem::MlKem512Params>::from_bytes(&ek_encoded);
+        let (ct, ss) = enc_key
+            .encapsulate(&mut OsRng)
+            .map_err(|_| CryptoError::DecapsulationFailed)?;
+
+        let mut shared_secret = [0u8; 32];
+        shared_secret.copy_from_slice(ss.as_slice());
+
+        Ok((
+            shared_secret,
+            MlKem512Ciphertext {
+                bytes: ct.as_slice().to_vec(),
+            },
+        ))
+    }
+
+    pub fn decapsulate(
+        private_key: &MlKem512PrivateKey,
+        ciphertext: &MlKem512Ciphertext,
+    ) -> Result<[u8; 32], CryptoError> {
+        let dk_bytes = Encoded::<DecapsulationKey<ml_kem::MlKem512Params>>::try_from(
+            private_key.bytes.as_slice(),
+        )
+        .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-512 private key bytes".into()))?;
+
+        let dec_key = DecapsulationKey::<ml_kem::MlKem512Params>::from_bytes(&dk_bytes);
+        let ct_bytes = ml_kem::Ciphertext::<ml_kem::MlKem512>::try_from(ciphertext.bytes.as_slice())
+            .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-512 ciphertext bytes".into()))?;
+
+        let ss = dec_key
+            .decapsulate(&ct_bytes)
+            .map_err(|_| CryptoError::DecapsulationFailed)?;
+
+        let mut shared_secret = [0u8; 32];
+        shared_secret.copy_from_slice(ss.as_slice());
+        Ok(shared_secret)
+    }
+}
+
+/// Post-Quantum ML-KEM-768 (NIST Security Category 3 / AES-192 Equivalent - Default)
 pub struct MlKem768Engine;
 
 #[derive(Clone, Zeroize, ZeroizeOnDrop)]
@@ -111,6 +193,84 @@ impl MlKem768Engine {
 
         let ct_bytes = ml_kem::Ciphertext::<MlKem768>::try_from(ciphertext.bytes.as_slice())
             .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-768 ciphertext bytes".into()))?;
+
+        let ss = dec_key
+            .decapsulate(&ct_bytes)
+            .map_err(|_| CryptoError::DecapsulationFailed)?;
+
+        let mut shared_secret = [0u8; 32];
+        shared_secret.copy_from_slice(ss.as_slice());
+        Ok(shared_secret)
+    }
+}
+
+/// Post-Quantum ML-KEM-1024 (NIST Security Category 5 / AES-256 Equivalent - High Security)
+pub struct MlKem1024Engine;
+
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+pub struct MlKem1024PrivateKey {
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone)]
+pub struct MlKem1024PublicKey {
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone)]
+pub struct MlKem1024Ciphertext {
+    pub bytes: Vec<u8>,
+}
+
+impl MlKem1024Engine {
+    pub fn generate_keypair() -> (MlKem1024PrivateKey, MlKem1024PublicKey) {
+        let (dk, ek) = ml_kem::MlKem1024::generate(&mut OsRng);
+        (
+            MlKem1024PrivateKey {
+                bytes: dk.as_bytes().to_vec(),
+            },
+            MlKem1024PublicKey {
+                bytes: ek.as_bytes().to_vec(),
+            },
+        )
+    }
+
+    pub fn encapsulate(
+        public_key: &MlKem1024PublicKey,
+    ) -> Result<([u8; 32], MlKem1024Ciphertext), CryptoError> {
+        let ek_encoded = Encoded::<EncapsulationKey<ml_kem::MlKem1024Params>>::try_from(
+            public_key.bytes.as_slice(),
+        )
+        .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-1024 public key bytes".into()))?;
+
+        let enc_key = EncapsulationKey::<ml_kem::MlKem1024Params>::from_bytes(&ek_encoded);
+        let (ct, ss) = enc_key
+            .encapsulate(&mut OsRng)
+            .map_err(|_| CryptoError::DecapsulationFailed)?;
+
+        let mut shared_secret = [0u8; 32];
+        shared_secret.copy_from_slice(ss.as_slice());
+
+        Ok((
+            shared_secret,
+            MlKem1024Ciphertext {
+                bytes: ct.as_slice().to_vec(),
+            },
+        ))
+    }
+
+    pub fn decapsulate(
+        private_key: &MlKem1024PrivateKey,
+        ciphertext: &MlKem1024Ciphertext,
+    ) -> Result<[u8; 32], CryptoError> {
+        let dk_bytes = Encoded::<DecapsulationKey<ml_kem::MlKem1024Params>>::try_from(
+            private_key.bytes.as_slice(),
+        )
+        .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-1024 private key bytes".into()))?;
+
+        let dec_key = DecapsulationKey::<ml_kem::MlKem1024Params>::from_bytes(&dk_bytes);
+        let ct_bytes = ml_kem::Ciphertext::<ml_kem::MlKem1024>::try_from(ciphertext.bytes.as_slice())
+            .map_err(|_| CryptoError::InvalidKey("Invalid ML-KEM-1024 ciphertext bytes".into()))?;
 
         let ss = dec_key
             .decapsulate(&ct_bytes)

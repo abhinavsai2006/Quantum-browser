@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v5 — Shell Controller
+// Qualium Quantum Browser v1 — Shell Controller
 function logDebug(msg) {
   try {
     const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);

@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v5 — Authoritative Security Hub Panel Controller
+// Qualium Quantum Browser v1 — Authoritative Security Hub Panel Controller
 
 const QualiumPanel = {
   service: null,

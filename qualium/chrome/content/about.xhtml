@@ -30,7 +30,7 @@
       <div class="about-title-info">
         <h1>Qualium Quantum Browser</h1>
         <div class="about-version-badge">
-          <span>v5.0.0-pqc</span>
+          <span>v1.0.0-pqc</span>
           <span>·</span>
           <span>Post-Quantum Production Edition</span>
         </div>
@@ -41,7 +41,7 @@
     <div class="about-grid">
       <div class="about-card">
         <span class="about-card-label">Qualium Version</span>
-        <span class="about-card-value" id="val-q-version">5.0.0-pqc (64-bit)</span>
+        <span class="about-card-value" id="val-q-version">1.0.0-pqc (64-bit)</span>
       </div>
       <div class="about-card">
         <span class="about-card-label">Gecko Platform Engine</span>
@@ -66,7 +66,7 @@
         <span class="about-card-label">Post-Quantum Cryptography</span>
         <span class="about-card-value about-status-active">
           <span class="about-status-dot"></span>
-          ML-KEM-768 / Kyber / ChaCha20
+          ML-KEM (512/768/1024) / Hybrid X25519
         </span>
       </div>
       <div class="about-card">
@@ -94,8 +94,13 @@
 
     <div class="update-status-box" id="update-box">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <span id="update-text">Qualium is up to date — version 5.0.0-pqc.</span>
+      <span id="update-text">Qualium is up to date — version 1.0.0-pqc.</span>
     </div>
+
+    <footer class="about-footer" style="margin-top: 24px; text-align: center; font-size: 12px; color: #64748b;">
+      <p>© 2026 Qualium Quantum Technologies. All rights reserved.</p>
+      <p style="margin-top: 4px;">Architecture: <span id="val-architecture">x86_64</span> · Post-Quantum Cryptographic Kernel</p>
+    </footer>
   </div>
 
   <div class="q-toast-container" id="toast-container"></div>
@@ -158,10 +163,14 @@
       const diagBtn = document.getElementById("btn-diagnostics");
       if (diagBtn) {
         diagBtn.addEventListener("click", () => {
-          if (typeof QualiumNavigationController !== "undefined") {
+          if (window.opener && window.opener.openTrustedLinkIn) {
+            window.opener.openTrustedLinkIn("qualium://diagnostics", "tab");
+          } else if (window.parent && window.parent.qualiumNav) {
+            window.parent.qualiumNav.navigateInternal("qualium://diagnostics");
+          } else if (typeof QualiumNavigationController !== "undefined" && window.QualiumNavigationController.navigateTo) {
             QualiumNavigationController.navigateTo("qualium://diagnostics", "current");
           } else {
-            window.location.href = "chrome://qualium/content/settings.xhtml#diagnostics";
+            window.location.href = "chrome://qualium/content/diagnostics.xhtml";
           }
         });
       }
@@ -170,7 +179,7 @@
       if (copyBtn) {
         copyBtn.addEventListener("click", () => {
           const report = [
-            "Qualium Quantum Browser v5.0.0-pqc",
+            "Qualium Quantum Browser v1.0.0-pqc",
             `Gecko Platform: ${geckoVer}`,
             `Build ID: ${buildId}`,
             `Platform: ${osInfo}`,
@@ -187,7 +196,7 @@
       const licenseBtn = document.getElementById("btn-license");
       if (licenseBtn) {
         licenseBtn.addEventListener("click", () => {
-          alert("Qualium Quantum Browser v5 is distributed under Mozilla Public License 2.0 and Qualium Quantum Security Enclave protocols.");
+          alert("Qualium Quantum Browser v1 is distributed under Mozilla Public License 2.0 and Qualium Quantum Security Enclave protocols.");
         });
       }
     });

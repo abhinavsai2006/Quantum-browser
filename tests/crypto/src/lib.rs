@@ -85,13 +85,13 @@ mod tests {
     fn test_signature_verification_lifecycle() {
         use qualium_crypto::QualiumSigner;
         let (sk, pk) = QualiumSigner::generate_keypair();
-        let message = b"Qualium-Update-Manifest-v5.0.0-Release";
+        let message = b"Qualium-Update-Manifest-v1.0.0-Release";
 
         let sig = QualiumSigner::sign(&sk, message).expect("sign");
         assert!(QualiumSigner::verify(&pk, message, &sig), "Valid signature must verify");
 
         // Verify with tampered message
-        let tampered_msg = b"Qualium-Update-Manifest-v5.0.0-Malicious";
+        let tampered_msg = b"Qualium-Update-Manifest-v1.0.0-Malicious";
         assert!(!QualiumSigner::verify(&pk, tampered_msg, &sig), "Signature over tampered message must fail");
     }
 

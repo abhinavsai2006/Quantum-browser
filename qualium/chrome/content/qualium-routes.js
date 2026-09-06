@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v5 — Central Authoritative Internal Route Registry
+// Qualium Quantum Browser v1 — Central Authoritative Internal Route Registry
 // Single source of truth for all qualium:// public protocols and internal chrome resources
 
 (function(global) {

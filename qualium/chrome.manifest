@@ -1,4 +1,4 @@
-# Qaulium Quantum Browser v5 Chrome Registration Manifest
+# Qaulium Quantum Browser v1 Chrome Registration Manifest
 content qualium chrome/content/ contentaccessible=yes
 skin qualium classic/1.0 chrome/skin/
 content qaulium chrome/content/ contentaccessible=yes

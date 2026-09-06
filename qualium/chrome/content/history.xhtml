@@ -165,7 +165,11 @@
           }
 
           const target = (e.ctrlKey || e.metaKey || e.button === 1) ? "tab" : "current";
-          if (typeof QualiumNavigationController !== "undefined") {
+          if (window.opener && window.opener.openTrustedLinkIn) {
+            window.opener.openTrustedLinkIn(item.url, target);
+          } else if (window.parent && window.parent.qualiumNav) {
+            window.parent.qualiumNav.navigate(item.url);
+          } else if (typeof QualiumNavigationController !== "undefined" && window.QualiumNavigationController.navigateTo) {
             QualiumNavigationController.navigateTo(item.url, target);
           } else {
             window.location.href = item.url;
@@ -176,7 +180,11 @@
         row.addEventListener("auxclick", (e) => {
           if (e.button === 1) {
             e.preventDefault();
-            if (typeof QualiumNavigationController !== "undefined") {
+            if (window.opener && window.opener.openTrustedLinkIn) {
+              window.opener.openTrustedLinkIn(item.url, "tab");
+            } else if (window.parent && window.parent.qualiumNav) {
+              window.parent.qualiumNav.navigate(item.url);
+            } else if (typeof QualiumNavigationController !== "undefined" && window.QualiumNavigationController.navigateTo) {
               QualiumNavigationController.navigateTo(item.url, "tab");
             }
           }

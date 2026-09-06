@@ -15,7 +15,7 @@ mod tests {
     #[test]
     fn test_p01_url_telemetry_elimination() {
         let telemetry_payload = serde_json::json!({
-            "browser_version": "5.0.0",
+            "browser_version": "1.0.0",
             "telemetry_enabled": false,
             "recorded_urls": []
         });
