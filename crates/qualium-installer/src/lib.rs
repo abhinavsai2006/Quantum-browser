@@ -22,7 +22,7 @@ pub mod win32 {
         _description: &str,
         _icon_path: Option<&Path>,
     ) -> anyhow::Result<()> {
-        Ok(())
+        anyhow::bail!("Windows shortcut creation is only supported on Windows")
     }
 
     pub fn register_uninstall(
