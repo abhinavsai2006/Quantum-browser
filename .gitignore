@@ -6,8 +6,6 @@ target_ci/
 target_dist/
 target_repro_a/
 target_repro_b/
-*.exe
-qualium-daemon.exe
 
 # Large binary runtime (Gecko engine — download separately)
 runtime/*
