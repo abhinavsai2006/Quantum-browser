@@ -8,6 +8,9 @@ fn main() {
     println!("cargo:rerun-if-changed=../../runtime/browser/omni.ja");
     println!("cargo:rerun-if-changed=../../dist/QualiumQuantumBrowser.exe");
     println!("cargo:rerun-if-changed=../../dist/qualium-daemon.exe");
+    println!("cargo:rerun-if-changed=../../dist/QualiumUninstall.exe");
+    println!("cargo:rerun-if-changed=../../target/release/qualium_uninstaller.exe");
+    println!("cargo:rerun-if-changed=../../qualium.ico");
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
@@ -73,6 +76,39 @@ fn main() {
     let app_ini_src = repo_root.join("dist").join("application.ini");
     if app_ini_src.exists() {
         fs::copy(&app_ini_src, stage_dir.join("application.ini")).unwrap();
+    }
+
+    // 5. Copy qualium.ico icon
+    let icon_candidates = [
+        repo_root.join("qualium.ico"),
+        repo_root.join("dist").join("qualium.ico"),
+        repo_root.join("qualium").join("chrome").join("content").join("assets").join("icons").join("qualium.ico"),
+    ];
+    let res_dir = stage_dir.join("resources");
+    let _ = fs::create_dir_all(&res_dir);
+    for icon_cand in &icon_candidates {
+        if icon_cand.exists() {
+            let _ = fs::copy(icon_cand, stage_dir.join("qualium.ico"));
+            let _ = fs::copy(icon_cand, res_dir.join("qualium.ico"));
+            break;
+        }
+    }
+
+    // 6. Copy QualiumUninstall.exe if available from previous builds or dist
+    let uninstaller_candidates = [
+        repo_root.join("target").join("release").join("qualium_uninstaller.exe"),
+        repo_root.join("dist").join("QualiumUninstall.exe"),
+        repo_root.join("target_build").join("release").join("qualium_uninstaller.exe"),
+        PathBuf::from(r"C:\Users\mndab\AppData\Local\Temp\qualium_target\release\qualium_uninstaller.exe"),
+    ];
+    let uninstall_sub_dir = stage_dir.join("uninstall");
+    let _ = fs::create_dir_all(&uninstall_sub_dir);
+    for uninst_cand in &uninstaller_candidates {
+        if uninst_cand.exists() {
+            let _ = fs::copy(uninst_cand, stage_dir.join("QualiumUninstall.exe"));
+            let _ = fs::copy(uninst_cand, uninstall_sub_dir.join("QualiumUninstall.exe"));
+            break;
+        }
     }
 
     // 3. Compress staging directory into payload.zip using Python shutil.make_archive

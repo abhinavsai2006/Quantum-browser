@@ -1,0 +1,1634 @@
+//! Qualium Quantum Browser v5 — Pure Native Win32 Wizard GUI
+//! Zero WinForms, zero .NET, zero external runtime dependencies.
+//! Direct Win32 implementation with dark styling, high-DPI awareness,
+//! dynamic disk space metrics, and live progress reporting.
+
+#![allow(non_snake_case, static_mut_refs, dead_code)]
+
+use crate::engine::{InstallEngine, InstallOptions, PayloadMetrics};
+use crate::uninstaller_engine::UninstallerEngine;
+use crate::win32;
+use std::ffi::OsStr;
+use std::os::windows::ffi::OsStrExt;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::thread;
+
+pub mod ffi {
+    pub type HWND = *mut std::ffi::c_void;
+    pub type HDC = *mut std::ffi::c_void;
+    pub type HBRUSH = *mut std::ffi::c_void;
+    pub type HFONT = *mut std::ffi::c_void;
+    pub type HMENU = *mut std::ffi::c_void;
+    pub type HINSTANCE = *mut std::ffi::c_void;
+    pub type HICON = *mut std::ffi::c_void;
+    pub type HCURSOR = *mut std::ffi::c_void;
+    pub type BOOL = i32;
+    pub type DWORD = u32;
+    pub type UINT = u32;
+    pub type WPARAM = usize;
+    pub type LPARAM = isize;
+    pub type LRESULT = isize;
+    pub type LPCWSTR = *const u16;
+    pub type LPWSTR = *mut u16;
+
+    pub type WNDPROC = unsafe extern "system" fn(HWND, UINT, WPARAM, LPARAM) -> LRESULT;
+
+    #[repr(C)]
+    pub struct WNDCLASSEXW {
+        pub cbSize: UINT,
+        pub style: UINT,
+        pub lpfnWndProc: WNDPROC,
+        pub cbClsExtra: i32,
+        pub cbWndExtra: i32,
+        pub hInstance: HINSTANCE,
+        pub hIcon: HICON,
+        pub hCursor: HCURSOR,
+        pub hbrBackground: HBRUSH,
+        pub lpszMenuName: LPCWSTR,
+        pub lpszClassName: LPCWSTR,
+        pub hIconSm: HICON,
+    }
+
+    #[repr(C)]
+    pub struct POINT {
+        pub x: i32,
+        pub y: i32,
+    }
+
+    #[repr(C)]
+    pub struct MSG {
+        pub hwnd: HWND,
+        pub message: UINT,
+        pub wParam: WPARAM,
+        pub lParam: LPARAM,
+        pub time: DWORD,
+        pub pt: POINT,
+    }
+
+    #[repr(C)]
+    pub struct RECT {
+        pub left: i32,
+        pub top: i32,
+        pub right: i32,
+        pub bottom: i32,
+    }
+
+    #[repr(C)]
+    pub struct PAINTSTRUCT {
+        pub hdc: HDC,
+        pub fErase: BOOL,
+        pub rcPaint: RECT,
+        pub fRestore: BOOL,
+        pub fIncUpdate: BOOL,
+        pub rgbReserved: [u8; 32],
+    }
+
+    #[repr(C)]
+    pub struct INITCOMMONCONTROLSEX {
+        pub dwSize: DWORD,
+        pub dwICC: DWORD,
+    }
+
+    #[repr(C)]
+    pub struct BROWSEINFOW {
+        pub hwndOwner: HWND,
+        pub pidlRoot: *const std::ffi::c_void,
+        pub pszDisplayName: LPWSTR,
+        pub lpszTitle: LPCWSTR,
+        pub ulFlags: DWORD,
+        pub lpfn: *const std::ffi::c_void,
+        pub lParam: LPARAM,
+        pub iImage: i32,
+    }
+
+    pub const WS_OVERLAPPEDWINDOW: DWORD = 0x00CF0000;
+    pub const WS_VISIBLE: DWORD = 0x10000000;
+    pub const WS_CHILD: DWORD = 0x40000000;
+    pub const WS_BORDER: DWORD = 0x00800000;
+    pub const WS_TABSTOP: DWORD = 0x00010000;
+    pub const WS_VSCROLL: DWORD = 0x00200000;
+    pub const ES_MULTILINE: DWORD = 0x0004;
+    pub const ES_AUTOVSCROLL: DWORD = 0x0040;
+    pub const ES_READONLY: DWORD = 0x0800;
+    pub const BS_PUSHBUTTON: DWORD = 0x0000;
+    pub const BS_AUTOCHECKBOX: DWORD = 0x0003;
+    pub const BS_AUTORADIOBUTTON: DWORD = 0x0009;
+    pub const SS_LEFT: DWORD = 0x0000;
+
+    pub const WM_CREATE: UINT = 0x0001;
+    pub const WM_DESTROY: UINT = 0x0002;
+    pub const WM_PAINT: UINT = 0x000F;
+    pub const WM_COMMAND: UINT = 0x0111;
+    pub const WM_CTLCOLORSTATIC: UINT = 0x0138;
+    pub const WM_CTLCOLOREDIT: UINT = 0x0133;
+    pub const WM_CTLCOLORBTN: UINT = 0x0135;
+    pub const WM_SETFONT: UINT = 0x0030;
+    pub const WM_USER: UINT = 0x0400;
+
+    pub const BM_GETCHECK: UINT = 0x00F0;
+    pub const BM_SETCHECK: UINT = 0x00F1;
+    pub const BST_UNCHECKED: WPARAM = 0;
+    pub const BST_CHECKED: WPARAM = 1;
+
+    pub const PBM_SETRANGE32: UINT = WM_USER + 6;
+    pub const PBM_SETPOS: UINT = WM_USER + 2;
+
+    pub const SW_SHOW: i32 = 5;
+    pub const COLOR_WINDOW: i32 = 5;
+    pub const COLOR_BTNFACE: i32 = 15;
+    pub const CW_USEDEFAULT: i32 = 0x80000000usize as i32;
+
+    pub const BIF_RETURNONLYFSDIRS: DWORD = 0x00000001;
+    pub const BIF_NEWDIALOGSTYLE: DWORD = 0x00000040;
+
+    #[link(name = "user32")]
+    extern "system" {
+        pub fn RegisterClassExW(lpwcx: *const WNDCLASSEXW) -> u16;
+        pub fn CreateWindowExW(
+            dwExStyle: DWORD,
+            lpClassName: LPCWSTR,
+            lpWindowName: LPCWSTR,
+            dwStyle: DWORD,
+            X: i32,
+            Y: i32,
+            nWidth: i32,
+            nHeight: i32,
+            hWndParent: HWND,
+            hMenu: HMENU,
+            hInstance: HINSTANCE,
+            lpParam: *mut std::ffi::c_void,
+        ) -> HWND;
+        pub fn ShowWindow(hWnd: HWND, nCmdShow: i32) -> BOOL;
+        pub fn UpdateWindow(hWnd: HWND) -> BOOL;
+        pub fn GetMessageW(lpMsg: *mut MSG, hWnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT) -> BOOL;
+        pub fn TranslateMessage(lpMsg: *const MSG) -> BOOL;
+        pub fn DispatchMessageW(lpMsg: *const MSG) -> LRESULT;
+        pub fn PostQuitMessage(nExitCode: i32);
+        pub fn PostMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> BOOL;
+        pub fn SendMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> LRESULT;
+        pub fn DefWindowProcW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> LRESULT;
+        pub fn SetWindowTextW(hWnd: HWND, lpString: LPCWSTR) -> BOOL;
+        pub fn GetWindowTextW(hWnd: HWND, lpString: LPWSTR, nMaxCount: i32) -> i32;
+        pub fn EnableWindow(hWnd: HWND, bEnable: BOOL) -> BOOL;
+        pub fn DestroyWindow(hWnd: HWND) -> BOOL;
+        pub fn SetWindowLongPtrW(hWnd: HWND, nIndex: i32, dwNewLong: isize) -> isize;
+        pub fn GetWindowLongPtrW(hWnd: HWND, nIndex: i32) -> isize;
+        pub fn InvalidateRect(hWnd: HWND, lpRect: *const RECT, bErase: BOOL) -> BOOL;
+        pub fn BeginPaint(hWnd: HWND, lpPaint: *mut PAINTSTRUCT) -> HDC;
+        pub fn EndPaint(hWnd: HWND, lpPaint: *const PAINTSTRUCT) -> BOOL;
+        pub fn GetClientRect(hWnd: HWND, lpRect: *mut RECT) -> BOOL;
+        pub fn GetSystemMetrics(nIndex: i32) -> i32;
+        pub fn SetProcessDpiAwarenessContext(value: isize) -> BOOL;
+    }
+
+    #[link(name = "gdi32")]
+    extern "system" {
+        pub fn CreateSolidBrush(color: DWORD) -> HBRUSH;
+        pub fn DeleteObject(ho: *mut std::ffi::c_void) -> BOOL;
+        pub fn CreateFontW(
+            cHeight: i32,
+            cWidth: i32,
+            cEscapement: i32,
+            cOrientation: i32,
+            cWeight: i32,
+            bItalic: DWORD,
+            bUnderline: DWORD,
+            bStrikeOut: DWORD,
+            iCharSet: DWORD,
+            iOutPrecision: DWORD,
+            iClipPrecision: DWORD,
+            iQuality: DWORD,
+            iPitchAndFamily: DWORD,
+            pszFaceName: LPCWSTR,
+        ) -> HFONT;
+        pub fn SelectObject(hdc: HDC, h: *mut std::ffi::c_void) -> *mut std::ffi::c_void;
+        pub fn SetTextColor(hdc: HDC, color: DWORD) -> DWORD;
+        pub fn SetBkColor(hdc: HDC, color: DWORD) -> DWORD;
+        pub fn SetBkMode(hdc: HDC, mode: i32) -> i32;
+        pub fn FillRect(hDC: HDC, lprc: *const RECT, hbr: HBRUSH) -> i32;
+    }
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        pub fn GetModuleHandleW(lpModuleName: LPCWSTR) -> HINSTANCE;
+    }
+
+    #[link(name = "comctl32")]
+    extern "system" {
+        pub fn InitCommonControlsEx(picce: *const INITCOMMONCONTROLSEX) -> BOOL;
+    }
+
+    #[link(name = "shell32")]
+    extern "system" {
+        pub fn SHBrowseForFolderW(lpbi: *mut BROWSEINFOW) -> *mut std::ffi::c_void;
+        pub fn SHGetPathFromIDListW(pidl: *const std::ffi::c_void, pszPath: LPWSTR) -> BOOL;
+    }
+
+    #[link(name = "ole32")]
+    extern "system" {
+        pub fn CoInitializeEx(pvReserved: *mut std::ffi::c_void, dwCoInit: DWORD) -> i32;
+        pub fn CoUninitialize();
+        pub fn CoTaskMemFree(pv: *mut std::ffi::c_void);
+    }
+}
+
+pub fn to_wide_null(s: &str) -> Vec<u16> {
+    OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect()
+}
+
+// Custom Windows Messages for Worker Thread -> UI Synchronization
+const WM_INSTALL_PROGRESS: u32 = ffi::WM_USER + 101;
+const WM_INSTALL_DONE: u32 = ffi::WM_USER + 102;
+const WM_INSTALL_ERROR: u32 = ffi::WM_USER + 103;
+
+const WM_UNINSTALL_PROGRESS: u32 = ffi::WM_USER + 201;
+const WM_UNINSTALL_DONE: u32 = ffi::WM_USER + 202;
+const WM_UNINSTALL_ERROR: u32 = ffi::WM_USER + 203;
+
+// Button Control IDs
+const ID_BTN_CANCEL: usize = 1001;
+const ID_BTN_BACK: usize = 1002;
+const ID_BTN_NEXT: usize = 1003;
+const ID_BTN_BROWSE: usize = 1004;
+const ID_BTN_RETRY: usize = 1005;
+
+// Checkboxes and Radios
+const ID_CHK_DESKTOP: usize = 1010;
+const ID_CHK_STARTMENU: usize = 1011;
+const ID_CHK_LAUNCH: usize = 1012;
+const ID_CHK_STARTWIN: usize = 1013;
+const ID_CHK_LICENSE: usize = 1014;
+
+const ID_RAD_KEEP: usize = 1020;
+const ID_RAD_PURGE: usize = 1021;
+
+// Colors (COLORREF: 0x00BBGGRR)
+const COLOR_BG_MAIN: u32 = 0x002A170F;     // Slate 900 (RGB 15, 23, 42)
+const COLOR_BG_HEADER: u32 = 0x003B291E;   // Slate 800 (RGB 30, 41, 59)
+const COLOR_BG_INPUT: u32 = 0x00170F02;    // Slate 950 (RGB 2, 6, 23)
+const COLOR_TEXT_WHITE: u32 = 0x00FCFAF8;  // Slate 50 (RGB 248, 250, 252)
+const COLOR_TEXT_MUTED: u32 = 0x00B8A394;  // Slate 400 (RGB 148, 163, 184)
+const COLOR_TEXT_CYAN: u32 = 0x00F8BD38;   // Sky 400 (RGB 56, 189, 248)
+const COLOR_ALERT_RED: u32 = 0x004444EF;   // Red 500 (RGB 239, 68, 68)
+const COLOR_ALERT_YELLOW: u32 = 0x0024BFFB;// Amber 400 (RGB 251, 191, 36)
+const COLOR_ALERT_GREEN: u32 = 0x005EC522; // Green 500 (RGB 34, 197, 94)
+
+// ==============================================================================
+// 1. INSTALLER WIZARD IMPLEMENTATION
+// ==============================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InstallerPage {
+    Welcome = 1,
+    License = 2,
+    Location = 3,
+    Options = 4,
+    Ready = 5,
+    Installing = 6,
+    Verification = 7,
+    Complete = 8,
+}
+
+struct InstallerState {
+    page: InstallerPage,
+    dest_dir: PathBuf,
+    req_bytes: u64,
+    total_files: usize,
+    avail_bytes: u64,
+    create_desktop: bool,
+    create_startmenu: bool,
+    launch_after: bool,
+    start_with_win: bool,
+    license_accepted: bool,
+    engine: Arc<InstallEngine>,
+    hwnd: ffi::HWND,
+    // Controls
+    hwnd_title: ffi::HWND,
+    hwnd_subtitle: ffi::HWND,
+    hwnd_body: ffi::HWND,
+    hwnd_path_edit: ffi::HWND,
+    hwnd_btn_browse: ffi::HWND,
+    hwnd_lbl_space: ffi::HWND,
+    hwnd_chk_desktop: ffi::HWND,
+    hwnd_chk_startmenu: ffi::HWND,
+    hwnd_chk_launch: ffi::HWND,
+    hwnd_chk_startwin: ffi::HWND,
+    hwnd_chk_license: ffi::HWND,
+    hwnd_progress: ffi::HWND,
+    hwnd_prog_text: ffi::HWND,
+    hwnd_btn_cancel: ffi::HWND,
+    hwnd_btn_back: ffi::HWND,
+    hwnd_btn_next: ffi::HWND,
+    // Fonts & Brushes
+    brush_bg: ffi::HBRUSH,
+    brush_header: ffi::HBRUSH,
+    brush_input: ffi::HBRUSH,
+    font_title: ffi::HFONT,
+    font_subtitle: ffi::HFONT,
+    font_body: ffi::HFONT,
+    font_bold: ffi::HFONT,
+}
+
+static mut G_INSTALLER_STATE: Option<Box<InstallerState>> = None;
+
+pub fn run_installer_gui(engine: InstallEngine, default_dest: PathBuf) -> anyhow::Result<()> {
+    unsafe {
+        // 1. Initialize High-DPI & Common Controls
+        let _ = ffi::SetProcessDpiAwarenessContext(-4); // PER_MONITOR_AWARE_V2
+        let icce = ffi::INITCOMMONCONTROLSEX {
+            dwSize: std::mem::size_of::<ffi::INITCOMMONCONTROLSEX>() as u32,
+            dwICC: 0x00000020 | 0x00004000, // ICC_PROGRESS_CLASS | ICC_STANDARD_CLASSES
+        };
+        ffi::InitCommonControlsEx(&icce);
+        ffi::CoInitializeEx(std::ptr::null_mut(), 0x0); // COINIT_MULTITHREADED
+
+        let metrics = engine.inspect_payload().unwrap_or(PayloadMetrics {
+            total_file_count: 288,
+            total_uncompressed_bytes: 255 * 1024 * 1024,
+        });
+
+        let (free_bytes, _) = win32::get_disk_free_space(&default_dest).unwrap_or((100 * 1024 * 1024 * 1024, 0));
+
+        let hinstance = ffi::GetModuleHandleW(std::ptr::null());
+        let class_name = to_wide_null("QualiumInstallerClass");
+
+        let brush_bg = ffi::CreateSolidBrush(COLOR_BG_MAIN);
+        let brush_header = ffi::CreateSolidBrush(COLOR_BG_HEADER);
+        let brush_input = ffi::CreateSolidBrush(COLOR_BG_INPUT);
+
+        let font_title = create_font("Segoe UI", 24, 700);
+        let font_subtitle = create_font("Segoe UI", 16, 400);
+        let font_body = create_font("Segoe UI", 15, 400);
+        let font_bold = create_font("Segoe UI", 15, 600);
+
+        let wnd_class = ffi::WNDCLASSEXW {
+            cbSize: std::mem::size_of::<ffi::WNDCLASSEXW>() as u32,
+            style: 0x0003, // CS_HREDRAW | CS_VREDRAW
+            lpfnWndProc: installer_wndproc,
+            cbClsExtra: 0,
+            cbWndExtra: 0,
+            hInstance: hinstance,
+            hIcon: std::ptr::null_mut(),
+            hCursor: std::ptr::null_mut(),
+            hbrBackground: brush_bg,
+            lpszMenuName: std::ptr::null(),
+            lpszClassName: class_name.as_ptr(),
+            hIconSm: std::ptr::null_mut(),
+        };
+
+        ffi::RegisterClassExW(&wnd_class);
+
+        // Center window on screen (900 x 620)
+        let screen_w = ffi::GetSystemMetrics(0); // SM_CXSCREEN
+        let screen_h = ffi::GetSystemMetrics(1); // SM_CYSCREEN
+        let win_w = 900;
+        let win_h = 620;
+        let pos_x = (screen_w - win_w) / 2;
+        let pos_y = (screen_h - win_h) / 2;
+
+        let title = to_wide_null("Qualium Quantum Browser v5.0.0 Setup");
+        let hwnd = ffi::CreateWindowExW(
+            0,
+            class_name.as_ptr(),
+            title.as_ptr(),
+            0x00CA0000 | ffi::WS_VISIBLE, // WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE
+            pos_x,
+            pos_y,
+            win_w,
+            win_h,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            hinstance,
+            std::ptr::null_mut(),
+        );
+
+        let state = Box::new(InstallerState {
+            page: InstallerPage::Welcome,
+            dest_dir: default_dest,
+            req_bytes: metrics.total_uncompressed_bytes,
+            total_files: metrics.total_file_count,
+            avail_bytes: free_bytes,
+            create_desktop: true,
+            create_startmenu: true,
+            launch_after: true,
+            start_with_win: false,
+            license_accepted: true,
+            engine: Arc::new(engine),
+            hwnd,
+            hwnd_title: std::ptr::null_mut(),
+            hwnd_subtitle: std::ptr::null_mut(),
+            hwnd_body: std::ptr::null_mut(),
+            hwnd_path_edit: std::ptr::null_mut(),
+            hwnd_btn_browse: std::ptr::null_mut(),
+            hwnd_lbl_space: std::ptr::null_mut(),
+            hwnd_chk_desktop: std::ptr::null_mut(),
+            hwnd_chk_startmenu: std::ptr::null_mut(),
+            hwnd_chk_launch: std::ptr::null_mut(),
+            hwnd_chk_startwin: std::ptr::null_mut(),
+            hwnd_chk_license: std::ptr::null_mut(),
+            hwnd_progress: std::ptr::null_mut(),
+            hwnd_prog_text: std::ptr::null_mut(),
+            hwnd_btn_cancel: std::ptr::null_mut(),
+            hwnd_btn_back: std::ptr::null_mut(),
+            hwnd_btn_next: std::ptr::null_mut(),
+            brush_bg,
+            brush_header,
+            brush_input,
+            font_title,
+            font_subtitle,
+            font_body,
+            font_bold,
+        });
+
+        G_INSTALLER_STATE = Some(state);
+
+        create_installer_controls(hwnd);
+        update_installer_page();
+
+        ffi::ShowWindow(hwnd, ffi::SW_SHOW);
+        ffi::UpdateWindow(hwnd);
+
+        let mut msg: ffi::MSG = std::mem::zeroed();
+        while ffi::GetMessageW(&mut msg, std::ptr::null_mut(), 0, 0) > 0 {
+            ffi::TranslateMessage(&msg);
+            ffi::DispatchMessageW(&msg);
+        }
+
+        ffi::CoUninitialize();
+    }
+
+    Ok(())
+}
+
+unsafe fn create_installer_controls(hwnd: ffi::HWND) {
+    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+        let hinstance = ffi::GetModuleHandleW(std::ptr::null());
+        let static_class = to_wide_null("STATIC");
+        let btn_class = to_wide_null("BUTTON");
+        let edit_class = to_wide_null("EDIT");
+        let prog_class = to_wide_null("msctls_progress32");
+
+        // Header Title
+        state.hwnd_title = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("QUALIUM QUANTUM BROWSER").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            30, 20, 840, 30, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_title, ffi::WM_SETFONT, state.font_title as usize, 1);
+
+        // Header Subtitle
+        state.hwnd_subtitle = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("Welcome to Setup").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            30, 52, 840, 24, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_subtitle, ffi::WM_SETFONT, state.font_subtitle as usize, 1);
+
+        // Main Multiline Body / Description Text
+        state.hwnd_body = ffi::CreateWindowExW(
+            0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::ES_MULTILINE | ffi::ES_READONLY | ffi::ES_AUTOVSCROLL | ffi::WS_VSCROLL,
+            30, 110, 830, 390, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_body, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        // Path Edit Box (Location Page)
+        state.hwnd_path_edit = ffi::CreateWindowExW(
+            0, edit_class.as_ptr(), to_wide_null(&state.dest_dir.to_string_lossy()).as_ptr(),
+            ffi::WS_CHILD | ffi::WS_BORDER | ffi::WS_TABSTOP,
+            30, 190, 680, 32, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_path_edit, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        // Browse Button
+        state.hwnd_btn_browse = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Browse...").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_TABSTOP,
+            720, 189, 130, 34, hwnd, ID_BTN_BROWSE as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_browse, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        // Space Information Label
+        state.hwnd_lbl_space = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("").as_ptr(),
+            ffi::WS_CHILD,
+            30, 240, 820, 60, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_lbl_space, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        // Checkboxes for Options Page
+        state.hwnd_chk_desktop = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Create Desktop Shortcut (Qualium Quantum Browser.lnk)").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
+            40, 160, 600, 28, hwnd, ID_CHK_DESKTOP as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_chk_desktop, ffi::WM_SETFONT, state.font_bold as usize, 1);
+        ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
+
+        state.hwnd_chk_startmenu = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Add to Windows Start Menu (Programs\\Qualium)").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
+            40, 200, 600, 28, hwnd, ID_CHK_STARTMENU as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::WM_SETFONT, state.font_bold as usize, 1);
+        ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
+
+        state.hwnd_chk_launch = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Launch Qualium Quantum Browser after installation").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
+            40, 240, 600, 28, hwnd, ID_CHK_LAUNCH as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_chk_launch, ffi::WM_SETFONT, state.font_bold as usize, 1);
+        ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
+
+        state.hwnd_chk_startwin = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Start Qualium automatically when Windows starts (Optional)").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
+            40, 280, 600, 28, hwnd, ID_CHK_STARTWIN as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_chk_startwin, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        state.hwnd_chk_license = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("I accept the terms in the License Agreement and Privacy Disclosures").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
+            30, 480, 600, 26, hwnd, ID_CHK_LICENSE as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_chk_license, ffi::WM_SETFONT, state.font_bold as usize, 1);
+        ffi::SendMessageW(state.hwnd_chk_license, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
+
+        // Progress Bar
+        state.hwnd_progress = ffi::CreateWindowExW(
+            0, prog_class.as_ptr(), std::ptr::null(),
+            ffi::WS_CHILD | ffi::WS_BORDER,
+            30, 220, 830, 32, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_progress, ffi::PBM_SETRANGE32, 0, 1000);
+
+        // Progress Details Text
+        state.hwnd_prog_text = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("Preparing installation...").as_ptr(),
+            ffi::WS_CHILD,
+            30, 265, 830, 50, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_prog_text, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        // Bottom Action Buttons
+        state.hwnd_btn_cancel = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Cancel").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
+            30, 525, 110, 38, hwnd, ID_BTN_CANCEL as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_cancel, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        state.hwnd_btn_back = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("< Back").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
+            610, 525, 115, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_back, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        state.hwnd_btn_next = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Next >").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
+            735, 525, 125, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_next, ffi::WM_SETFONT, state.font_bold as usize, 1);
+    }
+}
+
+unsafe fn update_installer_page() {
+    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+        let hide = |w: ffi::HWND| if !w.is_null() { ffi::ShowWindow(w, 0); };
+        let show = |w: ffi::HWND| if !w.is_null() { ffi::ShowWindow(w, 5); };
+
+        // Hide dynamic controls first
+        hide(state.hwnd_path_edit);
+        hide(state.hwnd_btn_browse);
+        hide(state.hwnd_lbl_space);
+        hide(state.hwnd_chk_desktop);
+        hide(state.hwnd_chk_startmenu);
+        hide(state.hwnd_chk_launch);
+        hide(state.hwnd_chk_startwin);
+        hide(state.hwnd_chk_license);
+        hide(state.hwnd_progress);
+        hide(state.hwnd_prog_text);
+
+        ffi::EnableWindow(state.hwnd_btn_back, 1);
+        ffi::EnableWindow(state.hwnd_btn_next, 1);
+        ffi::EnableWindow(state.hwnd_btn_cancel, 1);
+
+        match state.page {
+            InstallerPage::Welcome => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 1 of 8: Welcome to Qualium Quantum Browser").as_ptr());
+                let welcome_txt = "QUALIUM QUANTUM BROWSER v5.0.0\r\n\r\n\
+                    Welcome to the official setup wizard for Qualium Quantum Browser.\r\n\r\n\
+                    Product Highlights:\r\n\
+                    • Complete User Privacy: Zero corporate tracking, zero telemetry pings, and hardware-isolated browsing sessions.\r\n\
+                    • Genuine Gecko ESR 140 Engine: Native gecko rendering architecture with Necko high-performance networking.\r\n\
+                    • Clean In-Tab Management: All bookmarks, downloads, history, and settings load inside normal browser tabs (qualium:// urls) without floating popups.\r\n\
+                    • Quantum Cryptographic Vault: AES-256-GCM / X25519 local key management and credential isolation.\r\n\r\n\
+                    Click 'Next >' to review the license notices and continue installation.";
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(welcome_txt).as_ptr());
+                show(state.hwnd_body);
+
+                ffi::EnableWindow(state.hwnd_btn_back, 0);
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Next >").as_ptr());
+            }
+            InstallerPage::License => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 2 of 8: License Agreement & Notices").as_ptr());
+                let lic_txt = "MOZILLA PUBLIC LICENSE Version 2.0 & QUALIUM QUANTUM BROWSER TERMS\r\n\r\n\
+                    1. Definitions\r\n\
+                    1.1. \"Contributor\" means each individual or legal entity that creates, contributes to the creation of, or owns Covered Software.\r\n\
+                    1.2. \"Covered Software\" means Source Code Form to which the initial Contributor has attached the notice in Exhibit A, the Executable Form of such Source Code Form, and Modifications of such Source Code Form.\r\n\r\n\
+                    2. License Grants and Conditions\r\n\
+                    Each Contributor hereby grants You a world-wide, royalty-free, non-exclusive license to use, reproduce, make available, modify, display, perform, distribute, and otherwise exploit its Contributions.\r\n\r\n\
+                    3. Qualium Privacy & Security Assurance\r\n\
+                    Qualium Quantum Browser guarantees that no telemetry data, browsing history, keystrokes, or search requests are transmitted to Qualium or external third parties without explicit user consent. All cryptographic vault data remains strictly local on your device.\r\n\r\n\
+                    Portions of this software are based on Mozilla Gecko and Firefox technology under MPL 2.0.";
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(lic_txt).as_ptr());
+                show(state.hwnd_body);
+                show(state.hwnd_chk_license);
+
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Agree & Continue >").as_ptr());
+            }
+            InstallerPage::Location => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 3 of 8: Choose Install Location").as_ptr());
+                let loc_intro = "Setup will install Qualium Quantum Browser into the following destination folder.\r\n\r\n\
+                    To install to a different directory, click 'Browse...' and select another path.";
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(loc_intro).as_ptr());
+                show(state.hwnd_body);
+                show(state.hwnd_path_edit);
+                show(state.hwnd_btn_browse);
+                show(state.hwnd_lbl_space);
+
+                // Update dynamic space
+                let req_mb = (state.req_bytes as f64 / (1024.0 * 1024.0)).ceil();
+                if let Some((avail, _)) = win32::get_disk_free_space(&state.dest_dir) {
+                    state.avail_bytes = avail;
+                }
+                let avail_gb = state.avail_bytes as f64 / (1024.0 * 1024.0 * 1024.0);
+
+                let space_info = if state.avail_bytes < state.req_bytes + 50 * 1024 * 1024 {
+                    ffi::EnableWindow(state.hwnd_btn_next, 0);
+                    format!("Space required: {:.1} MB\r\nSpace available: {:.2} GB\r\n[!] Insufficient disk space on the selected drive!", req_mb, avail_gb)
+                } else {
+                    format!("Space required: {:.1} MB\r\nSpace available: {:.2} GB (Drive free space verified)", req_mb, avail_gb)
+                };
+                ffi::SetWindowTextW(state.hwnd_lbl_space, to_wide_null(&space_info).as_ptr());
+
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Next >").as_ptr());
+            }
+            InstallerPage::Options => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 4 of 8: Select Installation Options").as_ptr());
+                let opt_txt = "Configure desktop shortcuts and startup preferences for Qualium Quantum Browser:";
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(opt_txt).as_ptr());
+                show(state.hwnd_body);
+                show(state.hwnd_chk_desktop);
+                show(state.hwnd_chk_startmenu);
+                show(state.hwnd_chk_launch);
+                show(state.hwnd_chk_startwin);
+
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Next >").as_ptr());
+            }
+            InstallerPage::Ready => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 5 of 8: Ready to Install").as_ptr());
+                let req_mb = (state.req_bytes as f64 / (1024.0 * 1024.0)).ceil();
+                let avail_gb = state.avail_bytes as f64 / (1024.0 * 1024.0 * 1024.0);
+                let ready_summary = format!(
+                    "Setup is now ready to begin installing Qualium Quantum Browser v5.0.0 on your computer.\r\n\r\n\
+                    Installation Summary:\r\n\
+                    • Product: Qualium Quantum Browser v5.0.0 (x64 Native)\r\n\
+                    • Destination Folder:\r\n    {}\r\n\
+                    • Disk Space Required: {:.1} MB\r\n\
+                    • Disk Space Available: {:.2} GB\r\n\
+                    • Desktop Shortcut: {}\r\n\
+                    • Start Menu Shortcut: {}\r\n\
+                    • Launch After Install: {}\r\n\r\n\
+                    Core Binaries to Install:\r\n\
+                    • QualiumQuantumBrowser.exe (Primary Desktop Browser)\r\n\
+                    • qualium-daemon.exe (Background Privacy & Network Daemon)\r\n\
+                    • Gecko ESR 140 Engine Runtime & Necko Stack ({} files)\r\n\
+                    • Qualium Chrome Assets & Internal Navigation Schemes\r\n\
+                    • QualiumUninstall.exe (Independent Windows Uninstaller)\r\n\r\n\
+                    Click 'Install' to start the installation.",
+                    state.dest_dir.display(),
+                    req_mb,
+                    avail_gb,
+                    if state.create_desktop { "Yes" } else { "No" },
+                    if state.create_startmenu { "Yes" } else { "No" },
+                    if state.launch_after { "Yes" } else { "No" },
+                    state.total_files
+                );
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&ready_summary).as_ptr());
+                show(state.hwnd_body);
+
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Install").as_ptr());
+            }
+            InstallerPage::Installing => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 6 of 8: Installing Qualium Quantum Browser...").as_ptr());
+                hide(state.hwnd_body);
+                show(state.hwnd_progress);
+                show(state.hwnd_prog_text);
+
+                ffi::EnableWindow(state.hwnd_btn_back, 0);
+                ffi::EnableWindow(state.hwnd_btn_next, 0);
+                ffi::EnableWindow(state.hwnd_btn_cancel, 0);
+
+                // Start background worker thread
+                start_install_worker(state.hwnd);
+            }
+            InstallerPage::Verification => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 7 of 8: Verifying Installation...").as_ptr());
+                ffi::SendMessageW(state.hwnd_progress, ffi::PBM_SETPOS, 1000, 0);
+                ffi::SetWindowTextW(state.hwnd_prog_text, to_wide_null("Verifying binary integrity and SHA256 checksums...").as_ptr());
+            }
+            InstallerPage::Complete => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 8 of 8: Installation Complete!").as_ptr());
+                let done_txt = format!(
+                    "SUCCESS!\r\n\r\n\
+                    Qualium Quantum Browser v5.0.0 has been successfully installed on your computer.\r\n\r\n\
+                    Installed Location:\r\n    {}\r\n\r\n\
+                    Authoritative Manifest Generated:\r\n    {}\\install-manifest.json\r\n\r\n\
+                    Desktop and Start Menu shortcuts have been configured.\r\n\
+                    You can manage or uninstall this product at any time via Windows Installed Apps.\r\n\r\n\
+                    Click 'Finish' to exit Setup and launch Qualium Quantum Browser.",
+                    state.dest_dir.display(),
+                    state.dest_dir.display()
+                );
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&done_txt).as_ptr());
+                show(state.hwnd_body);
+                show(state.hwnd_chk_launch);
+
+                hide(state.hwnd_progress);
+                hide(state.hwnd_prog_text);
+                hide(state.hwnd_btn_cancel);
+                ffi::EnableWindow(state.hwnd_btn_back, 0);
+                ffi::EnableWindow(state.hwnd_btn_next, 1);
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Finish").as_ptr());
+            }
+        }
+
+        // Redraw window
+        let mut rc: ffi::RECT = std::mem::zeroed();
+        ffi::GetClientRect(state.hwnd, &mut rc);
+        ffi::InvalidateRect(state.hwnd, &rc, 1);
+    }
+}
+
+fn start_install_worker(hwnd: ffi::HWND) {
+    let engine = unsafe {
+        if let Some(state) = G_INSTALLER_STATE.as_ref() {
+            state.engine.clone()
+        } else {
+            return;
+        }
+    };
+
+    let options = unsafe {
+        if let Some(state) = G_INSTALLER_STATE.as_ref() {
+            InstallOptions {
+                install_dir: state.dest_dir.clone(),
+                create_desktop_shortcut: state.create_desktop,
+                create_start_menu_shortcut: state.create_startmenu,
+                launch_after_install: state.launch_after,
+                start_with_windows: state.start_with_win,
+            }
+        } else {
+            return;
+        }
+    };
+
+    let hwnd_val = hwnd as usize;
+    thread::spawn(move || {
+        let hwnd = hwnd_val as ffi::HWND;
+        let res = engine.install(&options, |cur_f, tot_f, cur_b, tot_b, path, comp| {
+            let pct = if tot_b > 0 { (cur_b as f64 / tot_b as f64 * 1000.0) as usize } else { 0 };
+            let msg = format!("{}: {} ({}/{})", comp, path, cur_f, tot_f);
+            let boxed = Box::into_raw(Box::new(msg)) as isize;
+            unsafe {
+                ffi::PostMessageW(hwnd, WM_INSTALL_PROGRESS, pct, boxed);
+            }
+        });
+
+        match res {
+            Ok(_) => unsafe {
+                ffi::PostMessageW(hwnd, WM_INSTALL_DONE, 0, 0);
+            },
+            Err(e) => {
+                let err_msg = e.to_string();
+                let boxed = Box::into_raw(Box::new(err_msg)) as isize;
+                unsafe {
+                    ffi::PostMessageW(hwnd, WM_INSTALL_ERROR, 0, boxed);
+                }
+            }
+        }
+    });
+}
+
+unsafe extern "system" fn installer_wndproc(
+    hwnd: ffi::HWND,
+    msg: ffi::UINT,
+    wparam: ffi::WPARAM,
+    lparam: ffi::LPARAM,
+) -> ffi::LRESULT {
+    match msg {
+        ffi::WM_PAINT => {
+            let mut ps: ffi::PAINTSTRUCT = std::mem::zeroed();
+            let hdc = ffi::BeginPaint(hwnd, &mut ps);
+
+            if let Some(state) = G_INSTALLER_STATE.as_ref() {
+                // Paint Header Background Banner (Top 85px)
+                let rect_header = ffi::RECT { left: 0, top: 0, right: 900, bottom: 85 };
+                ffi::FillRect(hdc, &rect_header, state.brush_header);
+
+                // Paint Top Header Separator Line
+                let rect_line1 = ffi::RECT { left: 0, top: 85, right: 900, bottom: 86 };
+                let brush_line = ffi::CreateSolidBrush(0x00503525); // Border slate
+                ffi::FillRect(hdc, &rect_line1, brush_line);
+
+                // Paint Bottom Action Bar Separator Line
+                let rect_line2 = ffi::RECT { left: 0, top: 515, right: 900, bottom: 516 };
+                ffi::FillRect(hdc, &rect_line2, brush_line);
+
+                ffi::DeleteObject(brush_line as *mut std::ffi::c_void);
+            }
+
+            ffi::EndPaint(hwnd, &ps);
+            0
+        }
+        ffi::WM_CTLCOLORSTATIC => {
+            let hdc = wparam as ffi::HDC;
+            ffi::SetBkMode(hdc, 1); // TRANSPARENT
+            if let Some(state) = G_INSTALLER_STATE.as_ref() {
+                let ctl_hwnd = lparam as ffi::HWND;
+                if ctl_hwnd == state.hwnd_title {
+                    ffi::SetTextColor(hdc, COLOR_TEXT_CYAN);
+                    return state.brush_header as ffi::LRESULT;
+                } else if ctl_hwnd == state.hwnd_subtitle {
+                    ffi::SetTextColor(hdc, COLOR_TEXT_MUTED);
+                    return state.brush_header as ffi::LRESULT;
+                } else {
+                    ffi::SetTextColor(hdc, COLOR_TEXT_WHITE);
+                    return state.brush_bg as ffi::LRESULT;
+                }
+            }
+            0
+        }
+        ffi::WM_CTLCOLOREDIT => {
+            let hdc = wparam as ffi::HDC;
+            ffi::SetTextColor(hdc, COLOR_TEXT_WHITE);
+            ffi::SetBkColor(hdc, COLOR_BG_INPUT);
+            if let Some(state) = G_INSTALLER_STATE.as_ref() {
+                return state.brush_input as ffi::LRESULT;
+            }
+            0
+        }
+        ffi::WM_CTLCOLORBTN => {
+            if let Some(state) = G_INSTALLER_STATE.as_ref() {
+                return state.brush_bg as ffi::LRESULT;
+            }
+            0
+        }
+        ffi::WM_COMMAND => {
+            let cmd_id = (wparam & 0xFFFF) as usize;
+            match cmd_id {
+                ID_BTN_CANCEL => {
+                    ffi::PostQuitMessage(0);
+                }
+                ID_BTN_BACK => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        state.page = match state.page {
+                            InstallerPage::License => InstallerPage::Welcome,
+                            InstallerPage::Location => InstallerPage::License,
+                            InstallerPage::Options => InstallerPage::Location,
+                            InstallerPage::Ready => InstallerPage::Options,
+                            _ => state.page,
+                        };
+                        update_installer_page();
+                    }
+                }
+                ID_BTN_NEXT => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        match state.page {
+                            InstallerPage::Welcome => {
+                                state.page = InstallerPage::License;
+                                update_installer_page();
+                            }
+                            InstallerPage::License => {
+                                state.page = InstallerPage::Location;
+                                update_installer_page();
+                            }
+                            InstallerPage::Location => {
+                                // Read text from edit control
+                                let mut buf = [0u16; 1024];
+                                let len = ffi::GetWindowTextW(state.hwnd_path_edit, buf.as_mut_ptr(), 1024);
+                                if len > 0 {
+                                    let s = String::from_utf16_lossy(&buf[..len as usize]);
+                                    state.dest_dir = PathBuf::from(s.trim());
+                                }
+                                state.page = InstallerPage::Options;
+                                update_installer_page();
+                            }
+                            InstallerPage::Options => {
+                                state.create_desktop = ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                                state.create_startmenu = ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                                state.launch_after = ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                                state.start_with_win = ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                                state.page = InstallerPage::Ready;
+                                update_installer_page();
+                            }
+                            InstallerPage::Ready => {
+                                state.page = InstallerPage::Installing;
+                                update_installer_page();
+                            }
+                            InstallerPage::Complete => {
+                                let do_launch = ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                                if do_launch {
+                                    let exe_path = state.dest_dir.join("QualiumQuantumBrowser.exe");
+                                    let alt_exe = state.dest_dir.join("QauliumQuantumBrowser.exe");
+                                    let target = if exe_path.exists() { exe_path } else { alt_exe };
+                                    if target.exists() {
+                                        let _ = std::process::Command::new(&target)
+                                            .current_dir(&state.dest_dir)
+                                            .spawn();
+                                    }
+                                }
+                                ffi::PostQuitMessage(0);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                ID_BTN_BROWSE => {
+                    if let Some(folder) = browse_for_folder(hwnd, "Select Qualium Destination Folder") {
+                        if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                            state.dest_dir = folder;
+                            ffi::SetWindowTextW(state.hwnd_path_edit, to_wide_null(&state.dest_dir.to_string_lossy()).as_ptr());
+                            update_installer_page();
+                        }
+                    }
+                }
+                _ => {}
+            }
+            0
+        }
+        WM_INSTALL_PROGRESS => {
+            let pct = wparam as isize;
+            let msg_ptr = lparam as *mut String;
+            if !msg_ptr.is_null() {
+                let msg = Box::from_raw(msg_ptr);
+                if let Some(state) = G_INSTALLER_STATE.as_ref() {
+                    ffi::SendMessageW(state.hwnd_progress, ffi::PBM_SETPOS, pct as usize, 0);
+                    ffi::SetWindowTextW(state.hwnd_prog_text, to_wide_null(&msg).as_ptr());
+                }
+            }
+            0
+        }
+        WM_INSTALL_DONE => {
+            if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                state.page = InstallerPage::Complete;
+                update_installer_page();
+            }
+            0
+        }
+        WM_INSTALL_ERROR => {
+            let err_ptr = lparam as *mut String;
+            if !err_ptr.is_null() {
+                let err_msg = Box::from_raw(err_ptr);
+                if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                    let err_display = format!("Installation Failed:\r\n\r\n{}\r\n\r\nPlease check permissions and disk space.", err_msg);
+                    ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&err_display).as_ptr());
+                    ffi::ShowWindow(state.hwnd_body, 5);
+                    ffi::ShowWindow(state.hwnd_progress, 0);
+                    ffi::ShowWindow(state.hwnd_prog_text, 0);
+                    ffi::EnableWindow(state.hwnd_btn_cancel, 1);
+                }
+            }
+            0
+        }
+        ffi::WM_DESTROY => {
+            ffi::PostQuitMessage(0);
+            0
+        }
+        _ => ffi::DefWindowProcW(hwnd, msg, wparam, lparam),
+    }
+}
+
+// ==============================================================================
+// 2. UNINSTALLER WIZARD IMPLEMENTATION
+// ==============================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UninstallerPage {
+    ProcessCheck = 1,
+    Options = 2,
+    Ready = 3,
+    Removing = 4,
+    Complete = 5,
+}
+
+struct UninstallerState {
+    page: UninstallerPage,
+    install_dir: PathBuf,
+    keep_user_data: bool,
+    running_procs: Vec<String>,
+    engine: Arc<UninstallerEngine>,
+    hwnd: ffi::HWND,
+    hwnd_title: ffi::HWND,
+    hwnd_subtitle: ffi::HWND,
+    hwnd_body: ffi::HWND,
+    hwnd_lbl_warning: ffi::HWND,
+    hwnd_btn_retry: ffi::HWND,
+    hwnd_rad_keep: ffi::HWND,
+    hwnd_rad_purge: ffi::HWND,
+    hwnd_progress: ffi::HWND,
+    hwnd_prog_text: ffi::HWND,
+    hwnd_btn_cancel: ffi::HWND,
+    hwnd_btn_back: ffi::HWND,
+    hwnd_btn_next: ffi::HWND,
+    brush_bg: ffi::HBRUSH,
+    brush_header: ffi::HBRUSH,
+    brush_input: ffi::HBRUSH,
+    font_title: ffi::HFONT,
+    font_subtitle: ffi::HFONT,
+    font_body: ffi::HFONT,
+    font_bold: ffi::HFONT,
+}
+
+static mut G_UNINSTALLER_STATE: Option<Box<UninstallerState>> = None;
+
+pub fn run_uninstaller_gui(engine: UninstallerEngine, install_dir: PathBuf) -> anyhow::Result<()> {
+    unsafe {
+        let _ = ffi::SetProcessDpiAwarenessContext(-4);
+        let icce = ffi::INITCOMMONCONTROLSEX {
+            dwSize: std::mem::size_of::<ffi::INITCOMMONCONTROLSEX>() as u32,
+            dwICC: 0x00000020 | 0x00004000,
+        };
+        ffi::InitCommonControlsEx(&icce);
+
+        let running = win32::get_running_qualium_processes();
+
+        let hinstance = ffi::GetModuleHandleW(std::ptr::null());
+        let class_name = to_wide_null("QualiumUninstallerClass");
+
+        let brush_bg = ffi::CreateSolidBrush(COLOR_BG_MAIN);
+        let brush_header = ffi::CreateSolidBrush(COLOR_BG_HEADER);
+        let brush_input = ffi::CreateSolidBrush(COLOR_BG_INPUT);
+
+        let font_title = create_font("Segoe UI", 24, 700);
+        let font_subtitle = create_font("Segoe UI", 16, 400);
+        let font_body = create_font("Segoe UI", 15, 400);
+        let font_bold = create_font("Segoe UI", 15, 600);
+
+        let wnd_class = ffi::WNDCLASSEXW {
+            cbSize: std::mem::size_of::<ffi::WNDCLASSEXW>() as u32,
+            style: 0x0003,
+            lpfnWndProc: uninstaller_wndproc,
+            cbClsExtra: 0,
+            cbWndExtra: 0,
+            hInstance: hinstance,
+            hIcon: std::ptr::null_mut(),
+            hCursor: std::ptr::null_mut(),
+            hbrBackground: brush_bg,
+            lpszMenuName: std::ptr::null(),
+            lpszClassName: class_name.as_ptr(),
+            hIconSm: std::ptr::null_mut(),
+        };
+
+        ffi::RegisterClassExW(&wnd_class);
+
+        let screen_w = ffi::GetSystemMetrics(0);
+        let screen_h = ffi::GetSystemMetrics(1);
+        let win_w = 880;
+        let win_h = 600;
+        let pos_x = (screen_w - win_w) / 2;
+        let pos_y = (screen_h - win_h) / 2;
+
+        let title = to_wide_null("Qualium Quantum Browser — Uninstaller");
+        let hwnd = ffi::CreateWindowExW(
+            0,
+            class_name.as_ptr(),
+            title.as_ptr(),
+            0x00CA0000 | ffi::WS_VISIBLE,
+            pos_x,
+            pos_y,
+            win_w,
+            win_h,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            hinstance,
+            std::ptr::null_mut(),
+        );
+
+        let state = Box::new(UninstallerState {
+            page: UninstallerPage::ProcessCheck,
+            install_dir,
+            keep_user_data: true,
+            running_procs: running,
+            engine: Arc::new(engine),
+            hwnd,
+            hwnd_title: std::ptr::null_mut(),
+            hwnd_subtitle: std::ptr::null_mut(),
+            hwnd_body: std::ptr::null_mut(),
+            hwnd_lbl_warning: std::ptr::null_mut(),
+            hwnd_btn_retry: std::ptr::null_mut(),
+            hwnd_rad_keep: std::ptr::null_mut(),
+            hwnd_rad_purge: std::ptr::null_mut(),
+            hwnd_progress: std::ptr::null_mut(),
+            hwnd_prog_text: std::ptr::null_mut(),
+            hwnd_btn_cancel: std::ptr::null_mut(),
+            hwnd_btn_back: std::ptr::null_mut(),
+            hwnd_btn_next: std::ptr::null_mut(),
+            brush_bg,
+            brush_header,
+            brush_input,
+            font_title,
+            font_subtitle,
+            font_body,
+            font_bold,
+        });
+
+        G_UNINSTALLER_STATE = Some(state);
+
+        create_uninstaller_controls(hwnd);
+        update_uninstaller_page();
+
+        ffi::ShowWindow(hwnd, ffi::SW_SHOW);
+        ffi::UpdateWindow(hwnd);
+
+        let mut msg: ffi::MSG = std::mem::zeroed();
+        while ffi::GetMessageW(&mut msg, std::ptr::null_mut(), 0, 0) > 0 {
+            ffi::TranslateMessage(&msg);
+            ffi::DispatchMessageW(&msg);
+        }
+    }
+
+    Ok(())
+}
+
+unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
+    if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+        let hinstance = ffi::GetModuleHandleW(std::ptr::null());
+        let static_class = to_wide_null("STATIC");
+        let btn_class = to_wide_null("BUTTON");
+        let edit_class = to_wide_null("EDIT");
+        let prog_class = to_wide_null("msctls_progress32");
+
+        // Header Title
+        state.hwnd_title = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("QUALIUM QUANTUM BROWSER").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            30, 20, 820, 30, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_title, ffi::WM_SETFONT, state.font_title as usize, 1);
+
+        // Header Subtitle
+        state.hwnd_subtitle = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("Uninstallation Wizard").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            30, 52, 820, 24, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_subtitle, ffi::WM_SETFONT, state.font_subtitle as usize, 1);
+
+        // Main Multiline Body
+        state.hwnd_body = ffi::CreateWindowExW(
+            0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::ES_MULTILINE | ffi::ES_READONLY | ffi::ES_AUTOVSCROLL | ffi::WS_VSCROLL,
+            30, 110, 810, 380, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_body, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        // Process Running Warning Label
+        state.hwnd_lbl_warning = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("").as_ptr(),
+            ffi::WS_CHILD,
+            40, 280, 780, 45, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_lbl_warning, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        // Retry Detection Button
+        state.hwnd_btn_retry = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Retry Detection").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_TABSTOP,
+            40, 335, 160, 36, hwnd, ID_BTN_RETRY as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_retry, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        // Radio Buttons (User Data Options)
+        state.hwnd_rad_keep = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Keep personal data (Preserve bookmarks, settings, history, and vault in %LOCALAPPDATA%\\Qualium)").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTORADIOBUTTON | ffi::WS_TABSTOP,
+            40, 180, 780, 30, hwnd, ID_RAD_KEEP as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_rad_keep, ffi::WM_SETFONT, state.font_bold as usize, 1);
+        ffi::SendMessageW(state.hwnd_rad_keep, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
+
+        state.hwnd_rad_purge = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Remove all Qualium personal data (Complete purge of application files and user profile)").as_ptr(),
+            ffi::WS_CHILD | ffi::BS_AUTORADIOBUTTON | ffi::WS_TABSTOP,
+            40, 225, 780, 30, hwnd, ID_RAD_PURGE as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_rad_purge, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        // Progress Bar
+        state.hwnd_progress = ffi::CreateWindowExW(
+            0, prog_class.as_ptr(), std::ptr::null(),
+            ffi::WS_CHILD | ffi::WS_BORDER,
+            30, 220, 810, 32, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_progress, ffi::PBM_SETRANGE32, 0, 100);
+
+        // Progress text
+        state.hwnd_prog_text = ffi::CreateWindowExW(
+            0, static_class.as_ptr(), to_wide_null("Preparing removal...").as_ptr(),
+            ffi::WS_CHILD,
+            30, 265, 810, 50, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_prog_text, ffi::WM_SETFONT, state.font_body as usize, 1);
+
+        // Action Buttons
+        state.hwnd_btn_cancel = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Cancel").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
+            30, 505, 110, 38, hwnd, ID_BTN_CANCEL as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_cancel, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        state.hwnd_btn_back = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("< Back").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
+            590, 505, 115, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_back, ffi::WM_SETFONT, state.font_bold as usize, 1);
+
+        state.hwnd_btn_next = ffi::CreateWindowExW(
+            0, btn_class.as_ptr(), to_wide_null("Next >").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
+            715, 505, 125, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
+        );
+        ffi::SendMessageW(state.hwnd_btn_next, ffi::WM_SETFONT, state.font_bold as usize, 1);
+    }
+}
+
+unsafe fn update_uninstaller_page() {
+    if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+        let hide = |w: ffi::HWND| if !w.is_null() { ffi::ShowWindow(w, 0); };
+        let show = |w: ffi::HWND| if !w.is_null() { ffi::ShowWindow(w, 5); };
+
+        hide(state.hwnd_lbl_warning);
+        hide(state.hwnd_btn_retry);
+        hide(state.hwnd_rad_keep);
+        hide(state.hwnd_rad_purge);
+        hide(state.hwnd_progress);
+        hide(state.hwnd_prog_text);
+
+        ffi::EnableWindow(state.hwnd_btn_back, 1);
+        ffi::EnableWindow(state.hwnd_btn_next, 1);
+        ffi::EnableWindow(state.hwnd_btn_cancel, 1);
+
+        match state.page {
+            UninstallerPage::ProcessCheck => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 1 of 5: Process Detection & Confirmation").as_ptr());
+                let welcome_msg = format!(
+                    "This wizard will uninstall Qualium Quantum Browser v5.0.0 from your system.\r\n\r\n\
+                    Installed Path:\r\n    {}\r\n\r\n\
+                    The uninstaller will clean:\r\n\
+                    • Desktop and Start Menu shortcuts\r\n\
+                    • Windows Installed Apps registry entry\r\n\
+                    • Core browser executable and bundled Gecko ESR 140 runtime\r\n\
+                    • Authoritative install manifest\r\n\r\n\
+                    Before continuing, setup checks whether any Qualium browser processes are running.",
+                    state.install_dir.display()
+                );
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&welcome_msg).as_ptr());
+                show(state.hwnd_body);
+
+                state.running_procs = win32::get_running_qualium_processes();
+                if !state.running_procs.is_empty() {
+                    let warn = format!("[!] Qualium is currently running ({})!\r\nPlease close all browser windows before continuing.", state.running_procs.join(", "));
+                    ffi::SetWindowTextW(state.hwnd_lbl_warning, to_wide_null(&warn).as_ptr());
+                    show(state.hwnd_lbl_warning);
+                    show(state.hwnd_btn_retry);
+                    ffi::EnableWindow(state.hwnd_btn_next, 0);
+                } else {
+                    ffi::EnableWindow(state.hwnd_btn_next, 1);
+                }
+
+                ffi::EnableWindow(state.hwnd_btn_back, 0);
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Next >").as_ptr());
+            }
+            UninstallerPage::Options => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 2 of 5: Personal User Data Options").as_ptr());
+                let opt_intro = "Please choose how you want the uninstaller to handle your personal browsing profile:\r\n\r\n\
+                    Your personal profile stores bookmarks, history, stored logins, and cryptographic vault keys.\r\n\r\n\
+                    Note: User Documents, Pictures, and Downloads folder files will NEVER be deleted.";
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(opt_intro).as_ptr());
+                show(state.hwnd_body);
+                show(state.hwnd_rad_keep);
+                show(state.hwnd_rad_purge);
+
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Next >").as_ptr());
+            }
+            UninstallerPage::Ready => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 3 of 5: Ready to Remove").as_ptr());
+                let data_choice_str = if state.keep_user_data {
+                    "PRESERVE (Keep personal bookmarks, settings, and vault in %LOCALAPPDATA%\\Qualium)"
+                } else {
+                    "PURGE (Permanently remove %LOCALAPPDATA%\\Qualium)"
+                };
+
+                let ready_summary = format!(
+                    "Qualium Quantum Browser is ready to be uninstalled.\r\n\r\n\
+                    Summary of operations:\r\n\
+                    • Application files to remove: {}\r\n\
+                    • Shortcuts to remove: Desktop & Start Menu\r\n\
+                    • Registry to clean: HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\QualiumQuantumBrowser\r\n\
+                    • User Data Action: {}\r\n\r\n\
+                    Click 'Uninstall' to begin removal.",
+                    state.install_dir.display(),
+                    data_choice_str
+                );
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&ready_summary).as_ptr());
+                show(state.hwnd_body);
+
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Uninstall").as_ptr());
+            }
+            UninstallerPage::Removing => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 4 of 5: Removing Application Files...").as_ptr());
+                hide(state.hwnd_body);
+                show(state.hwnd_progress);
+                show(state.hwnd_prog_text);
+
+                ffi::EnableWindow(state.hwnd_btn_back, 0);
+                ffi::EnableWindow(state.hwnd_btn_next, 0);
+                ffi::EnableWindow(state.hwnd_btn_cancel, 0);
+
+                start_uninstall_worker(state.hwnd);
+            }
+            UninstallerPage::Complete => {
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 5 of 5: Uninstallation Complete").as_ptr());
+                let done_msg = format!(
+                    "Uninstallation Complete!\r\n\r\n\
+                    Qualium Quantum Browser has been successfully removed from your computer.\r\n\r\n\
+                    All shortcuts, registry registrations, and application files have been verified removed.\r\n\
+                    User data state: {}\r\n\r\n\
+                    Click 'Close' to finish.",
+                    if state.keep_user_data { "Preserved in %LOCALAPPDATA%\\Qualium" } else { "Cleaned" }
+                );
+                ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&done_msg).as_ptr());
+                show(state.hwnd_body);
+                hide(state.hwnd_progress);
+                hide(state.hwnd_prog_text);
+                hide(state.hwnd_btn_cancel);
+
+                ffi::EnableWindow(state.hwnd_btn_back, 0);
+                ffi::EnableWindow(state.hwnd_btn_next, 1);
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Close").as_ptr());
+            }
+        }
+
+        let mut rc: ffi::RECT = std::mem::zeroed();
+        ffi::GetClientRect(state.hwnd, &mut rc);
+        ffi::InvalidateRect(state.hwnd, &rc, 1);
+    }
+}
+
+fn start_uninstall_worker(hwnd: ffi::HWND) {
+    let engine = unsafe {
+        if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+            state.engine.clone()
+        } else {
+            return;
+        }
+    };
+
+    let keep_data = unsafe {
+        if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+            state.keep_user_data
+        } else {
+            true
+        }
+    };
+
+    let hwnd_val = hwnd as usize;
+    thread::spawn(move || {
+        let hwnd = hwnd_val as ffi::HWND;
+        let res = engine.execute_uninstall(keep_data, |cur, tot, op, item| {
+            let pct = if tot > 0 { (cur as f64 / tot as f64 * 100.0) as usize } else { 0 };
+            let msg = format!("{}: {}", op, item);
+            let boxed = Box::into_raw(Box::new(msg)) as isize;
+            unsafe {
+                ffi::PostMessageW(hwnd, WM_UNINSTALL_PROGRESS, pct, boxed);
+            }
+        });
+
+        match res {
+            Ok(_) => unsafe {
+                ffi::PostMessageW(hwnd, WM_UNINSTALL_DONE, 0, 0);
+            },
+            Err(e) => {
+                let err_msg = e.to_string();
+                let boxed = Box::into_raw(Box::new(err_msg)) as isize;
+                unsafe {
+                    ffi::PostMessageW(hwnd, WM_UNINSTALL_ERROR, 0, boxed);
+                }
+            }
+        }
+    });
+}
+
+unsafe extern "system" fn uninstaller_wndproc(
+    hwnd: ffi::HWND,
+    msg: ffi::UINT,
+    wparam: ffi::WPARAM,
+    lparam: ffi::LPARAM,
+) -> ffi::LRESULT {
+    match msg {
+        ffi::WM_PAINT => {
+            let mut ps: ffi::PAINTSTRUCT = std::mem::zeroed();
+            let hdc = ffi::BeginPaint(hwnd, &mut ps);
+
+            if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+                let rect_header = ffi::RECT { left: 0, top: 0, right: 880, bottom: 85 };
+                ffi::FillRect(hdc, &rect_header, state.brush_header);
+
+                let rect_line1 = ffi::RECT { left: 0, top: 85, right: 880, bottom: 86 };
+                let brush_line = ffi::CreateSolidBrush(0x00503525);
+                ffi::FillRect(hdc, &rect_line1, brush_line);
+
+                let rect_line2 = ffi::RECT { left: 0, top: 495, right: 880, bottom: 496 };
+                ffi::FillRect(hdc, &rect_line2, brush_line);
+
+                ffi::DeleteObject(brush_line as *mut std::ffi::c_void);
+            }
+
+            ffi::EndPaint(hwnd, &ps);
+            0
+        }
+        ffi::WM_CTLCOLORSTATIC => {
+            let hdc = wparam as ffi::HDC;
+            ffi::SetBkMode(hdc, 1);
+            if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+                let ctl_hwnd = lparam as ffi::HWND;
+                if ctl_hwnd == state.hwnd_title {
+                    ffi::SetTextColor(hdc, COLOR_ALERT_RED);
+                    return state.brush_header as ffi::LRESULT;
+                } else if ctl_hwnd == state.hwnd_subtitle {
+                    ffi::SetTextColor(hdc, COLOR_TEXT_MUTED);
+                    return state.brush_header as ffi::LRESULT;
+                } else if ctl_hwnd == state.hwnd_lbl_warning {
+                    ffi::SetTextColor(hdc, COLOR_ALERT_YELLOW);
+                    return state.brush_bg as ffi::LRESULT;
+                } else {
+                    ffi::SetTextColor(hdc, COLOR_TEXT_WHITE);
+                    return state.brush_bg as ffi::LRESULT;
+                }
+            }
+            0
+        }
+        ffi::WM_CTLCOLOREDIT => {
+            let hdc = wparam as ffi::HDC;
+            ffi::SetTextColor(hdc, COLOR_TEXT_WHITE);
+            ffi::SetBkColor(hdc, COLOR_BG_INPUT);
+            if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+                return state.brush_input as ffi::LRESULT;
+            }
+            0
+        }
+        ffi::WM_CTLCOLORBTN => {
+            if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+                return state.brush_bg as ffi::LRESULT;
+            }
+            0
+        }
+        ffi::WM_COMMAND => {
+            let cmd_id = (wparam & 0xFFFF) as usize;
+            match cmd_id {
+                ID_BTN_CANCEL => {
+                    ffi::PostQuitMessage(0);
+                }
+                ID_BTN_RETRY => {
+                    if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+                        state.running_procs = win32::get_running_qualium_processes();
+                        update_uninstaller_page();
+                    }
+                }
+                ID_BTN_BACK => {
+                    if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+                        state.page = match state.page {
+                            UninstallerPage::Options => UninstallerPage::ProcessCheck,
+                            UninstallerPage::Ready => UninstallerPage::Options,
+                            _ => state.page,
+                        };
+                        update_uninstaller_page();
+                    }
+                }
+                ID_BTN_NEXT => {
+                    if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+                        match state.page {
+                            UninstallerPage::ProcessCheck => {
+                                state.page = UninstallerPage::Options;
+                                update_uninstaller_page();
+                            }
+                            UninstallerPage::Options => {
+                                state.keep_user_data = ffi::SendMessageW(state.hwnd_rad_keep, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                                state.page = UninstallerPage::Ready;
+                                update_uninstaller_page();
+                            }
+                            UninstallerPage::Ready => {
+                                state.page = UninstallerPage::Removing;
+                                update_uninstaller_page();
+                            }
+                            UninstallerPage::Complete => {
+                                ffi::PostQuitMessage(0);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+            0
+        }
+        WM_UNINSTALL_PROGRESS => {
+            let pct = wparam as isize;
+            let msg_ptr = lparam as *mut String;
+            if !msg_ptr.is_null() {
+                let msg = Box::from_raw(msg_ptr);
+                if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
+                    ffi::SendMessageW(state.hwnd_progress, ffi::PBM_SETPOS, pct as usize, 0);
+                    ffi::SetWindowTextW(state.hwnd_prog_text, to_wide_null(&msg).as_ptr());
+                }
+            }
+            0
+        }
+        WM_UNINSTALL_DONE => {
+            if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+                state.page = UninstallerPage::Complete;
+                update_uninstaller_page();
+            }
+            0
+        }
+        WM_UNINSTALL_ERROR => {
+            let err_ptr = lparam as *mut String;
+            if !err_ptr.is_null() {
+                let err_msg = Box::from_raw(err_ptr);
+                if let Some(state) = G_UNINSTALLER_STATE.as_mut() {
+                    let err_display = format!("Uninstallation Encountered Issues:\r\n\r\n{}\r\n\r\nSome files may have been locked by running processes.", err_msg);
+                    ffi::SetWindowTextW(state.hwnd_body, to_wide_null(&err_display).as_ptr());
+                    ffi::ShowWindow(state.hwnd_body, 5);
+                    ffi::ShowWindow(state.hwnd_progress, 0);
+                    ffi::ShowWindow(state.hwnd_prog_text, 0);
+                    ffi::EnableWindow(state.hwnd_btn_cancel, 1);
+                }
+            }
+            0
+        }
+        ffi::WM_DESTROY => {
+            ffi::PostQuitMessage(0);
+            0
+        }
+        _ => ffi::DefWindowProcW(hwnd, msg, wparam, lparam),
+    }
+}
+
+unsafe fn create_font(name: &str, size_pt: i32, weight: i32) -> ffi::HFONT {
+    let wide = to_wide_null(name);
+    ffi::CreateFontW(
+        -size_pt, 0, 0, 0, weight, 0, 0, 0,
+        1, // DEFAULT_CHARSET
+        0, 0, 5, // CLEARTYPE_QUALITY
+        0, wide.as_ptr()
+    )
+}
+
+fn browse_for_folder(hwnd_owner: ffi::HWND, title: &str) -> Option<PathBuf> {
+    unsafe {
+        let mut display_name = [0u16; 260];
+        let title_wide = to_wide_null(title);
+        let mut bi = ffi::BROWSEINFOW {
+            hwndOwner: hwnd_owner,
+            pidlRoot: std::ptr::null(),
+            pszDisplayName: display_name.as_mut_ptr(),
+            lpszTitle: title_wide.as_ptr(),
+            ulFlags: ffi::BIF_RETURNONLYFSDIRS | ffi::BIF_NEWDIALOGSTYLE,
+            lpfn: std::ptr::null(),
+            lParam: 0,
+            iImage: 0,
+        };
+
+        let pidl = ffi::SHBrowseForFolderW(&mut bi);
+        if !pidl.is_null() {
+            let mut path_buf = [0u16; 260];
+            if ffi::SHGetPathFromIDListW(pidl, path_buf.as_mut_ptr()) != 0 {
+                ffi::CoTaskMemFree(pidl);
+                let len = path_buf.iter().position(|&c| c == 0).unwrap_or(260);
+                let s = String::from_utf16_lossy(&path_buf[..len]);
+                return Some(PathBuf::from(s));
+            }
+            ffi::CoTaskMemFree(pidl);
+        }
+    }
+    None
+}

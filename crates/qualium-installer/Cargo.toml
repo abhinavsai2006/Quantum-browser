@@ -10,3 +10,16 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 anyhow = { workspace = true }
+zip = { version = "7.2.0", default-features = false, features = ["deflate"] }
+
+[lib]
+name = "qualium_installer_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "qualium_installer"
+path = "src/main.rs"
+
+[[bin]]
+name = "qualium_uninstaller"
+path = "src/bin/uninstaller.rs"
