@@ -3,12 +3,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Bookmarks — Qaulium</title>
+  <title>Qualium Bookmarks</title>
   <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/bookmarks.css"/>
   <script src="chrome://qualium/content/favicon-service.js"></script>
+  <script>
+    //<![CDATA[
+    // If opened in a standalone dialog/modal window, immediately redirect to a tab in the main window
+    if (window.opener && window.opener.openTrustedLinkIn) {
+      try {
+        window.opener.openTrustedLinkIn("qualium://bookmarks", "tab");
+        window.close();
+      } catch (e) {}
+    }
+    //]]>
+  </script>
 </head>
 <body>
   <div class="page-container">

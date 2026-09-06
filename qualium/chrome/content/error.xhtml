@@ -4,34 +4,79 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Security &amp; Network Notice — Qaulium</title>
+  <title id="page-title">Qualium Error</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/error.css"/>
+  <script src="chrome://qualium/content/qualium-routes.js"></script>
+  <script src="chrome://qualium/content/favicon-service.js"></script>
 </head>
 <body>
   <div class="error-container">
-    <div class="error-icon">🛡⚠️</div>
-    <h1 class="error-title">Connection Intercepted or Unavailable</h1>
-    <p class="error-subtitle" id="error-type">Privacy Network / TLS Security Boundary</p>
+    <div class="error-icon" id="error-icon-box">
+      <svg id="error-svg" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    
+    <h1 class="error-title" id="error-title">Unknown Internal Page</h1>
+    <p class="error-subtitle" id="error-type">Qualium Internal Navigation System</p>
 
     <div class="error-explanation-box">
       <div class="explain-item">
-        <strong>WHAT HAPPENED</strong>
-        <p id="desc-what">The remote server failed certificate validation, or the active privacy circuit could not establish an authenticated TLS session.</p>
+        <strong id="explain-header">REQUESTED ADDRESS</strong>
+        <p id="desc-what" style="font-family: monospace; color: #34d399; font-size: 14px; word-break: break-all;">qualium://error</p>
       </div>
       <div class="explain-item">
-        <strong>WHY THIS OCCURRED</strong>
-        <p id="desc-why">In strict privacy mode, Qaulium fails closed to prevent unencrypted network leaks, certificate spoofing, or downgrade attacks.</p>
+        <strong>DIAGNOSTIC NOTICE</strong>
+        <p id="desc-why">The requested internal address is not a registered Qualium route. Qualium isolates internal browser surfaces and prevents unrecognized system calls.</p>
       </div>
       <div class="explain-item">
-        <strong>WHAT YOU CAN DO</strong>
-        <p id="desc-action">Try rotating your network identity to establish a fresh circuit, or verify the domain name spelling.</p>
+        <strong>AVAILABLE ACTIONS</strong>
+        <p id="desc-action">Return to your previous page, open the New Tab dashboard, or manage your configuration in Settings.</p>
       </div>
     </div>
 
-    <div class="error-actions">
-      <button type="button" class="btn-action btn-primary" onclick="window.location.reload()">Retry Connection</button>
-      <button type="button" class="btn-action btn-secondary" onclick="window.location.href='about:newtab'">Return to New Tab</button>
+    <div class="error-actions" id="error-actions-box">
+      <button type="button" class="btn-action btn-secondary" onclick="window.history.back()">Back</button>
+      <button type="button" class="btn-action btn-primary" onclick="navTo('qualium://newtab')">New Tab</button>
+      <button type="button" class="btn-action btn-secondary" onclick="navTo('qualium://settings')">Go to Settings</button>
+      <button type="button" class="btn-action btn-secondary" onclick="navTo('qualium://security')">Diagnostics</button>
     </div>
   </div>
+
+  <script>
+    //<![CDATA[
+    function navTo(dest) {
+      if (typeof QualiumNavigationController !== "undefined") {
+        QualiumNavigationController.navigateTo(dest, "current");
+      } else {
+        window.location.href = dest;
+      }
+    }
+
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const badRoute = params.get("route");
+      const whatEl = document.getElementById("desc-what");
+      const titleEl = document.getElementById("error-title");
+      const pageTitle = document.getElementById("page-title");
+
+      if (badRoute) {
+        pageTitle.textContent = "Qualium Error";
+        titleEl.textContent = "Unknown Internal Page";
+        if (whatEl) whatEl.textContent = badRoute;
+      } else {
+        // Generic network error fallback
+        pageTitle.textContent = "Security & Network Notice — Qaulium";
+        titleEl.textContent = "Connection Intercepted or Unavailable";
+        const typeEl = document.getElementById("error-type");
+        if (typeEl) typeEl.textContent = "Privacy Network / TLS Security Boundary";
+        if (whatEl) whatEl.textContent = "The remote destination failed secure post-quantum handshake or certificate validation.";
+      }
+    })();
+    //]]>
+  </script>
 </body>
 </html>

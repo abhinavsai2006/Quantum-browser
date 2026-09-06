@@ -174,32 +174,11 @@ user_pref("media.peerconnection.ice.no_host", true);
 fn resolve_internal_route(input: &str) -> String {
     let trimmed = input.trim();
     let normalized = trimmed.replace("qaulium://", "qualium://");
-    if normalized.is_empty() || normalized == "qualium://newtab" {
-        return "chrome://qualium/content/newtab.xhtml".to_string();
+    if normalized.starts_with("qualium://") {
+        return normalized;
     }
-    if normalized == "qualium://settings" || normalized == "qualium://about" {
-        return "chrome://qualium/content/settings.xhtml".to_string();
-    }
-    if normalized == "qualium://privacy" || normalized == "qualium://security" {
-        return "chrome://qualium/content/dashboard.xhtml".to_string();
-    }
-    if normalized == "qualium://downloads" {
-        return "chrome://qualium/content/downloads.xhtml".to_string();
-    }
-    if normalized == "qualium://bookmarks" {
-        return "chrome://qualium/content/bookmarks.xhtml".to_string();
-    }
-    if normalized == "qualium://history" {
-        return "chrome://qualium/content/history.xhtml".to_string();
-    }
-    if normalized == "qualium://passwords" {
-        return "about:logins".to_string();
-    }
-    if normalized == "qualium://extensions" {
-        return "about:addons".to_string();
-    }
-    if normalized == "qualium://onboarding" || normalized == "qualium://welcome" {
-        return "chrome://qualium/content/onboarding.xhtml".to_string();
+    if trimmed.is_empty() {
+        return "qualium://newtab".to_string();
     }
 
     if trimmed.starts_with("chrome://") || trimmed.starts_with("about:") || trimmed.starts_with("resource://") {
@@ -442,16 +421,11 @@ fn main() -> anyhow::Result<()> {
         gecko_cmd.arg(profile_dir.to_string_lossy().as_ref());
         gecko_cmd.arg("-no-remote");
         if let Some(ref url) = target_url {
-            if url.starts_with("chrome://") {
-                gecko_cmd.arg("--chrome");
-                gecko_cmd.arg(url);
-            } else {
-                gecko_cmd.arg("-url");
-                gecko_cmd.arg(url);
-            }
+            gecko_cmd.arg("-url");
+            gecko_cmd.arg(url);
         }
 
-        let _ = gecko_cmd.spawn()?;
+        let _gecko_child = gecko_cmd.spawn()?;
         log.push_str("Gecko proc spawned successfully. Beginning supervision loop...\n");
         let _ = fs::write(&log_file, &log);
 

@@ -33,17 +33,22 @@
    * Safe URL Canonicalization
    */
   function canonicalizeUrl(rawUrl) {
-    if (!rawUrl || typeof rawUrl !== "string") return "";
+    if (!rawUrl) return "";
     let trimmed = rawUrl.trim();
 
-    // Internal protocols
-    if (trimmed.startsWith("qaulium://") || trimmed.startsWith("qualium://")) {
-      const route = trimmed.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
-      return `qualium://${route}`;
-    }
-    if (trimmed.startsWith("chrome://qualium/content/")) {
-      const route = trimmed.replace("chrome://qualium/content/", "").replace(/\.xhtml$/, "");
-      return `qualium://${route}`;
+    if (typeof QualiumRouteRegistry !== "undefined") {
+      if (QualiumRouteRegistry.isInternalResource(trimmed)) {
+        return QualiumRouteRegistry.internalToPublic(trimmed);
+      }
+    } else {
+      if (trimmed.startsWith("qaulium://") || trimmed.startsWith("qualium://")) {
+        const route = trimmed.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
+        return `qualium://${route}`;
+      }
+      if (trimmed.startsWith("chrome://qualium/content/")) {
+        const route = trimmed.replace("chrome://qualium/content/", "").replace(/\.xhtml$/, "");
+        return `qualium://${route}`;
+      }
     }
 
     try {
@@ -885,7 +890,9 @@
 
       // Resolve internal route
       let dest = url;
-      if (dest.startsWith("qaulium://") || dest.startsWith("qualium://")) {
+      if (typeof QualiumRouteRegistry !== "undefined") {
+        dest = QualiumRouteRegistry.publicToInternal(dest);
+      } else if (dest.startsWith("qaulium://") || dest.startsWith("qualium://")) {
         const file = dest.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
         dest = `chrome://qualium/content/${file}.xhtml`;
       }

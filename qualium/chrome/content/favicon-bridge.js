@@ -127,7 +127,34 @@
         try {
           if (!aBrowser || !aLocation) return;
           const url = aLocation.spec;
-          if (!url || url.startsWith("about:") || url.startsWith("chrome://qualium/")) {
+          if (!url) return;
+
+          // Address Bar & Tab Title Synchronization for internal Qualium routes
+          if (typeof window.QualiumRouteRegistry !== "undefined" && window.QualiumRouteRegistry.isInternalResource(url)) {
+            const publicUrl = window.QualiumRouteRegistry.internalToPublic(url);
+            const cleanTitle = window.QualiumRouteRegistry.getTitleForRoute(url);
+
+            // Sync Omnibox value to clean public URL (e.g. qualium://newtab, qualium://settings)
+            if (window.gURLBar && !window.gURLBar.focused) {
+              window.gURLBar.value = publicUrl;
+              window.gURLBar._untrimmedValue = publicUrl;
+              if (window.gURLBar.inputField) {
+                window.gURLBar.inputField.value = publicUrl;
+              }
+              if (aBrowser) {
+                aBrowser.userTypedValue = publicUrl;
+              }
+            }
+
+            // Sync Tab Label
+            const tab = gBrowser.getTabForBrowser(aBrowser);
+            if (tab) {
+              tab.setAttribute("label", cleanTitle);
+            }
+            return;
+          }
+
+          if (url.startsWith("about:") || url.startsWith("chrome://qualium/")) {
             return;
           }
 
@@ -156,16 +183,66 @@
       console.warn("[QUALIUM:FAVICON_BRIDGE] addTabsProgressListener error:", e);
     }
 
-    // 3. Hook Star Button & Shortcut for Instant Bookmark Creation
+    // 3. Hook Omnibox Navigation & Protocol Routing for qualium://
+    function hookOmniboxRouting() {
+      if (window.gURLBar && !window.gURLBar._qualiumNavWrapped) {
+        const origHandleNav = window.gURLBar.handleNavigation;
+        window.gURLBar.handleNavigation = function(options = {}) {
+          const rawVal = (this.untrimmedValue || this.value || "").trim();
+          if (typeof window.QualiumRouteRegistry !== "undefined" && window.QualiumRouteRegistry.isQualiumRoute(rawVal)) {
+            const internalTarget = window.QualiumRouteRegistry.publicToInternal(rawVal);
+            const publicDisplay = window.QualiumRouteRegistry.normalize(rawVal);
+            const where = this._whereToOpen(options.event);
+            const principal = window.Services ? window.Services.scriptSecurityManager.getSystemPrincipal() : null;
+
+            this.window.openTrustedLinkIn(internalTarget, where, { triggeringPrincipal: principal });
+            this.handleRevert();
+            this.value = publicDisplay;
+            this._untrimmedValue = publicDisplay;
+            if (this.inputField) this.inputField.value = publicDisplay;
+            return;
+          }
+          return origHandleNav.call(this, options);
+        };
+        window.gURLBar._qualiumNavWrapped = true;
+      }
+
+      // Wrap openTrustedLinkIn to resolve qualium:// routes seamlessly
+      if (typeof window.openTrustedLinkIn === "function" && !window.openTrustedLinkIn._qualiumWrapped) {
+        const origOpen = window.openTrustedLinkIn;
+        window.openTrustedLinkIn = function(url, where, params) {
+          let resolved = url;
+          if (typeof url === "string" && typeof window.QualiumRouteRegistry !== "undefined") {
+            if (window.QualiumRouteRegistry.isQualiumRoute(url)) {
+              resolved = window.QualiumRouteRegistry.publicToInternal(url);
+            }
+          }
+          return origOpen.call(this, resolved, where, params);
+        };
+        window.openTrustedLinkIn._qualiumWrapped = true;
+      }
+    }
+    hookOmniboxRouting();
+
+    // 4. Hook Star Button & Shortcut for Instant Bookmark Creation
     function hookBookmarkAction() {
       async function createBookmarkFromCurrentTab() {
         try {
           const currentTab = gBrowser.selectedTab;
           const currentBrowser = gBrowser.selectedBrowser;
-          const url = currentBrowser && currentBrowser.currentURI ? currentBrowser.currentURI.spec : "";
-          if (!url || url.startsWith("about:") || url.startsWith("chrome://")) return;
+          const rawUrl = currentBrowser && currentBrowser.currentURI ? currentBrowser.currentURI.spec : "";
+          if (!rawUrl) return;
 
-          const title = currentTab ? currentTab.getAttribute("label") : (currentBrowser ? currentBrowser.contentTitle : "");
+          let url = rawUrl;
+          let title = currentTab ? currentTab.getAttribute("label") : (currentBrowser ? currentBrowser.contentTitle : "");
+
+          if (typeof window.QualiumRouteRegistry !== "undefined") {
+            url = window.QualiumRouteRegistry.internalToPublic(rawUrl);
+            if (window.QualiumRouteRegistry.isInternalResource(rawUrl)) {
+              title = window.QualiumRouteRegistry.getTitleForRoute(rawUrl);
+            }
+          }
+
           const icon = currentTab ? (currentTab.getAttribute("image") || currentBrowser.mIconURL) : null;
 
           logBridge("Creating bookmark for current tab: " + url + " | title=" + title);

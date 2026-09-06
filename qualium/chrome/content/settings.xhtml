@@ -4,11 +4,21 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Settings — Qaulium Quantum Browser</title>
+  <title>Qualium Settings</title>
   <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/settings.css"/>
+  <script>
+    //<![CDATA[
+    if (window.opener && window.opener.openTrustedLinkIn) {
+      try {
+        window.opener.openTrustedLinkIn("qualium://settings", "tab");
+        window.close();
+      } catch (e) {}
+    }
+    //]]>
+  </script>
   <script type="application/javascript"><![CDATA[
     function switchTab(tabId) {
       if (!tabId) tabId = "general";

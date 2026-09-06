@@ -15,18 +15,26 @@ print(f"Target Executable: {exe_path}")
 subprocess.run(["powershell", "-Command", "Get-Process QualiumQuantumBrowser, qualium-daemon, qualium-core, firefox -ErrorAction SilentlyContinue | Stop-Process -Force"], capture_output=True)
 time.sleep(1)
 
-# Clean locks
-prof_dir = os.path.expandvars(r"%LOCALAPPDATA%\Qualium\Profile")
-for lock in ["parent.lock", ".parentlock"]:
-    lp = os.path.join(prof_dir, lock)
-    if os.path.exists(lp):
-        try: os.remove(lp)
-        except: pass
+# Clean locks across both Qualium and Qaulium profile folders
+for p_name in ["Qualium", "Qaulium"]:
+    prof_dir = os.path.expandvars(rf"%LOCALAPPDATA%\{p_name}\Profile")
+    for lock in ["parent.lock", ".parentlock"]:
+        lp = os.path.join(prof_dir, lock)
+        if os.path.exists(lp):
+            try: os.remove(lp)
+            except: pass
+
+target_url = sys.argv[1] if len(sys.argv) > 1 else None
+out_img = sys.argv[2] if len(sys.argv) > 2 else r"C:\Users\mndab\.gemini\antigravity-ide\brain\38ef44a2-12b9-4657-8f35-3220c9d8b70b\qualium_v5_live_window5.png"
+
+cmd = [exe_path]
+if target_url:
+    cmd.extend(["-url", target_url])
 
 # Start QualiumQuantumBrowser.exe
-proc = subprocess.Popen([exe_path])
-print(f"Spawned QualiumQuantumBrowser.exe PID: {proc.pid}")
-time.sleep(6)
+proc = subprocess.Popen(cmd)
+print(f"Spawned QualiumQuantumBrowser.exe PID: {proc.pid} with cmd: {cmd}")
+time.sleep(7)
 
 # Query processes using PowerShell WMI
 ps_cmd = """
@@ -58,14 +66,17 @@ def enum_cb(hwnd, extra):
             print(f"PID {pid.value} HWND {hwnd}: class='{cls_name.value}' title='{title}' size=({w}x{h})")
             if w > 400 and h > 300:
                 try:
-                    subprocess.run(["py", "scripts/capture_window.py", r"C:\Users\mndab\.gemini\antigravity-ide\brain\38ef44a2-12b9-4657-8f35-3220c9d8b70b\qualium_v5_live_window5.png"], capture_output=True)
-                    print("Captured live screenshot to qualium_v5_live_window5.png")
+                    subprocess.run(["py", "-3", "scripts/capture_window.py", out_img], capture_output=True)
+                    print(f"Captured live screenshot to {out_img}")
                 except Exception as e:
                     print("Capture error:", e)
     return True
 
 WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
 user32.EnumWindows(WNDENUMPROC(enum_cb), 0)
+
+# Keep process alive for 3 more seconds before termination
+time.sleep(3)
 
 # Terminate test process
 subprocess.run(["powershell", "-Command", "Get-Process QualiumQuantumBrowser, qualium-daemon, qualium-core, firefox -ErrorAction SilentlyContinue | Stop-Process -Force"], capture_output=True)

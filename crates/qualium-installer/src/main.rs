@@ -480,19 +480,19 @@ $btnCancel.FlatStyle = "Flat"
 $btnCancel.Add_Click({{ $form.Close() }})
 $form.Controls.Add($btnCancel)
 
-$step = 1
+$script:step = 1
 
 $btnNext.Add_Click({{
-    if ($step -eq 1) {{
+    if ($script:step -eq 1) {{
         # Transition: Welcome -> Options
-        $step = 2
+        $script:step = 2
         $panelWelcome.Visible = $false
         $panelOptions.Visible = $true
         $btnBack.Visible = $true
         $btnNext.Text = "Continue >"
-    }} elseif ($step -eq 2) {{
+    }} elseif ($script:step -eq 2) {{
         # Transition: Options -> Ready
-        $step = 3
+        $script:step = 3
         $panelOptions.Visible = $false
         $panelReady.Visible = $true
         $btnBack.Visible = $true
@@ -500,9 +500,9 @@ $btnNext.Add_Click({{
         
         $destPath = $txtPath.Text
         $lblRSummary.Text = "Qaulium Setup is now ready to begin installing.`n`nSummary of Settings:`n  • Product: Qaulium Quantum Browser v5.0.0`n  • Destination: $destPath`n  • Desktop Shortcut: $(if ($chkDesktop.Checked) {{ 'Yes' }} else {{ 'No' }})`n  • Start Menu: $(if ($chkMenu.Checked) {{ 'Yes' }} else {{ 'No' }})`n  • Post-Install Launch: $(if ($chkLaunch.Checked) {{ 'Yes' }} else {{ 'No' }})`n`nClick 'Install' to begin the installation transaction."
-    }} elseif ($step -eq 3) {{
+    }} elseif ($script:step -eq 3) {{
         # Transition: Ready -> Installing (Real Live Transaction)
-        $step = 4
+        $script:step = 4
         $panelReady.Visible = $false
         $panelProgress.Visible = $true
         $btnBack.Visible = $false
@@ -543,6 +543,9 @@ $btnNext.Add_Click({{
 
         $ws = New-Object -ComObject WScript.Shell
         $browserExe = Join-Path $dest "QualiumQuantumBrowser.exe"
+        if (-not (Test-Path $browserExe)) {{
+            $browserExe = Join-Path $dest "QauliumQuantumBrowser.exe"
+        }}
 
         if ($chkDesktop.Checked) {{
             $desktop = [Environment]::GetFolderPath('Desktop')
@@ -577,7 +580,7 @@ $btnNext.Add_Click({{
         $form.Refresh()
         Start-Sleep -Milliseconds 400
 
-        $step = 5
+        $script:step = 5
         $panelProgress.Visible = $false
         $panelComplete.Visible = $true
         $lblCDesc.Text = "Qaulium Quantum Browser v5.0.0 has been successfully installed.`n`nInstalled Location:`n$dest`n`nAll components, post-quantum crypto defenses, and Gecko chrome assets are verified and ready."
@@ -586,11 +589,14 @@ $btnNext.Add_Click({{
         $btnNext.Visible = $true
         $btnNext.BackColor = [System.Drawing.Color]::FromArgb(74, 222, 128)
         $btnNext.ForeColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
-    }} elseif ($step -eq 5) {{
+    }} elseif ($script:step -eq 5) {{
         # Finish Action
         if ($chkLaunch.Checked) {{
             $dest = $txtPath.Text
             $browserExe = Join-Path $dest "QualiumQuantumBrowser.exe"
+            if (-not (Test-Path $browserExe)) {{
+                $browserExe = Join-Path $dest "QauliumQuantumBrowser.exe"
+            }}
             if (Test-Path $browserExe) {{
                 Start-Process -FilePath $browserExe
             }}
@@ -601,14 +607,14 @@ $btnNext.Add_Click({{
 }})
 
 $btnBack.Add_Click({{
-    if ($step -eq 2) {{
-        $step = 1
+    if ($script:step -eq 2) {{
+        $script:step = 1
         $panelOptions.Visible = $false
         $panelWelcome.Visible = $true
         $btnBack.Visible = $false
         $btnNext.Text = "Continue >"
-    }} elseif ($step -eq 3) {{
-        $step = 2
+    }} elseif ($script:step -eq 3) {{
+        $script:step = 2
         $panelReady.Visible = $false
         $panelOptions.Visible = $true
         $btnNext.Text = "Continue >"

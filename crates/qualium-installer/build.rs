@@ -21,6 +21,7 @@ fn main() {
 
     // 1. Copy QualiumQuantumBrowser.exe as the primary graphical desktop browser
     let browser_candidates = [
+        repo_root.join("target").join("release").join("QualiumQuantumBrowser.exe"),
         repo_root.join("dist").join("QualiumQuantumBrowser.exe"),
         repo_root.join("target_build").join("release").join("QualiumQuantumBrowser.exe"),
         PathBuf::from(r"C:\Users\mndab\AppData\Local\Temp\qualium_target\release\QualiumQuantumBrowser.exe"),
@@ -37,6 +38,7 @@ fn main() {
 
     // 2. Copy qualium-daemon.exe as the separate background service binary
     let daemon_candidates = [
+        repo_root.join("target").join("release").join("qualium-daemon.exe"),
         repo_root.join("target_build").join("release").join("qualium-daemon.exe"),
         repo_root.join("dist").join("qualium-daemon.exe"),
     ];

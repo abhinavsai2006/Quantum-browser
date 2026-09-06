@@ -130,43 +130,43 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     # Wire Commands so Bookmarks, History, Downloads NEVER open modal dialogs
     mod_xhtml = orig_xhtml.replace(
         '<command id="Browser:ShowAllBookmarks"/>',
-        '<command id="Browser:ShowAllBookmarks" oncommand="openTrustedLinkIn(\'chrome://qualium/content/bookmarks.xhtml\', \'tab\')"/>'
+        '<command id="Browser:ShowAllBookmarks" oncommand="openTrustedLinkIn(\'qualium://bookmarks\', \'tab\')"/>'
     ).replace(
         '<command id="Browser:ShowAllHistory"/>',
-        '<command id="Browser:ShowAllHistory" oncommand="openTrustedLinkIn(\'chrome://qualium/content/history.xhtml\', \'tab\')"/>'
+        '<command id="Browser:ShowAllHistory" oncommand="openTrustedLinkIn(\'qualium://history\', \'tab\')"/>'
     ).replace(
         '<command id="Tools:Downloads" />',
-        '<command id="Tools:Downloads" oncommand="openTrustedLinkIn(\'chrome://qualium/content/downloads.xhtml\', \'tab\')"/>'
+        '<command id="Tools:Downloads" oncommand="openTrustedLinkIn(\'qualium://downloads\', \'tab\')"/>'
     ).replace(
         'id="appMenu-bookmarks-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="library-bookmarks-menu"\n                     closemenu="none"\n                     />',
-        'id="appMenu-bookmarks-button"\n                     class="subviewbutton"\n                     data-l10n-id="library-bookmarks-menu"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/bookmarks.xhtml\', \'tab\')"\n                     />'
+        'id="appMenu-bookmarks-button"\n                     class="subviewbutton"\n                     data-l10n-id="library-bookmarks-menu"\n                     oncommand="openTrustedLinkIn(\'qualium://bookmarks\', \'tab\')"\n                     />'
     ).replace(
         'id="appMenu-history-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="appmenuitem-history"\n                     closemenu="none"\n                     />',
-        'id="appMenu-history-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-history"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/history.xhtml\', \'tab\')"\n                     />'
+        'id="appMenu-history-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-history"\n                     oncommand="openTrustedLinkIn(\'qualium://history\', \'tab\')"\n                     />'
     ).replace(
         'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     command="Tools:Downloads"/>',
-        'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/downloads.xhtml\', \'tab\')"/>'
+        'id="appMenu-downloads-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-downloads"\n                     key="key_openDownloads"\n                     oncommand="openTrustedLinkIn(\'qualium://downloads\', \'tab\')"/>'
     ).replace(
         'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     />',
-        'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     oncommand="openTrustedLinkIn(\'about:logins\', \'tab\')"\n                     />'
+        'id="appMenu-passwords-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-passwords"\n                     oncommand="openTrustedLinkIn(\'qualium://passwords\', \'tab\')"\n                     />'
     ).replace(
         'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     />',
-        'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/settings.xhtml\', \'tab\')"\n                     />'
+        'id="appMenu-settings-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-settings"\n                     oncommand="openTrustedLinkIn(\'qualium://settings\', \'tab\')"\n                     />'
     ).replace(
         'id="appMenu-help-button2"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="appmenuitem-help"\n                     closemenu="none"\n                     />',
-        'id="appMenu-help-button2"\n                     class="subviewbutton"\n                     label="About Qaulium"\n                     data-l10n-id="appmenuitem-help"\n                     oncommand="openTrustedLinkIn(\'chrome://qualium/content/settings.xhtml#about\', \'tab\')"\n                     />'
+        'id="appMenu-help-button2"\n                     class="subviewbutton"\n                     label="About Qaulium"\n                     data-l10n-id="appmenuitem-help"\n                     oncommand="openTrustedLinkIn(\'qualium://about\', \'tab\')"\n                     />'
     ).replace(
         'oncommand="openPreferences()"',
-        'oncommand="openTrustedLinkIn(\'chrome://qualium/content/settings.xhtml\', \'tab\')"'
+        'oncommand="openTrustedLinkIn(\'qualium://settings\', \'tab\')"'
     ).replace(
         'oncommand="openProtectionsDashboard()"',
-        'oncommand="openTrustedLinkIn(\'chrome://qualium/content/dashboard.xhtml\', \'tab\')"'
+        'oncommand="openTrustedLinkIn(\'qualium://privacy\', \'tab\')"'
     ).replace(
         'id="urlbar-search-button"',
         'id="urlbar-search-button" hidden="true"'
     ).replace(
         '<script src="chrome://browser/content/browser-main.js"></script>',
-        '<script src="chrome://browser/content/browser-main.js"></script>\n  <script src="chrome://qualium/content/favicon-service.js"></script>\n  <script src="chrome://qualium/content/favicon-bridge.js"></script>'
+        '<script src="chrome://browser/content/browser-main.js"></script>\n  <script src="chrome://qualium/content/qualium-routes.js"></script>\n  <script src="chrome://qualium/content/favicon-service.js"></script>\n  <script src="chrome://qualium/content/favicon-bridge.js"></script>'
     )
 
     # Physically remove the gap elements between Extensions and Settings
@@ -221,7 +221,302 @@ override chrome://branding/content/icon32.png chrome://qualium/skin/qualium-shie
 override chrome://branding/content/icon16.png chrome://qualium/skin/qualium-shield.svg
 override chrome://global/skin/icons/defaultFavicon.svg chrome://qualium/skin/qualium-shield.svg
 """
-    mod_manifest = orig_manifest + "\n" + qualium_manifest_entries
+    if "content qualium browser/content/qualium/" not in orig_manifest:
+        mod_manifest = orig_manifest + "\n" + qualium_manifest_entries
+    else:
+        mod_manifest = orig_manifest
+
+    # 7. Patch modules/UrlbarInput.sys.mjs for clean qualium:// omnibox display and routing
+    orig_urlbar = src_zf.read("modules/UrlbarInput.sys.mjs").decode("utf-8", "ignore")
+    urlbar_setval_target = "let originalUrl = lazy.ReaderMode.getOriginalUrlObjectForDisplay(val);\n    if (originalUrl) {\n      val = originalUrl.displaySpec;\n    }"
+    urlbar_setval_replacement = """let originalUrl = lazy.ReaderMode.getOriginalUrlObjectForDisplay(val);
+    if (originalUrl) {
+      val = originalUrl.displaySpec;
+    }
+    // Qualium Protocol: Map internal Gecko chrome implementation resources to user-facing qualium:// URLs
+    if (val && typeof val === "string") {
+      if (this.window?.QualiumRouteRegistry) {
+        val = this.window.QualiumRouteRegistry.internalToPublic(val);
+      } else {
+        let v = val.trim();
+        if (v.startsWith("chrome://qualium/content/newtab.xhtml") || v === "about:newtab" || v === "about:home" || v === "about:privatebrowsing" || v === "chrome://browser/content/blanktab.html") {
+          val = "qualium://newtab";
+        } else if (v.startsWith("chrome://qualium/content/settings.xhtml#about")) {
+          val = "qualium://about";
+        } else if (v.startsWith("chrome://qualium/content/settings.xhtml") || v === "about:preferences") {
+          val = "qualium://settings";
+        } else if (v.startsWith("chrome://qualium/content/dashboard.xhtml") || v === "about:protections") {
+          val = "qualium://privacy";
+        } else if (v.startsWith("chrome://qualium/content/downloads.xhtml") || v === "about:downloads") {
+          val = "qualium://downloads";
+        } else if (v.startsWith("chrome://qualium/content/bookmarks.xhtml") || v.includes("places/places.xhtml")) {
+          val = "qualium://bookmarks";
+        } else if (v.startsWith("chrome://qualium/content/history.xhtml") || v.includes("places/history.xhtml")) {
+          val = "qualium://history";
+        } else if (v === "about:logins") {
+          val = "qualium://passwords";
+        } else if (v === "about:addons") {
+          val = "qualium://extensions";
+        } else if (v.startsWith("chrome://qualium/content/onboarding.xhtml") || v === "about:welcome") {
+          val = "qualium://welcome";
+        } else if (v.startsWith("chrome://qualium/content/error.xhtml")) {
+          let m = v.match(/route=([^&]+)/);
+          val = m ? decodeURIComponent(m[1]) : "qualium://error";
+        }
+      }
+    }
+    if (untrimmedValue && typeof untrimmedValue === "string") {
+      if (this.window?.QualiumRouteRegistry) {
+        untrimmedValue = this.window.QualiumRouteRegistry.internalToPublic(untrimmedValue);
+      } else if (untrimmedValue.includes("chrome://qualium/content/")) {
+        if (untrimmedValue.includes("newtab.xhtml")) untrimmedValue = "qualium://newtab";
+        else if (untrimmedValue.includes("settings.xhtml#about")) untrimmedValue = "qualium://about";
+        else if (untrimmedValue.includes("settings.xhtml")) untrimmedValue = "qualium://settings";
+        else if (untrimmedValue.includes("dashboard.xhtml")) untrimmedValue = "qualium://privacy";
+        else if (untrimmedValue.includes("downloads.xhtml")) untrimmedValue = "qualium://downloads";
+        else if (untrimmedValue.includes("bookmarks.xhtml")) untrimmedValue = "qualium://bookmarks";
+        else if (untrimmedValue.includes("history.xhtml")) untrimmedValue = "qualium://history";
+        else if (untrimmedValue.includes("error.xhtml")) {
+          let m = untrimmedValue.match(/route=([^&]+)/);
+          untrimmedValue = m ? decodeURIComponent(m[1]) : "qualium://error";
+        }
+      }
+    }"""
+    mod_urlbar = orig_urlbar.replace(urlbar_setval_target, urlbar_setval_replacement)
+
+    urlbar_load_target = """  _loadURL(
+    url,
+    event,
+    openUILinkWhere,
+    params,
+    resultDetails = null,
+    browser = this.window.gBrowser.selectedBrowser
+  ) {"""
+    urlbar_load_replacement = """  _loadURL(
+    url,
+    event,
+    openUILinkWhere,
+    params,
+    resultDetails = null,
+    browser = this.window.gBrowser.selectedBrowser
+  ) {
+    if (url && typeof url === "string" && (url.startsWith("qualium://") || url.startsWith("qaulium://"))) {
+      let origQualiumUrl = url;
+      if (this.window?.QualiumRouteRegistry) {
+        url = this.window.QualiumRouteRegistry.publicToInternal(url);
+      } else {
+        const _qMap = {
+          "qualium://newtab": "chrome://qualium/content/newtab.xhtml",
+          "qualium://privacy": "chrome://qualium/content/dashboard.xhtml",
+          "qualium://security": "chrome://qualium/content/dashboard.xhtml",
+          "qualium://settings": "chrome://qualium/content/settings.xhtml",
+          "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
+          "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
+          "qualium://history": "chrome://qualium/content/history.xhtml",
+          "qualium://passwords": "about:logins",
+          "qualium://extensions": "about:addons",
+          "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
+          "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+          "qualium://error": "chrome://qualium/content/error.xhtml",
+        };
+        let lower = origQualiumUrl.toLowerCase().replace("qaulium://", "qualium://");
+        let base = lower.split("?")[0].split("#")[0];
+        if (_qMap[base]) {
+          url = _qMap[base] + lower.slice(base.length);
+        } else {
+          url = "chrome://qualium/content/error.xhtml?route=" + encodeURIComponent(origQualiumUrl);
+        }
+      }
+      params = Object.assign({}, params);
+      params.triggeringPrincipal = lazy.Services.scriptSecurityManager.getSystemPrincipal();
+      if (openUILinkWhere == "current") {
+        this.value = origQualiumUrl;
+        this._untrimmedValue = origQualiumUrl;
+        browser.userTypedValue = origQualiumUrl;
+      }
+    }"""
+    mod_urlbar = mod_urlbar.replace(urlbar_load_target, urlbar_load_replacement)
+
+    # 8. Patch modules/URILoadingHelper.sys.mjs for universal internal routing
+    orig_helper = src_zf.read("modules/URILoadingHelper.sys.mjs").decode("utf-8", "ignore")
+    helper_target = """  openLinkIn(window, url, where, params) {
+    if (!where || !url) {
+      return;
+    }"""
+    if "origQualiumUrl" in orig_helper:
+        start_idx = orig_helper.find("  openLinkIn(window, url, where, params) {")
+        marker = "params.triggeringPrincipal = lazy.Services.scriptSecurityManager.getSystemPrincipal();\n    }"
+        end_idx = orig_helper.rfind(marker)
+        if start_idx != -1 and end_idx != -1:
+            orig_helper = orig_helper[:start_idx] + helper_target + orig_helper[end_idx + len(marker):]
+
+    helper_replacement = """  openLinkIn(window, url, where, params) {
+    if (!where || !url) {
+      return;
+    }
+    if (typeof url === "string" && (url.startsWith("qualium://") || url.startsWith("qaulium://"))) {
+      let origQualiumUrl = url;
+      if (window?.QualiumRouteRegistry) {
+        url = window.QualiumRouteRegistry.publicToInternal(url);
+      } else {
+        const _qMap = {
+          "qualium://newtab": "chrome://qualium/content/newtab.xhtml",
+          "qualium://privacy": "chrome://qualium/content/dashboard.xhtml",
+          "qualium://security": "chrome://qualium/content/dashboard.xhtml",
+          "qualium://settings": "chrome://qualium/content/settings.xhtml",
+          "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
+          "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
+          "qualium://history": "chrome://qualium/content/history.xhtml",
+          "qualium://passwords": "about:logins",
+          "qualium://extensions": "about:addons",
+          "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
+          "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+          "qualium://error": "chrome://qualium/content/error.xhtml",
+        };
+        let lower = origQualiumUrl.toLowerCase().replace("qaulium://", "qualium://");
+        let base = lower.split("?")[0].split("#")[0];
+        if (_qMap[base]) {
+          url = _qMap[base] + lower.slice(base.length);
+        } else {
+          url = "chrome://qualium/content/error.xhtml?route=" + encodeURIComponent(origQualiumUrl);
+        }
+      }
+      params = Object.assign({}, params);
+      params.triggeringPrincipal = lazy.Services.scriptSecurityManager.getSystemPrincipal();
+    }"""
+    mod_helper = orig_helper.replace(helper_target, helper_replacement)
+
+    # 9. Patch chrome/browser/content/browser/browser.js to declare qualium routes as initial pages
+    orig_browser_js = src_zf.read("chrome/browser/content/browser/browser.js").decode("utf-8", "ignore")
+    browser_js_target = """var gInitialPages = [
+  "about:blank",
+  "about:home",
+  "about:firefoxview",
+  "about:newtab",
+  "about:privatebrowsing",
+  "about:sessionrestore",
+  "about:welcome",
+  "about:welcomeback",
+  "chrome://browser/content/blanktab.html",
+];"""
+    browser_js_replacement = """var gInitialPages = [
+  "about:blank",
+  "about:home",
+  "about:firefoxview",
+  "about:newtab",
+  "about:privatebrowsing",
+  "about:sessionrestore",
+  "about:welcome",
+  "about:welcomeback",
+  "chrome://browser/content/blanktab.html",
+  "chrome://qualium/content/newtab.xhtml",
+  "qualium://newtab",
+  "qualium://settings",
+  "qualium://privacy",
+  "qualium://security",
+  "qualium://downloads",
+  "qualium://bookmarks",
+  "qualium://history",
+  "qualium://passwords",
+  "qualium://extensions",
+  "qualium://about",
+  "qualium://error",
+];"""
+    if "qualium://bookmarks" not in orig_browser_js:
+        mod_browser_js = orig_browser_js.replace(browser_js_target, browser_js_replacement)
+    else:
+        mod_browser_js = orig_browser_js
+
+    # 10. Patch chrome/browser/content/browser/browser-places.js so Bookmarks / History / Downloads ALWAYS open as tabs
+    orig_places_js = src_zf.read("chrome/browser/content/browser/browser-places.js").decode("utf-8", "ignore")
+    places_target = """    if (!organizer || organizer.closed) {
+      // No currently open places window, so open one with the specified mode.
+      openDialog(
+        "chrome://browser/content/places/places.xhtml",
+        "",
+        "chrome,toolbar=yes,dialog=no,resizable",
+        item
+      );
+    } else {
+      organizer.PlacesOrganizer.selectLeftPaneContainerByHierarchy(item);
+      organizer.focus();
+    }"""
+    places_replacement = """    let target = "qualium://bookmarks";
+    if (item === "History") {
+      target = "qualium://history";
+    } else if (item === "Downloads") {
+      target = "qualium://downloads";
+    }
+    openTrustedLinkIn(target, "tab");"""
+    if "qualium://bookmarks" not in orig_places_js:
+        mod_places_js = orig_places_js.replace(places_target, places_replacement)
+    else:
+        mod_places_js = orig_places_js
+
+    # 11. Patch chrome/browser/content/browser/utilityOverlay.js so About dialog opens as tab
+    orig_utility_js = src_zf.read("chrome/browser/content/browser/utilityOverlay.js").decode("utf-8", "ignore")
+    about_target = '  window.openDialog("chrome://browser/content/aboutDialog.xhtml", "", features);'
+    about_replacement = '  openTrustedLinkIn("qualium://about", "tab");'
+    if "qualium://about" not in orig_utility_js:
+        mod_utility_js = orig_utility_js.replace(about_target, about_replacement)
+    else:
+        mod_utility_js = orig_utility_js
+
+    # 12. Patch modules/BrowserContentHandler.sys.mjs to support qualium:// CLI loading and allow in-tab chrome://qualium/
+    orig_bch = src_zf.read("modules/BrowserContentHandler.sys.mjs").decode("utf-8", "ignore")
+    bch_target = """function shouldLoadURI(aURI) {
+  if (aURI && !aURI.schemeIs("chrome")) {
+    return true;
+  }
+
+  dump("*** Preventing external load of chrome: URI into browser window\\n");
+  dump("    Use --chrome <uri> instead\\n");
+  return false;
+}
+
+function resolveURIInternal(aCmdLine, aArgument) {
+  let principal = lazy.gSystemPrincipal;
+  var uri = aCmdLine.resolveURI(aArgument);"""
+    bch_replacement = """function shouldLoadURI(aURI) {
+  if (aURI && (!aURI.schemeIs("chrome") || aURI.spec.startsWith("chrome://qualium/"))) {
+    return true;
+  }
+
+  dump("*** Preventing external load of chrome: URI into browser window\\n");
+  dump("    Use --chrome <uri> instead\\n");
+  return false;
+}
+
+function resolveURIInternal(aCmdLine, aArgument) {
+  let principal = lazy.gSystemPrincipal;
+  if (typeof aArgument === "string" && (aArgument.startsWith("qualium://") || aArgument.startsWith("qaulium://"))) {
+    const _qMap = {
+      "qualium://newtab": "chrome://qualium/content/newtab.xhtml",
+      "qualium://privacy": "chrome://qualium/content/dashboard.xhtml",
+      "qualium://security": "chrome://qualium/content/dashboard.xhtml",
+      "qualium://settings": "chrome://qualium/content/settings.xhtml",
+      "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
+      "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
+      "qualium://history": "chrome://qualium/content/history.xhtml",
+      "qualium://passwords": "about:logins",
+      "qualium://extensions": "about:addons",
+      "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
+      "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+      "qualium://error": "chrome://qualium/content/error.xhtml",
+    };
+    let lower = aArgument.toLowerCase().replace("qaulium://", "qualium://");
+    let base = lower.split("?")[0].split("#")[0];
+    let mapped = _qMap[base] ? (_qMap[base] + lower.slice(base.length)) : ("chrome://qualium/content/error.xhtml?route=" + encodeURIComponent(aArgument));
+    try {
+      let uri = aCmdLine.resolveURI(mapped);
+      return { uri, principal };
+    } catch (e) {}
+  }
+  var uri = aCmdLine.resolveURI(aArgument);"""
+    if "_qMap" not in orig_bch:
+        mod_bch = orig_bch.replace(bch_target, bch_replacement)
+    else:
+        mod_bch = orig_bch
 
     # Pre-read replacement content
     repo_root = r"e:\Qaulium AI\Broswer"
@@ -287,6 +582,18 @@ graph-week-summary-private-window = All trackers blocked this week
             dst_zf.writestr(name, downloads_bytes)
         elif name == "chrome/browser/content/browser/browser.xhtml":
             dst_zf.writestr(name, mod_xhtml.encode("utf-8"))
+        elif name == "modules/UrlbarInput.sys.mjs":
+            dst_zf.writestr(name, mod_urlbar.encode("utf-8"))
+        elif name == "modules/URILoadingHelper.sys.mjs":
+            dst_zf.writestr(name, mod_helper.encode("utf-8"))
+        elif name == "chrome/browser/content/browser/browser.js":
+            dst_zf.writestr(name, mod_browser_js.encode("utf-8"))
+        elif name == "chrome/browser/content/browser/browser-places.js":
+            dst_zf.writestr(name, mod_places_js.encode("utf-8"))
+        elif name == "chrome/browser/content/browser/utilityOverlay.js":
+            dst_zf.writestr(name, mod_utility_js.encode("utf-8"))
+        elif name == "modules/BrowserContentHandler.sys.mjs":
+            dst_zf.writestr(name, mod_bch.encode("utf-8"))
         elif name == "chrome/chrome.manifest":
             dst_zf.writestr(name, mod_manifest.encode("utf-8"))
         else:
