@@ -2,6 +2,9 @@
 //! Ultra-premium dark design, zero WinForms, zero .NET runtime dependencies.
 //! Direct Win32 implementation with crisp typography, high-DPI awareness,
 //! dynamic disk space metrics, and responsive interactive cards.
+//!
+//! This module is Windows-only and must not be compiled on Linux or macOS.
+#![cfg(windows)]
 
 #![allow(non_snake_case, static_mut_refs, dead_code)]
 

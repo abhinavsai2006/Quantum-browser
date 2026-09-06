@@ -1,6 +1,16 @@
 //! Qualium Quantum Browser v5 — Installer & Uninstaller Library
 //! Provides Win32 native integration, installation engine, manifest tracking, and uninstaller engine.
+//!
+//! Windows-only modules (`win32`, `win32_gui`, `uninstaller_engine`) are gated with
+//! `#[cfg(windows)]` so the crate can be included in the workspace without breaking
+//! Linux/macOS builds. The CI additionally uses `--exclude qualium-installer` on those
+//! platforms so the Windows-specific engine code is never attempted outside Windows.
 
+// Cross-platform modules
+pub mod manifest;
+pub mod engine;
+
+// Win32 bindings and GUI wizard
 #[cfg(windows)]
 pub mod win32;
 #[cfg(not(windows))]
@@ -58,9 +68,7 @@ pub mod win32 {
         None
     }
 }
-pub mod manifest;
-pub mod engine;
-pub mod uninstaller_engine;
+
 #[cfg(windows)]
 pub mod win32_gui;
 #[cfg(not(windows))]
@@ -78,6 +86,14 @@ pub mod win32_gui {
     }
 }
 
+#[cfg(windows)]
+pub mod uninstaller_engine;
+#[cfg(not(windows))]
+pub mod uninstaller_engine {
+    pub struct UninstallerEngine;
+}
+
 pub use manifest::{InstallManifest, ManifestFileEntry};
 pub use engine::{InstallEngine, InstallOptions, PayloadMetrics};
+#[cfg(windows)]
 pub use uninstaller_engine::UninstallerEngine;

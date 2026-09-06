@@ -1,5 +1,8 @@
 //! Windows Native API Bindings & Helpers for Qualium Installer/Uninstaller
 //! Provides disk queries, registry registration, process detection, and shortcut creation without WinForms/.NET.
+//!
+//! This module is Windows-only and must not be compiled on Linux or macOS.
+#![cfg(windows)]
 
 use std::ffi::OsStr;
 use std::fs;

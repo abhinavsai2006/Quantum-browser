@@ -1,5 +1,9 @@
 //! Qualium Quantum Browser v5 — Uninstaller Engine
 //! Authoritative removal based on install-manifest.json, Windows registry cleanup, and user data choices.
+//!
+//! This module is Windows-only: it drives the Win32 registry, shortcut removal,
+//! and batch-script self-deletion that only apply on Windows.
+#![cfg(windows)]
 
 use crate::manifest::InstallManifest;
 use crate::win32;

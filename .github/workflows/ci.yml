@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Rust Toolchain & Dependencies
         run: |
@@ -27,18 +28,18 @@ jobs:
           sudo apt-get update && sudo apt-get install -y clang lld llvm libssl-dev pkg-config dpkg-dev
 
       - name: Run Full Workspace Tests (42 Security Tests)
-        run: cargo test --workspace --all-targets --all-features -- --nocapture
+        run: cargo test --workspace --exclude qualium-installer --all-targets --all-features -- --nocapture
 
       - name: Build Release Binaries & Package Linux Bundle
         run: |
-          cargo build --release --workspace
+          cargo build --release --workspace --exclude qualium-installer
           python3 scripts/package-cross-platform.py
 
       - name: Upload Linux Distribution Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: qualium-linux-x86_64
-          path: dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz
+          path: dist/Qualium-Quantum-Browser-*-linux-x86_64.tar.gz
 
   # ==========================================================
   # 2. MACOS RUNNER (APPLE SILICON & INTEL)
@@ -48,23 +49,24 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Rust Toolchain
         run: rustup update stable
 
       - name: Run Full Workspace Tests (42 Security Tests)
-        run: cargo test --workspace --all-targets --all-features -- --nocapture
+        run: cargo test --workspace --exclude qualium-installer --all-targets --all-features -- --nocapture
 
       - name: Build macOS Release Binaries & Package .app Bundle
         run: |
-          cargo build --release --workspace
+          cargo build --release --workspace --exclude qualium-installer
           python3 scripts/package-cross-platform.py
 
       - name: Upload macOS Distribution Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: qualium-macos-universal
-          path: dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz
+          path: dist/Qualium-Quantum-Browser-*-macOS-Universal.tar.gz
 
   # ==========================================================
   # 3. WINDOWS x64 RUNNER
@@ -74,6 +76,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Rust Toolchain
         run: rustup update stable
@@ -91,6 +94,6 @@ jobs:
         with:
           name: qualium-windows-x64
           path: |
-            dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe
+            dist/Qualium-Quantum-Browser-*-Setup.exe
             dist/SHA256SUMS.asc
-            dist/sbom-v1.0.0.spdx.json
+            dist/sbom-*.spdx.json

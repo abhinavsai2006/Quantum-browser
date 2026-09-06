@@ -1,4 +1,5 @@
 #![windows_subsystem = "windows"]
+#![cfg(windows)]
 
 //! Qualium Quantum Browser v5 — Production Windows Uninstaller
 //! Pure native Win32 implementation (Zero WinForms, Zero .NET).

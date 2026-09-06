@@ -2,6 +2,7 @@
 //! Executes real unzipping, SHA256 verification, staging, committing, and shortcut/registry registration.
 
 use crate::manifest::{InstallManifest, ManifestFileEntry};
+#[cfg(windows)]
 use crate::win32;
 use sha2::{Digest, Sha256};
 use std::fs::{self, File};
@@ -60,7 +61,8 @@ impl InstallEngine {
         let dest = &options.install_dir;
         let metrics = self.inspect_payload()?;
 
-        // 1. Verify disk space
+        // 1. Verify disk space (Windows-only: uses GetDiskFreeSpaceExW)
+        #[cfg(windows)]
         if let Some((free_avail, _)) = win32::get_disk_free_space(dest) {
             let required_with_margin = metrics.total_uncompressed_bytes + 50 * 1024 * 1024;
             if free_avail < required_with_margin {
@@ -79,7 +81,22 @@ impl InstallEngine {
         }
         fs::create_dir_all(&staging_dir)?;
 
-        let mut manifest = InstallManifest::new(dest.clone(), win32::get_user_data_dir());
+        // Resolve user data dir: Windows uses LOCALAPPDATA, others use XDG_DATA_HOME or ~/.local/share
+        #[cfg(windows)]
+        let user_data_dir = win32::get_user_data_dir();
+        #[cfg(not(windows))]
+        let user_data_dir = std::env::var("XDG_DATA_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                // Pure stdlib home detection: try HOME (Linux/macOS), then /tmp fallback
+                std::env::var("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|_| PathBuf::from("/tmp"))
+                    .join(".local")
+                    .join("share")
+                    .join("qualium")
+            });
+        let mut manifest = InstallManifest::new(dest.clone(), user_data_dir);
         manifest.total_installed_bytes = metrics.total_uncompressed_bytes;
         manifest.total_file_count = metrics.total_file_count;
 
@@ -196,7 +213,8 @@ impl InstallEngine {
             let _ = fs::copy(&sub_uninstaller, &root_uninstaller);
         }
 
-        // 8. Shortcuts creation
+        // 8. Shortcuts creation (Windows-only: uses WScript.Shell COM / SHGetSpecialFolderPathW)
+        #[cfg(windows)]
         if options.create_desktop_shortcut {
             let icon_ref = if icon_path.exists() { Some(icon_path.as_path()) } else { None };
             for desktop_lnk in win32::get_desktop_shortcut_paths() {
@@ -214,6 +232,7 @@ impl InstallEngine {
             }
         }
 
+        #[cfg(windows)]
         if options.create_start_menu_shortcut {
             if let Some(menu_dir) = win32::get_start_menu_shortcut_dir() {
                 let _ = fs::create_dir_all(&menu_dir);
@@ -243,10 +262,13 @@ impl InstallEngine {
             }
         }
 
-        // 9. Windows Installed Apps Registry Registration
-        let total_size_kb = (metrics.total_uncompressed_bytes / 1024).max(1);
-        let reg_icon = if icon_path.exists() { icon_path } else { main_browser_exe.clone() };
-        win32::register_uninstall(dest, &root_uninstaller, &reg_icon, total_size_kb)?;
+        // 9. Windows Installed Apps Registry Registration (Windows-only)
+        #[cfg(windows)]
+        {
+            let total_size_kb = (metrics.total_uncompressed_bytes / 1024).max(1);
+            let reg_icon = if icon_path.exists() { icon_path } else { main_browser_exe.clone() };
+            win32::register_uninstall(dest, &root_uninstaller, &reg_icon, total_size_kb)?;
+        }
 
         // 10. Write authoritative install-manifest.json
         manifest.save_to_dir(dest)?;
