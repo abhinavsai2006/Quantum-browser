@@ -92,6 +92,8 @@ def main():
         "chrome/browser/content/qualium/qualium-panel.xhtml",
         "chrome/browser/content/qualium/onboarding.xhtml",
         "chrome/browser/content/qualium/runtime-state.js",
+        "chrome/browser/content/qualium/favicon-service.js",
+        "chrome/browser/content/qualium/favicon-bridge.js",
         "chrome/browser/skin/classic/qualium/qualium-shield.svg",
         "chrome/chrome.manifest"
     ]

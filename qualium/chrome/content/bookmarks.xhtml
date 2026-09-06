@@ -8,35 +8,222 @@
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/bookmarks.css"/>
-  <script>
-    //<![CDATA[
-    // If opened in a standalone dialog/modal window, immediately redirect to a tab in the main window
-    if (window.opener && window.opener.openTrustedLinkIn) {
-      try {
-        window.opener.openTrustedLinkIn("chrome://qualium/content/bookmarks.xhtml", "tab");
-        window.close();
-      } catch (e) {}
-    }
-    //]]>
-  </script>
+  <script src="chrome://qualium/content/favicon-service.js"></script>
 </head>
 <body>
   <div class="page-container">
     <header class="page-header">
       <div class="header-title-row">
-        <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
         <h1>Bookmarks</h1>
       </div>
       <p class="header-desc">Locally stored private bookmarks, never synced to external cloud servers.</p>
     </header>
 
-    <div class="empty-state">
-      <div class="empty-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <!-- Live Search Filter -->
+    <div class="bookmarks-search-row">
+      <div class="search-input-wrap">
+        <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="bm-search-input" class="bookmarks-search-input" placeholder="Search bookmarks by title or URL..." autocomplete="off" spellcheck="false"/>
       </div>
-      <h3>No bookmarks yet</h3>
-      <p>Click the star icon in the address bar or press <kbd>Ctrl+D</kbd> to save websites privately.</p>
+    </div>
+
+    <!-- Dynamic Bookmarks List Container -->
+    <div id="bookmarks-container" class="bookmarks-list">
+      <!-- Populated dynamically by script -->
+    </div>
+
+    <!-- Empty State (Shown when no bookmarks exist or no matches) -->
+    <div id="empty-state" class="empty-state" style="display: none;">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </div>
+      <h3 id="empty-state-title">No bookmarks found</h3>
+      <p id="empty-state-desc">Click the star icon in the address bar or press <kbd>Ctrl+D</kbd> to save websites privately.</p>
     </div>
   </div>
+
+  <script>
+    //<![CDATA[
+    (function() {
+      "use strict";
+
+      let allBookmarks = [];
+      let searchQuery = "";
+
+      function createSVGElement(svgStr) {
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svgStr, "image/svg+xml");
+          if (doc.documentElement && doc.documentElement.nodeName === "svg") {
+            return document.importNode(doc.documentElement, true);
+          }
+        } catch (e) {}
+        const temp = document.createElement("div");
+        temp.innerHTML = svgStr;
+        return temp.firstElementChild;
+      }
+
+      async function loadAndRender() {
+        if (typeof QualiumBookmarkStore !== "undefined") {
+          allBookmarks = await QualiumBookmarkStore.getBookmarks();
+        } else {
+          allBookmarks = [];
+        }
+        renderList();
+      }
+
+      async function renderList() {
+        const container = document.getElementById("bookmarks-container");
+        const emptyState = document.getElementById("empty-state");
+        const emptyTitle = document.getElementById("empty-state-title");
+        const emptyDesc = document.getElementById("empty-state-desc");
+        if (!container) return;
+
+        const filtered = allBookmarks.filter(b => {
+          if (!searchQuery) return true;
+          const q = searchQuery.toLowerCase();
+          return (b.title && b.title.toLowerCase().includes(q)) || 
+                 (b.url && b.url.toLowerCase().includes(q));
+        });
+
+        container.innerHTML = "";
+
+        if (filtered.length === 0) {
+          if (emptyState) {
+            emptyState.style.display = "flex";
+            if (searchQuery) {
+              emptyTitle.textContent = "No matching bookmarks";
+              emptyDesc.textContent = `No bookmarks matched "${searchQuery}".`;
+            } else {
+              emptyTitle.textContent = "No bookmarks yet";
+              emptyDesc.innerHTML = 'Click the star icon in the address bar or press <kbd>Ctrl+D</kbd> to save websites privately.';
+            }
+          }
+          return;
+        }
+
+        if (emptyState) emptyState.style.display = "none";
+
+        for (const bm of filtered) {
+          const card = document.createElement("div");
+          card.className = "bookmark-card";
+          card.dataset.id = bm.id;
+
+          const left = document.createElement("div");
+          left.className = "bookmark-card-left";
+
+          const iconBox = document.createElement("div");
+          iconBox.className = "bookmark-icon-box";
+
+          // Dynamic Favicon Resolution
+          if (bm.isInternal) {
+            const svg = QualiumFaviconService.getInternalIconSvg(bm.internalIcon || "shield");
+            iconBox.appendChild(createSVGElement(svg));
+          } else {
+            const resolved = await QualiumFaviconService.getForPage(bm.url);
+            if (resolved && resolved.dataUrl) {
+              const img = document.createElement("img");
+              img.src = resolved.dataUrl;
+              img.className = "bookmark-icon-img";
+              img.alt = bm.title;
+              img.onerror = () => {
+                iconBox.innerHTML = "";
+                iconBox.appendChild(createSVGElement(QualiumFaviconService.getNeutralFallbackSvg()));
+              };
+              iconBox.appendChild(img);
+            } else {
+              iconBox.appendChild(createSVGElement(QualiumFaviconService.getNeutralFallbackSvg()));
+            }
+          }
+
+          const info = document.createElement("div");
+          info.className = "bookmark-info";
+
+          const title = document.createElement("div");
+          title.className = "bookmark-title";
+          title.textContent = bm.title || bm.url;
+
+          const url = document.createElement("div");
+          url.className = "bookmark-url";
+          url.textContent = bm.canonicalUrl || bm.url;
+
+          info.appendChild(title);
+          info.appendChild(url);
+          left.appendChild(iconBox);
+          left.appendChild(info);
+
+          // Right Actions
+          const right = document.createElement("div");
+          right.className = "bookmark-card-right";
+
+          // Pin / Unpin button
+          const pinBtn = document.createElement("button");
+          pinBtn.className = "btn-pin-toggle" + (bm.pinned ? " pinned" : "");
+          pinBtn.textContent = bm.pinned ? "Pinned ✓" : "Pin to New Tab";
+          pinBtn.title = bm.pinned ? "Unpin from New Tab shortcuts" : "Pin to New Tab shortcuts";
+          pinBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await QualiumBookmarkStore.updateBookmark(bm.id, { pinned: !bm.pinned });
+          });
+
+          // Delete button
+          const delBtn = document.createElement("button");
+          delBtn.className = "btn-delete-bookmark";
+          delBtn.title = "Delete bookmark";
+          delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+          delBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await QualiumBookmarkStore.deleteBookmark(bm.id);
+          });
+
+          right.appendChild(pinBtn);
+          right.appendChild(delBtn);
+
+          card.appendChild(left);
+          card.appendChild(right);
+
+          // Click on card: Authoritative navigation inside Qualium tab
+          card.addEventListener("click", () => {
+            QualiumNavigationController.navigateTo(bm.url, "current");
+          });
+
+          container.appendChild(card);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        loadAndRender();
+
+        const searchInput = document.getElementById("bm-search-input");
+        if (searchInput) {
+          searchInput.addEventListener("input", (e) => {
+            searchQuery = e.target.value.trim();
+            renderList();
+          });
+        }
+
+        if (typeof QualiumBookmarkStore !== "undefined") {
+          QualiumBookmarkStore.subscribe(() => {
+            loadAndRender();
+          });
+        }
+
+        if (typeof QualiumFaviconService !== "undefined") {
+          QualiumFaviconService.subscribe(() => {
+            renderList();
+          });
+        }
+      });
+    })();
+    //]]>
+  </script>
 </body>
 </html>

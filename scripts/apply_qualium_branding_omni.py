@@ -164,6 +164,9 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     ).replace(
         'id="urlbar-search-button"',
         'id="urlbar-search-button" hidden="true"'
+    ).replace(
+        '<script src="chrome://browser/content/browser-main.js"></script>',
+        '<script src="chrome://browser/content/browser-main.js"></script>\n  <script src="chrome://qualium/content/favicon-service.js"></script>\n  <script src="chrome://qualium/content/favicon-bridge.js"></script>'
     )
 
     # Physically remove the gap elements between Extensions and Settings
@@ -226,6 +229,14 @@ override chrome://global/skin/icons/defaultFavicon.svg chrome://qualium/skin/qua
         newtab_bytes = f.read()
     with open(os.path.join(repo_root, "qualium", "chrome", "content", "dashboard.xhtml"), "rb") as f:
         dashboard_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "settings.xhtml"), "rb") as f:
+        settings_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "bookmarks.xhtml"), "rb") as f:
+        bookmarks_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "history.xhtml"), "rb") as f:
+        history_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "downloads.xhtml"), "rb") as f:
+        downloads_bytes = f.read()
 
     new_private_ftl = """privatebrowsing-page-title = Qaulium Private Browsing
 about-private-browsing-search-placeholder = Search privately or enter address
@@ -266,6 +277,14 @@ graph-week-summary-private-window = All trackers blocked this week
             dst_zf.writestr(name, newtab_bytes)
         elif name in ["chrome/browser/content/browser/protections.html", "chrome/browser/content/browser/protections.xhtml"]:
             dst_zf.writestr(name, dashboard_bytes)
+        elif name in ["chrome/browser/content/browser/preferences/preferences.xhtml", "chrome/browser/content/browser/preferences/preferences.html", "chrome/browser/content/preferences/preferences.xhtml"]:
+            dst_zf.writestr(name, settings_bytes)
+        elif name in ["chrome/browser/content/browser/places/places.xhtml", "chrome/browser/content/browser/places/places.html", "chrome/browser/content/places/places.xhtml"]:
+            dst_zf.writestr(name, bookmarks_bytes)
+        elif name in ["chrome/browser/content/browser/places/history.xhtml", "chrome/browser/content/browser/places/history.html", "chrome/browser/content/places/history.xhtml"]:
+            dst_zf.writestr(name, history_bytes)
+        elif name in ["chrome/browser/content/browser/downloads/contentAreaDownloadsView.xhtml", "chrome/browser/content/downloads/contentAreaDownloadsView.xhtml"]:
+            dst_zf.writestr(name, downloads_bytes)
         elif name == "chrome/browser/content/browser/browser.xhtml":
             dst_zf.writestr(name, mod_xhtml.encode("utf-8"))
         elif name == "chrome/chrome.manifest":

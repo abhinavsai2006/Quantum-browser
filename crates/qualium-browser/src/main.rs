@@ -175,22 +175,22 @@ fn resolve_internal_route(input: &str) -> String {
     let trimmed = input.trim();
     let normalized = trimmed.replace("qaulium://", "qualium://");
     if normalized.is_empty() || normalized == "qualium://newtab" {
-        return "about:home".to_string();
+        return "chrome://qualium/content/newtab.xhtml".to_string();
     }
     if normalized == "qualium://settings" || normalized == "qualium://about" {
-        return "about:preferences".to_string();
+        return "chrome://qualium/content/settings.xhtml".to_string();
     }
     if normalized == "qualium://privacy" || normalized == "qualium://security" {
-        return "about:protections".to_string();
+        return "chrome://qualium/content/dashboard.xhtml".to_string();
     }
     if normalized == "qualium://downloads" {
-        return "about:downloads".to_string();
+        return "chrome://qualium/content/downloads.xhtml".to_string();
     }
     if normalized == "qualium://bookmarks" {
-        return "about:bookmarks".to_string();
+        return "chrome://qualium/content/bookmarks.xhtml".to_string();
     }
     if normalized == "qualium://history" {
-        return "about:history".to_string();
+        return "chrome://qualium/content/history.xhtml".to_string();
     }
     if normalized == "qualium://passwords" {
         return "about:logins".to_string();
@@ -199,7 +199,7 @@ fn resolve_internal_route(input: &str) -> String {
         return "about:addons".to_string();
     }
     if normalized == "qualium://onboarding" || normalized == "qualium://welcome" {
-        return "about:welcome".to_string();
+        return "chrome://qualium/content/onboarding.xhtml".to_string();
     }
 
     if trimmed.starts_with("chrome://") || trimmed.starts_with("about:") || trimmed.starts_with("resource://") {

@@ -24,7 +24,7 @@ def capture_window_screenshot(output_path, timeout=15):
                 user32.GetWindowRect(hwnd, ctypes.byref(rect))
                 w = rect.right - rect.left
                 h = rect.bottom - rect.top
-                if (("qualium" in title.lower() or "qaulium" in title.lower()) or cls_name.value == "MozillaWindowClass") and w > 300 and h > 200:
+                if (("qualium" in title.lower() or "qaulium" in title.lower()) or cls_name.value == "MozillaWindowClass") and w > 200 and h > 20:
                     target_hwnd = hwnd
                     return False
             return True
@@ -39,6 +39,10 @@ def capture_window_screenshot(output_path, timeout=15):
         return False
 
     print(f"Found Qualium window HWND: {target_hwnd}")
+
+    user32.ShowWindow(target_hwnd, 9) # SW_RESTORE
+    user32.SetWindowPos(target_hwnd, 0, 50, 50, 1280, 820, 0x0040)
+    time.sleep(1.5)
 
     rect = wintypes.RECT()
     user32.GetWindowRect(target_hwnd, ctypes.byref(rect))

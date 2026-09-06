@@ -6,16 +6,19 @@ target_ci/
 target_dist/
 target_repro_a/
 target_repro_b/
+*.exe
+qualium-daemon.exe
 
 # Large binary runtime (Gecko engine — download separately)
-runtime/browser/
+runtime/*
+!runtime/distribution/
+!runtime/distribution/policies.json
 
 # Large installer binaries (distribute via GitHub Releases)
-dist/*.exe
-dist/*.tar.gz
-dist/*.asc
+dist/
 
 # Temp/test files
+scratch/
 current_window_test.png
 *.pyc
 __pycache__/

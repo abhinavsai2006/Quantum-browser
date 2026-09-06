@@ -51,39 +51,47 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch(e) {}
   }
 
-  function getTabFaviconSvg(iconType, url) {
-    if (url && (url.includes("google.com") || url.includes("google"))) {
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>`;
-    }
-    if (url && (url.includes("youtube.com") || url.includes("youtube"))) {
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10 8 16 12 10 16 10 8"/><rect x="2" y="4" width="20" height="16" rx="4"/></svg>`;
-    }
-    if (url && (url.includes("github.com") || url.includes("github"))) {
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`;
-    }
-    if (url && (url.includes("wikipedia.org") || url.includes("wikipedia"))) {
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><text x="8" y="16" font-size="12" font-weight="bold" fill="currentColor">W</text></svg>`;
+  async function updateTabFaviconElement(tabEl, url, iconType) {
+    if (!tabEl) return;
+    const oldFavicon = tabEl.querySelector(".tab-favicon");
+    if (!oldFavicon) return;
+
+    if (typeof QualiumFaviconService !== "undefined") {
+      const resolved = await QualiumFaviconService.getForPage(url);
+      if (resolved && resolved.dataUrl) {
+        const img = document.createElement("img");
+        img.src = resolved.dataUrl;
+        img.className = "q-icon q-icon-sm tab-favicon";
+        img.style.objectFit = "contain";
+        img.style.borderRadius = "3px";
+        img.onerror = () => {
+          const temp = document.createElement("div");
+          temp.innerHTML = QualiumFaviconService.getNeutralFallbackSvg();
+          const fallback = temp.firstElementChild;
+          if (fallback) tabEl.replaceChild(fallback, img);
+        };
+        tabEl.replaceChild(img, oldFavicon);
+        return;
+      }
+      if (resolved && resolved.svg) {
+        const temp = document.createElement("div");
+        temp.innerHTML = resolved.svg;
+        const newSvg = temp.firstElementChild;
+        if (newSvg) {
+          newSvg.classList.add("q-icon", "q-icon-sm", "tab-favicon");
+          tabEl.replaceChild(newSvg, oldFavicon);
+          return;
+        }
+      }
     }
 
-    switch (iconType) {
-      case "download":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
-      case "bookmark":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-      case "settings":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
-      case "lock":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
-      case "extensions":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`;
-      case "history":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-      case "shield":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
-      case "search":
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
-      default:
-        return `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`;
+    const temp = document.createElement("div");
+    temp.innerHTML = typeof QualiumFaviconService !== "undefined"
+      ? QualiumFaviconService.getNeutralFallbackSvg()
+      : `<svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`;
+    const newFavicon = temp.firstElementChild;
+    if (newFavicon) {
+      tabEl.replaceChild(newFavicon, oldFavicon);
     }
   }
 
@@ -124,15 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (activeTabEl) {
         const titleSpan = activeTabEl.querySelector(".tab-title");
         if (titleSpan) titleSpan.textContent = title;
-        const oldFavicon = activeTabEl.querySelector(".tab-favicon");
-        if (oldFavicon) {
-          const temp = document.createElement("div");
-          temp.innerHTML = getTabFaviconSvg(iconType, canonical || url);
-          const newFavicon = temp.firstElementChild;
-          if (newFavicon) {
-            activeTabEl.replaceChild(newFavicon, oldFavicon);
-          }
-        }
+        updateTabFaviconElement(activeTabEl, canonical || url, iconType);
       }
       updateAddressBar(url, canonical);
       recordHistory(canonical || url, title);
@@ -167,8 +167,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnReload) btnReload.addEventListener("click", () => navCtrl.reload());
   if (btnDownloads) btnDownloads.addEventListener("click", () => navCtrl.navigateInternal("qualium://downloads"));
   if (btnBookmarkStar) {
-    btnBookmarkStar.addEventListener("click", () => {
-      showToast("Page bookmarked locally");
+    btnBookmarkStar.addEventListener("click", async () => {
+      const currentData = tabData.get(activeTabId);
+      if (currentData && currentData.url && typeof QualiumBookmarkStore !== "undefined") {
+        await QualiumBookmarkStore.addBookmark({
+          url: currentData.canonical || currentData.url,
+          title: currentData.title || currentData.url,
+          pinned: true
+        });
+        showToast("Page bookmarked & added to New Tab ✓");
+      } else {
+        showToast("Page bookmarked locally");
+      }
     });
   }
 

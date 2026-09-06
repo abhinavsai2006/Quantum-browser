@@ -305,6 +305,35 @@ html, body {
   color: #ffffff;
 }
 
+/* Edit button on shortcuts */
+.shortcut-edit-btn {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #334155;
+  color: #cbd5e1;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+  z-index: 2;
+}
+
+.shortcut-item:hover .shortcut-edit-btn {
+  opacity: 1;
+}
+
+.shortcut-edit-btn:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
 /* Add Shortcut Tile */
 .shortcut-add-box {
   background-color: transparent;
