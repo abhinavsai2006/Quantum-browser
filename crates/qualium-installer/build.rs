@@ -120,7 +120,8 @@ fn main() {
         stage_dir.display()
     );
 
-    let status = Command::new("py")
+    let python = if cfg!(windows) { "py" } else { "python3" };
+    let status = Command::new(python)
         .args(["-c", &py_cmd])
         .status()
         .unwrap();
