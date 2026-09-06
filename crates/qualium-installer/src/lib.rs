@@ -7,6 +7,10 @@ pub mod win32;
 pub mod win32 {
     use std::path::{Path, PathBuf};
 
+    pub mod sys {
+        pub const CREATE_NO_WINDOW: u32 = 0;
+    }
+
     pub fn get_disk_free_space(_path: &Path) -> Option<(u64, u64)> {
         None
     }
@@ -22,6 +26,7 @@ pub mod win32 {
         _description: &str,
         _icon_path: Option<&Path>,
     ) -> anyhow::Result<()> {
+        anyhow::bail!("Windows shortcuts are only supported on Windows")
         anyhow::bail!("Windows shortcut creation is only supported on Windows")
     }
 
@@ -39,6 +44,15 @@ pub mod win32 {
     }
 
     pub fn get_default_install_dir() -> PathBuf {
+        PathBuf::from("/opt/qualium")
+    }
+
+    pub fn get_user_data_dir() -> PathBuf {
+        if let Ok(home) = std::env::var("HOME") {
+            PathBuf::from(home).join(".qualium")
+        } else {
+            PathBuf::from("/tmp/.qualium")
+        }
         std::env::temp_dir().join("Qualium")
     }
 
