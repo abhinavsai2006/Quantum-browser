@@ -78,6 +78,16 @@ pub mod sys {
         pub fn RegDeleteTreeW(hKey: HKEY, lpSubKey: LPCWSTR) -> LSTATUS;
         pub fn RegCloseKey(hKey: HKEY) -> LSTATUS;
     }
+
+    #[link(name = "shell32")]
+    extern "system" {
+        pub fn SHGetSpecialFolderPathW(
+            hwndOwner: HWND,
+            lpszPath: LPWSTR,
+            nFolder: i32,
+            fCreate: BOOL,
+        ) -> BOOL;
+    }
 }
 
 pub fn to_wide_null(s: &str) -> Vec<u16> {
@@ -294,12 +304,33 @@ pub fn get_user_data_dir() -> PathBuf {
     }
 }
 
-pub fn get_desktop_shortcut_path() -> Option<PathBuf> {
-    if let Ok(userprofile) = std::env::var("USERPROFILE") {
-        Some(PathBuf::from(userprofile).join("Desktop").join("Qualium Quantum Browser.lnk"))
-    } else {
-        None
+pub fn get_desktop_shortcut_paths() -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+    let mut buf = [0u16; 260];
+    unsafe {
+        if sys::SHGetSpecialFolderPathW(std::ptr::null_mut(), buf.as_mut_ptr(), 0x0010, 0) != 0 {
+            let len = buf.iter().position(|&c| c == 0).unwrap_or(260);
+            let dir = PathBuf::from(String::from_utf16_lossy(&buf[..len]));
+            if dir.exists() {
+                paths.push(dir.join("Qualium Quantum Browser.lnk"));
+            }
+        }
     }
+    if let Ok(userprofile) = std::env::var("USERPROFILE") {
+        let p1 = PathBuf::from(&userprofile).join("Desktop").join("Qualium Quantum Browser.lnk");
+        let p2 = PathBuf::from(&userprofile).join("OneDrive").join("Desktop").join("Qualium Quantum Browser.lnk");
+        if !paths.contains(&p1) && p1.parent().map(|d| d.exists()).unwrap_or(false) {
+            paths.push(p1);
+        }
+        if !paths.contains(&p2) && p2.parent().map(|d| d.exists()).unwrap_or(false) {
+            paths.push(p2);
+        }
+    }
+    paths
+}
+
+pub fn get_desktop_shortcut_path() -> Option<PathBuf> {
+    get_desktop_shortcut_paths().into_iter().next()
 }
 
 pub fn get_start_menu_shortcut_dir() -> Option<PathBuf> {

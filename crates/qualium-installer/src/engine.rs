@@ -198,8 +198,8 @@ impl InstallEngine {
 
         // 8. Shortcuts creation
         if options.create_desktop_shortcut {
-            if let Some(desktop_lnk) = win32::get_desktop_shortcut_path() {
-                let icon_ref = if icon_path.exists() { Some(icon_path.as_path()) } else { None };
+            let icon_ref = if icon_path.exists() { Some(icon_path.as_path()) } else { None };
+            for desktop_lnk in win32::get_desktop_shortcut_paths() {
                 if let Ok(()) = win32::create_shortcut(
                     &main_browser_exe,
                     &desktop_lnk,
@@ -207,7 +207,9 @@ impl InstallEngine {
                     "Qualium Quantum Browser — Privacy-First Gecko Desktop Browser",
                     icon_ref,
                 ) {
-                    manifest.shortcuts.push(desktop_lnk);
+                    if !manifest.shortcuts.contains(&desktop_lnk) {
+                        manifest.shortcuts.push(desktop_lnk);
+                    }
                 }
             }
         }
