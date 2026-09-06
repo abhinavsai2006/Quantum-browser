@@ -66,14 +66,32 @@
           };
           iconBox.appendChild(img);
         } else {
-          // Dynamic Neutral Loading State: Subtle letter badge
-          const letter = (item.title || "W").charAt(0).toUpperCase();
-          const hue = Math.abs(item.title.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) * 53) % 360;
-          iconBox.style.background = `linear-gradient(135deg, hsl(${hue}, 45%, 24%), hsl(${(hue + 35) % 360}, 50%, 18%))`;
-          iconBox.style.color = "#f8fafc";
-          iconBox.style.fontSize = "16px";
-          iconBox.style.fontWeight = "600";
-          iconBox.textContent = letter;
+          // Neutral Qualium shield fallback ONLY while retrieving (NEVER letter avatar!)
+          iconBox.innerHTML = "";
+          iconBox.appendChild(createSVGElement(QualiumFaviconService.getNeutralFallbackSvg()));
+
+          // Asynchronously resolve official site favicon
+          if (typeof QualiumFaviconService.resolveAndFetchOfficialFavicon === "function") {
+            QualiumFaviconService.resolveAndFetchOfficialFavicon(item.url).then(rec => {
+              if (rec && rec.dataUrl) {
+                iconBox.innerHTML = "";
+                const img = document.createElement("img");
+                img.src = rec.dataUrl;
+                img.className = "shortcut-favicon-img";
+                img.alt = item.title;
+                img.style.width = "26px";
+                img.style.height = "26px";
+                img.style.objectFit = "contain";
+                img.style.borderRadius = "4px";
+                img.style.display = "block";
+                img.onerror = () => {
+                  iconBox.innerHTML = "";
+                  iconBox.appendChild(createSVGElement(QualiumFaviconService.getNeutralFallbackSvg()));
+                };
+                iconBox.appendChild(img);
+              }
+            }).catch(() => {});
+          }
         }
       }
 

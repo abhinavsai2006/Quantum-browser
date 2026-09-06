@@ -422,28 +422,34 @@
         fstream.close();
         try { pendingFile.remove(false); } catch(e) {}
         const dest = str.value ? str.value.trim() : "";
-        if (dest && dest.startsWith("http")) {
-          logBridge("[STARTUP_NAV] Loading pending URL into Gecko: " + dest);
+        if (dest) {
+          let resolvedDest = dest;
+          if (typeof window.QualiumRouteRegistry !== "undefined" && window.QualiumRouteRegistry.isQualiumRoute(dest)) {
+            resolvedDest = window.QualiumRouteRegistry.publicToInternal(dest);
+          } else if (dest.startsWith("qualium://") || dest.startsWith("qaulium://")) {
+            const file = dest.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
+            resolvedDest = `chrome://qualium/content/${file}.xhtml`;
+          }
+
+          logBridge("[STARTUP_NAV] Loading pending URL into Gecko: " + resolvedDest);
           const principal = Services.scriptSecurityManager.getSystemPrincipal();
           setTimeout(() => {
             try {
               if (typeof gBrowser.loadURI === "function") {
-                gBrowser.loadURI(Services.io.newURI(dest), { triggeringPrincipal: principal });
+                gBrowser.loadURI(Services.io.newURI(resolvedDest), { triggeringPrincipal: principal });
               } else if (gBrowser.selectedBrowser && typeof gBrowser.selectedBrowser.loadURI === "function") {
-                gBrowser.selectedBrowser.loadURI(dest, { triggeringPrincipal: principal });
+                gBrowser.selectedBrowser.loadURI(resolvedDest, { triggeringPrincipal: principal });
               }
 
-              // Also trigger an explicit Necko XMLHttpRequest to ensure full round-trip
-              const xhr = new XMLHttpRequest();
-              xhr.open("GET", dest, true);
-              xhr.onload = function() {
-                logBridge("[STARTUP_NAV] Necko XHR success from " + dest + " status=" + xhr.status + " len=" + (xhr.responseText ? xhr.responseText.length : 0));
-              };
-              xhr.onerror = function(err) {
-                logBridge("[STARTUP_NAV] Necko XHR error for " + dest + ": " + err);
-              };
-              xhr.send();
-              logBridge("[STARTUP_NAV] Dispatched loadURI and Necko XHR for: " + dest);
+              if (dest.startsWith("http")) {
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", dest, true);
+                xhr.onload = function() {
+                  logBridge("[STARTUP_NAV] Necko XHR success from " + dest + " status=" + xhr.status);
+                };
+                xhr.onerror = function() {};
+                xhr.send();
+              }
             } catch(loadErr) {
               logBridge("[STARTUP_NAV] loadURI dispatch error: " + loadErr);
             }
