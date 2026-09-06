@@ -54,13 +54,18 @@ py -3 scripts/build_installer.py
 
 ## Download
 
-Pre-built installers are available on the [Releases](../../releases) page.
+Download the latest pre-built Windows standalone installer:
 
-| Platform | File |
-|----------|------|
-| Windows  | `Qaulium-Quantum-Browser-v5.0.0-Setup.exe` |
-| Linux    | `Qaulium-Quantum-Browser-v5.0.0-linux-x86_64.tar.gz` |
-| macOS    | `Qaulium-Quantum-Browser-v5.0.0-macOS.tar.gz` |
+[![Download Windows Installer](https://img.shields.io/badge/Download-Windows_Installer_(.exe)-00c853?style=for-the-badge&logo=windows)](https://github.com/Qaulium-AI-Browser/Abhinav-s-repo-for-qualium-browser-backend/releases/download/v5.0.0/Qaulium-Quantum-Browser-v5.0.0-Setup.exe)
+
+**Direct Download Link:**  
+👉 **[Qaulium-Quantum-Browser-v5.0.0-Setup.exe](https://github.com/Qaulium-AI-Browser/Abhinav-s-repo-for-qualium-browser-backend/releases/download/v5.0.0/Qaulium-Quantum-Browser-v5.0.0-Setup.exe)**
+
+| Platform | File / Download Link | Description |
+|----------|----------------------|-------------|
+| **Windows (Installer)** | [Qaulium-Quantum-Browser-v5.0.0-Setup.exe](https://github.com/Qaulium-AI-Browser/Abhinav-s-repo-for-qualium-browser-backend/releases/download/v5.0.0/Qaulium-Quantum-Browser-v5.0.0-Setup.exe) | Complete standalone installer with embedded Gecko runtime & daemon |
+| **Windows (Runner)** | [`QauliumQuantumBrowser.exe`](QauliumQuantumBrowser.exe) | Standalone host shell executable in repository root |
+| **Network Daemon** | [`qualium-daemon.exe`](qualium-daemon.exe) | Post-quantum ML-KEM-768 privacy proxy executable |
 
 ## License
 
