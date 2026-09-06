@@ -120,10 +120,18 @@ fn main() {
         stage_dir.display()
     );
 
-    let status = Command::new("py")
-        .args(["-c", &py_cmd])
-        .status()
-        .unwrap();
+    let mut status = None;
+    for python in ["py", "python3", "python"] {
+        match Command::new(python).args(["-c", &py_cmd]).status() {
+            Ok(exit_status) => {
+                status = Some(exit_status);
+                break;
+            }
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(err) => panic!("Failed to execute {python} in build.rs: {err}"),
+        }
+    }
+    let status = status.expect("No Python interpreter found (tried: py, python3, python)");
 
     if !status.success() || !payload_zip.exists() {
         panic!("Failed to generate payload.zip in build.rs via Python shutil.make_archive");
