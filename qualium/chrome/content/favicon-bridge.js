@@ -96,6 +96,15 @@
             logBridge("TabAttrModified icon for " + currentUrl + ": " + iconUrl.substring(0, 60));
             persistGeckoFavicon(currentUrl, iconUrl);
           }
+
+          // Update real browsing history with latest title and icon
+          if (typeof window.QualiumHistoryStore !== "undefined" && !currentUrl.startsWith("about:") && !currentUrl.includes("error.xhtml") && !currentUrl.includes("history.xhtml")) {
+            window.QualiumHistoryStore.recordVisit({
+              url: currentUrl,
+              title: title || currentUrl,
+              iconDataUrl: iconUrl
+            });
+          }
         }
       } catch (e) {
         logBridge("TabAttrModified handler error: " + e);
@@ -151,6 +160,15 @@
             if (tab) {
               tab.setAttribute("label", cleanTitle);
             }
+
+            // Record internal route visit (excluding history itself to avoid self-loop noise)
+            if (publicUrl !== "qualium://history" && !publicUrl.includes("error") && typeof window.QualiumHistoryStore !== "undefined") {
+              window.QualiumHistoryStore.recordVisit({
+                url: publicUrl,
+                title: cleanTitle,
+                iconDataUrl: null
+              });
+            }
             return;
           }
 
@@ -158,13 +176,21 @@
             return;
           }
 
-          // Check if tab already has an icon
+          // Real external website navigation — check icon and record real history
           const tab = gBrowser.getTabForBrowser(aBrowser);
-          if (tab) {
-            const iconUrl = tab.getAttribute("image") || aBrowser.mIconURL;
-            if (iconUrl) {
-              persistGeckoFavicon(url, iconUrl);
-            }
+          const iconUrl = tab ? (tab.getAttribute("image") || aBrowser.mIconURL) : null;
+          const title = tab ? tab.getAttribute("label") : (aBrowser.contentTitle || url);
+
+          if (iconUrl) {
+            persistGeckoFavicon(url, iconUrl);
+          }
+
+          if (typeof window.QualiumHistoryStore !== "undefined") {
+            window.QualiumHistoryStore.recordVisit({
+              url: url,
+              title: title || url,
+              iconDataUrl: iconUrl
+            });
           }
         } catch (e) {}
       },

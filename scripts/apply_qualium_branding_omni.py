@@ -138,6 +138,12 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
         '<command id="Tools:Downloads" />',
         '<command id="Tools:Downloads" oncommand="openTrustedLinkIn(\'qualium://downloads\', \'tab\')"/>'
     ).replace(
+        '<command id="Tools:Addons" />',
+        '<command id="Tools:Addons" oncommand="openTrustedLinkIn(\'qualium://extensions\', \'tab\')"/>'
+    ).replace(
+        'id="appMenu-extensions-themes-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-extensions-and-themes"\n                     key="key_openAddons"\n                     command="Tools:Addons"\n                     />',
+        'id="appMenu-extensions-themes-button"\n                     class="subviewbutton"\n                     data-l10n-id="appmenuitem-extensions-and-themes"\n                     key="key_openAddons"\n                     oncommand="openTrustedLinkIn(\'qualium://extensions\', \'tab\')"\n                     />'
+    ).replace(
         'id="appMenu-bookmarks-button"\n                     class="subviewbutton subviewbutton-nav"\n                     data-l10n-id="library-bookmarks-menu"\n                     closemenu="none"\n                     />',
         'id="appMenu-bookmarks-button"\n                     class="subviewbutton"\n                     data-l10n-id="library-bookmarks-menu"\n                     oncommand="openTrustedLinkIn(\'qualium://bookmarks\', \'tab\')"\n                     />'
     ).replace(
@@ -217,6 +223,10 @@ override chrome://browser/content/places/places.xhtml chrome://qualium/content/b
 override chrome://browser/content/places/history.xhtml chrome://qualium/content/history.xhtml
 override chrome://browser/content/aboutwelcome/aboutwelcome.html chrome://qualium/content/onboarding.xhtml
 override chrome://browser/content/aboutwelcome/aboutwelcome.xhtml chrome://qualium/content/onboarding.xhtml
+override chrome://mozapps/content/extensions/aboutaddons.html chrome://qualium/content/extensions.xhtml
+override chrome://mozapps/content/extensions/extensions.xhtml chrome://qualium/content/extensions.xhtml
+override chrome://browser/content/aboutlogins/aboutLogins.html chrome://qualium/content/passwords.xhtml
+override chrome://browser/content/aboutDialog.xhtml chrome://qualium/content/about.xhtml
 override chrome://branding/content/icon32.png chrome://qualium/skin/qualium-shield.svg
 override chrome://branding/content/icon16.png chrome://qualium/skin/qualium-shield.svg
 override chrome://global/skin/icons/defaultFavicon.svg chrome://qualium/skin/qualium-shield.svg
@@ -498,10 +508,11 @@ function resolveURIInternal(aCmdLine, aArgument) {
       "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
       "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
       "qualium://history": "chrome://qualium/content/history.xhtml",
-      "qualium://passwords": "about:logins",
-      "qualium://extensions": "about:addons",
+      "qualium://passwords": "chrome://qualium/content/passwords.xhtml",
+      "qualium://extensions": "chrome://qualium/content/extensions.xhtml",
       "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
-      "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+      "qualium://about": "chrome://qualium/content/about.xhtml",
+      "qualium://diagnostics": "chrome://qualium/content/settings.xhtml#diagnostics",
       "qualium://error": "chrome://qualium/content/error.xhtml",
     };
     let lower = aArgument.toLowerCase().replace("qaulium://", "qualium://");
@@ -532,6 +543,12 @@ function resolveURIInternal(aCmdLine, aArgument) {
         history_bytes = f.read()
     with open(os.path.join(repo_root, "qualium", "chrome", "content", "downloads.xhtml"), "rb") as f:
         downloads_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "extensions.xhtml"), "rb") as f:
+        extensions_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "passwords.xhtml"), "rb") as f:
+        passwords_bytes = f.read()
+    with open(os.path.join(repo_root, "qualium", "chrome", "content", "about.xhtml"), "rb") as f:
+        about_bytes = f.read()
 
     new_private_ftl = """privatebrowsing-page-title = Qaulium Private Browsing
 about-private-browsing-search-placeholder = Search privately or enter address
@@ -580,6 +597,12 @@ graph-week-summary-private-window = All trackers blocked this week
             dst_zf.writestr(name, history_bytes)
         elif name in ["chrome/browser/content/browser/downloads/contentAreaDownloadsView.xhtml", "chrome/browser/content/downloads/contentAreaDownloadsView.xhtml"]:
             dst_zf.writestr(name, downloads_bytes)
+        elif name in ["chrome/browser/content/browser/aboutDialog.xhtml", "chrome/browser/content/aboutDialog.xhtml"]:
+            dst_zf.writestr(name, about_bytes)
+        elif name in ["chrome/browser/content/aboutlogins/aboutLogins.html", "chrome/browser/content/aboutlogins/aboutLogins.xhtml"]:
+            dst_zf.writestr(name, passwords_bytes)
+        elif name in ["chrome/mozapps/content/extensions/aboutaddons.html", "chrome/mozapps/content/extensions/extensions.xhtml"]:
+            dst_zf.writestr(name, extensions_bytes)
         elif name == "chrome/browser/content/browser/browser.xhtml":
             dst_zf.writestr(name, mod_xhtml.encode("utf-8"))
         elif name == "modules/UrlbarInput.sys.mjs":

@@ -450,7 +450,7 @@ pub fn run_installer_gui(engine: InstallEngine, default_dest: PathBuf) -> anyhow
 
         let screen_w = ffi::GetSystemMetrics(0);
         let screen_h = ffi::GetSystemMetrics(1);
-        let mut rect = ffi::RECT { left: 0, top: 0, right: 900, bottom: 620 };
+        let mut rect = ffi::RECT { left: 0, top: 0, right: 920, bottom: 640 };
         ffi::AdjustWindowRectEx(&mut rect, 0x00CA0000 | ffi::WS_VISIBLE, 0, 0);
         let win_w = rect.right - rect.left;
         let win_h = rect.bottom - rect.top;
@@ -554,8 +554,10 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
 
         let mut rc: ffi::RECT = std::mem::zeroed();
         ffi::GetClientRect(hwnd, &mut rc);
-        let client_w = (rc.right - rc.left).max(860);
+        let client_w = (rc.right - rc.left).max(900);
+        let client_h = (rc.bottom - rc.top).max(620);
         let content_w = client_w - 70;
+        let bar_y = client_h - 58;
 
         // Header Title
         state.hwnd_title = ffi::CreateWindowExW(
@@ -585,7 +587,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_welcome_box = ffi::CreateWindowExW(
             0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
             ffi::WS_CHILD | ffi::ES_MULTILINE | ffi::ES_READONLY,
-            35, 160, content_w, 330, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 155, content_w, 370, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_welcome_box, ffi::WM_SETFONT, state.font_body as usize, 1);
 
@@ -593,14 +595,14 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_license_edit = ffi::CreateWindowExW(
             0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
             ffi::WS_CHILD | ffi::ES_MULTILINE | ffi::ES_READONLY | ffi::ES_AUTOVSCROLL | ffi::WS_VSCROLL,
-            35, 155, content_w, 300, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 155, content_w, 335, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_license_edit, ffi::WM_SETFONT, state.font_body as usize, 1);
 
         state.hwnd_chk_license = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("I accept the terms of the License Agreement and Privacy Disclosures").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
-            35, 468, content_w, 28, hwnd, ID_CHK_LICENSE as ffi::HMENU, hinstance, std::ptr::null_mut()
+            35, 502, content_w, 28, hwnd, ID_CHK_LICENSE as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_chk_license, ffi::WM_SETFONT, state.font_bold as usize, 1);
         ffi::SendMessageW(state.hwnd_chk_license, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
@@ -632,7 +634,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_chk_desktop = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Create a Desktop Shortcut (Qualium Quantum Browser.lnk)").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
-            40, 160, content_w - 10, 26, hwnd, ID_CHK_DESKTOP as ffi::HMENU, hinstance, std::ptr::null_mut()
+            40, 150, content_w - 10, 26, hwnd, ID_CHK_DESKTOP as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_chk_desktop, ffi::WM_SETFONT, state.font_bold as usize, 1);
         ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
@@ -640,14 +642,14 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_lbl_desktop_sub = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Places a quick launch shortcut on your active Windows Desktop screen.").as_ptr(),
             ffi::WS_CHILD,
-            65, 188, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            65, 178, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_desktop_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
         state.hwnd_chk_startmenu = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Add Shortcuts to Windows Start Menu").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
-            40, 220, content_w - 10, 26, hwnd, ID_CHK_STARTMENU as ffi::HMENU, hinstance, std::ptr::null_mut()
+            40, 215, content_w - 10, 26, hwnd, ID_CHK_STARTMENU as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::WM_SETFONT, state.font_bold as usize, 1);
         ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
@@ -655,7 +657,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_lbl_startmenu_sub = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Adds Qualium Quantum Browser and Uninstaller under Start Menu > Programs > Qualium.").as_ptr(),
             ffi::WS_CHILD,
-            65, 248, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            65, 243, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_startmenu_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
@@ -677,14 +679,15 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_chk_startwin = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Start with Windows (Optional)").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
-            40, 340, content_w - 10, 26, hwnd, ID_CHK_STARTWIN as ffi::HMENU, hinstance, std::ptr::null_mut()
+            40, 345, content_w - 10, 26, hwnd, ID_CHK_STARTWIN as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_chk_startwin, ffi::WM_SETFONT, state.font_body as usize, 1);
+        ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_SETCHECK, ffi::BST_UNCHECKED, 0);
 
         state.hwnd_lbl_startwin_sub = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Launches the Qualium background privacy daemon when Windows starts (Default: Off).").as_ptr(),
             ffi::WS_CHILD,
-            65, 368, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            65, 373, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_startwin_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
@@ -692,7 +695,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_ready_box = ffi::CreateWindowExW(
             0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
             ffi::WS_CHILD | ffi::ES_MULTILINE | ffi::ES_READONLY,
-            35, 160, content_w, 330, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 155, content_w, 370, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_ready_box, ffi::WM_SETFONT, state.font_body as usize, 1);
 
@@ -700,7 +703,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_complete_box = ffi::CreateWindowExW(
             0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
             ffi::WS_CHILD | ffi::ES_MULTILINE | ffi::ES_READONLY,
-            35, 160, content_w, 220, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 155, content_w, 320, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_complete_box, ffi::WM_SETFONT, state.font_body as usize, 1);
 
@@ -708,14 +711,14 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_progress = ffi::CreateWindowExW(
             0, prog_class.as_ptr(), std::ptr::null(),
             ffi::WS_CHILD | ffi::WS_BORDER,
-            35, 220, content_w, 32, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 210, content_w, 32, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_progress, ffi::PBM_SETRANGE32, 0, 1000);
 
         state.hwnd_prog_text = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Preparing installation...").as_ptr(),
             ffi::WS_CHILD,
-            35, 265, content_w, 50, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 255, content_w, 95, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_prog_text, ffi::WM_SETFONT, state.font_body as usize, 1);
 
@@ -723,23 +726,22 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_btn_cancel = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Cancel").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            35, 525, 110, 38, hwnd, ID_BTN_CANCEL as ffi::HMENU, hinstance, std::ptr::null_mut()
+            35, bar_y, 120, 38, hwnd, ID_BTN_CANCEL as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_cancel, ffi::WM_SETFONT, state.font_bold as usize, 1);
 
         state.hwnd_btn_back = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("< Back").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            client_w - 275, 525, 115, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
+            client_w - 325, bar_y, 135, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_back, ffi::WM_SETFONT, state.font_bold as usize, 1);
 
         state.hwnd_btn_next = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Next >").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            client_w - 150, 525, 125, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
+            client_w - 175, bar_y, 145, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
-        ffi::SendMessageW(state.hwnd_btn_next, ffi::WM_SETFONT, state.font_bold as usize, 1);
         ffi::SendMessageW(state.hwnd_btn_next, ffi::WM_SETFONT, state.font_bold as usize, 1);
     }
 }
@@ -810,7 +812,7 @@ unsafe fn update_installer_page() {
                 show(state.hwnd_license_edit);
                 show(state.hwnd_chk_license);
 
-                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Agree & Continue >").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Agree && Continue >").as_ptr());
             }
             InstallerPage::Location => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 3 of 8: Choose Install Location").as_ptr());
@@ -967,7 +969,13 @@ fn start_install_worker(hwnd: ffi::HWND) {
         let hwnd = hwnd_val as ffi::HWND;
         let res = engine.install(&options, |cur_f, tot_f, cur_b, tot_b, path, comp| {
             let pct = if tot_b > 0 { (cur_b as f64 / tot_b as f64 * 1000.0) as usize } else { 0 };
-            let msg = format!("{}: {} ({}/{})", comp, path, cur_f, tot_f);
+            let mb_cur = cur_b as f64 / (1024.0 * 1024.0);
+            let mb_tot = tot_b as f64 / (1024.0 * 1024.0);
+            let pct_100 = if tot_b > 0 { (cur_b as f64 / tot_b as f64 * 100.0) as usize } else { 0 };
+            let msg = format!(
+                "Installing Qualium Quantum Browser\r\nComponent: {}\r\nFiles: {} / {} | {:.1} MB / {:.1} MB ({}%)\r\nExtracting: {}",
+                comp, cur_f, tot_f, mb_cur, mb_tot, pct_100, path
+            );
             let boxed = Box::into_raw(Box::new(msg)) as isize;
             unsafe {
                 ffi::PostMessageW(hwnd, WM_INSTALL_PROGRESS, pct, boxed);
@@ -1001,15 +1009,21 @@ unsafe extern "system" fn installer_wndproc(
             let hdc = ffi::BeginPaint(hwnd, &mut ps);
 
             if let Some(state) = G_INSTALLER_STATE.as_ref() {
+                let mut rc_client: ffi::RECT = std::mem::zeroed();
+                ffi::GetClientRect(hwnd, &mut rc_client);
+                let w = rc_client.right - rc_client.left;
+                let h = rc_client.bottom - rc_client.top;
+
                 // Header Banner
-                let rect_header = ffi::RECT { left: 0, top: 0, right: 900, bottom: 85 };
+                let rect_header = ffi::RECT { left: 0, top: 0, right: w, bottom: 85 };
                 ffi::FillRect(hdc, &rect_header, state.brush_header);
 
-                let rect_line1 = ffi::RECT { left: 0, top: 85, right: 900, bottom: 86 };
+                let rect_line1 = ffi::RECT { left: 0, top: 85, right: w, bottom: 86 };
                 let brush_line = ffi::CreateSolidBrush(0x00503525);
                 ffi::FillRect(hdc, &rect_line1, brush_line);
 
-                let rect_line2 = ffi::RECT { left: 0, top: 515, right: 900, bottom: 516 };
+                let bar_line_y = h - 68;
+                let rect_line2 = ffi::RECT { left: 0, top: bar_line_y, right: w, bottom: bar_line_y + 1 };
                 ffi::FillRect(hdc, &rect_line2, brush_line);
 
                 ffi::DeleteObject(brush_line as *mut std::ffi::c_void);
@@ -1294,7 +1308,7 @@ pub fn run_uninstaller_gui(engine: UninstallerEngine, install_dir: PathBuf) -> a
 
         let screen_w = ffi::GetSystemMetrics(0);
         let screen_h = ffi::GetSystemMetrics(1);
-        let mut rect = ffi::RECT { left: 0, top: 0, right: 880, bottom: 600 };
+        let mut rect = ffi::RECT { left: 0, top: 0, right: 920, bottom: 640 };
         ffi::AdjustWindowRectEx(&mut rect, 0x00CA0000 | ffi::WS_VISIBLE, 0, 0);
         let win_w = rect.right - rect.left;
         let win_h = rect.bottom - rect.top;
@@ -1385,8 +1399,10 @@ unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
 
         let mut rc: ffi::RECT = std::mem::zeroed();
         ffi::GetClientRect(hwnd, &mut rc);
-        let client_w = (rc.right - rc.left).max(860);
+        let client_w = (rc.right - rc.left).max(900);
+        let client_h = (rc.bottom - rc.top).max(620);
         let content_w = client_w - 70;
+        let bar_y = client_h - 58;
 
         // Header Title
         state.hwnd_title = ffi::CreateWindowExW(
@@ -1518,21 +1534,21 @@ unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
         state.hwnd_btn_cancel = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Cancel").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            35, 525, 110, 38, hwnd, ID_BTN_CANCEL as ffi::HMENU, hinstance, std::ptr::null_mut()
+            35, bar_y, 120, 38, hwnd, ID_BTN_CANCEL as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_cancel, ffi::WM_SETFONT, state.font_bold as usize, 1);
 
         state.hwnd_btn_back = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("< Back").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            client_w - 275, 525, 115, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
+            client_w - 325, bar_y, 135, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_back, ffi::WM_SETFONT, state.font_bold as usize, 1);
 
         state.hwnd_btn_next = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Next >").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            client_w - 150, 525, 125, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
+            client_w - 175, bar_y, 145, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_next, ffi::WM_SETFONT, state.font_bold as usize, 1);
     }
@@ -1745,14 +1761,20 @@ unsafe extern "system" fn uninstaller_wndproc(
             let hdc = ffi::BeginPaint(hwnd, &mut ps);
 
             if let Some(state) = G_UNINSTALLER_STATE.as_ref() {
-                let rect_header = ffi::RECT { left: 0, top: 0, right: 880, bottom: 85 };
+                let mut rc_client: ffi::RECT = std::mem::zeroed();
+                ffi::GetClientRect(hwnd, &mut rc_client);
+                let w = rc_client.right - rc_client.left;
+                let h = rc_client.bottom - rc_client.top;
+
+                let rect_header = ffi::RECT { left: 0, top: 0, right: w, bottom: 85 };
                 ffi::FillRect(hdc, &rect_header, state.brush_header);
 
-                let rect_line1 = ffi::RECT { left: 0, top: 85, right: 880, bottom: 86 };
+                let rect_line1 = ffi::RECT { left: 0, top: 85, right: w, bottom: 86 };
                 let brush_line = ffi::CreateSolidBrush(0x00503525);
                 ffi::FillRect(hdc, &rect_line1, brush_line);
 
-                let rect_line2 = ffi::RECT { left: 0, top: 495, right: 880, bottom: 496 };
+                let bar_line_y = h - 68;
+                let rect_line2 = ffi::RECT { left: 0, top: bar_line_y, right: w, bottom: bar_line_y + 1 };
                 ffi::FillRect(hdc, &rect_line2, brush_line);
 
                 ffi::DeleteObject(brush_line as *mut std::ffi::c_void);

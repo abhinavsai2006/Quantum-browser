@@ -1,54 +1,82 @@
 /* ==========================================================================
-   Qualium Quantum Browser v5 — "Qualium Quiet Precision" Design Tokens
+   Qualium Quantum Browser v5 — Single Authoritative Design System Tokens
+   Pure Quantum Architecture · Zero Firefox Defaults · High-DPI Calibrated
    ========================================================================== */
 
 :root {
-  /* Dark Theme Palette (Default) */
-  --q-bg-window: #111318;
-  --q-bg-chrome: #17191F;
-  --q-bg-toolbar: #1B1E24;
-  --q-bg-surface: #20242B;
-  --q-bg-elevated: #252A32;
-  --q-bg-hover: #2B3038;
-  --q-bg-active: #303640;
-  --q-bg-input: #15181E;
+  /* Dark Theme Palette (Authoritative Single Theme) */
+  --q-bg-window: #0A0F1D;
+  --q-bg-chrome: #0E1526;
+  --q-bg-toolbar: #111827;
+  --q-bg-surface: #131D31;
+  --q-bg-elevated: #1E293B;
+  --q-bg-hover: #26354D;
+  --q-bg-active: #2F4160;
+  --q-bg-input: #0A0F1D;
+
+  /* Short alias tokens matching specification */
+  --background: var(--q-bg-window);
+  --surface: var(--q-bg-surface);
+  --surface-elevated: var(--q-bg-elevated);
+  --surface-hover: var(--q-bg-hover);
 
   /* Borders & Separators */
-  --q-border-subtle: rgba(255, 255, 255, 0.07);
-  --q-border-medium: rgba(255, 255, 255, 0.12);
-  --q-border-focus: rgba(255, 255, 255, 0.25);
+  --q-border-subtle: rgba(255, 255, 255, 0.08);
+  --q-border-medium: rgba(255, 255, 255, 0.15);
+  --q-border-focus: #38BDF8;
+  --border: var(--q-border-subtle);
 
   /* Typography & Text */
   --q-text-primary: #F8FAFC;
-  --q-text-secondary: #CBD5E1;
-  --q-text-muted: #94A3B8;
+  --q-text-secondary: #94A3B8;
+  --q-text-muted: #64748B;
   --q-text-disabled: #475569;
+  --text-primary: var(--q-text-primary);
+  --text-secondary: var(--q-text-secondary);
+  --text-muted: var(--q-text-muted);
 
-  /* Restrained Semantic Accents — Pure Titanium, Slate & Emerald (Zero vibrant blue) */
-  --q-accent-primary: #E2E8F0;
-  --q-accent-primary-subtle: rgba(255, 255, 255, 0.08);
+  /* Primary Interactive Accent: Sky Blue (Strictly for actions, links, focus, active tabs) */
+  --q-accent: #38BDF8;
+  --q-accent-hover: #0284C7;
+  --q-accent-primary: #38BDF8;
+  --q-accent-subtle: rgba(56, 189, 248, 0.12);
+  --q-accent-pqc: #38BDF8;
+  --q-accent-pqc-subtle: rgba(56, 189, 248, 0.12);
+  --accent: var(--q-accent);
+  --accent-hover: var(--q-accent-hover);
+  --focus: var(--q-accent);
+
+  /* Semantic Status: Green strictly for Protected, Active, Healthy, Success */
+  --q-success: #34D399;
+  --q-success-subtle: rgba(52, 211, 153, 0.12);
   --q-accent-success: #34D399;
   --q-accent-success-subtle: rgba(52, 211, 153, 0.12);
+  --success: var(--q-success);
+
+  /* Warning & Danger */
+  --q-warning: #F59E0B;
+  --q-warning-subtle: rgba(245, 158, 11, 0.12);
   --q-accent-warning: #F59E0B;
-  --q-accent-warning-subtle: rgba(245, 158, 11, 0.12);
+  --warning: var(--q-warning);
+
+  --q-danger: #EF4444;
+  --q-danger-subtle: rgba(239, 68, 68, 0.12);
   --q-accent-danger: #EF4444;
-  --q-accent-danger-subtle: rgba(239, 68, 68, 0.12);
-  --q-accent-pqc: #E2E8F0;
-  --q-accent-pqc-subtle: rgba(255, 255, 255, 0.08);
+  --danger: var(--q-danger);
 
   /* Typography Scale */
   --q-font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --q-font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
 
   --q-text-xs: 0.75rem;     /* 12px */
-  --q-text-sm: 0.8125rem;   /* 13px - Browser standard */
+  --q-text-sm: 0.8125rem;   /* 13px */
   --q-text-base: 0.875rem;  /* 14px */
   --q-text-md: 0.9375rem;   /* 15px */
   --q-text-lg: 1.125rem;    /* 18px */
   --q-text-xl: 1.375rem;    /* 22px */
   --q-text-2xl: 1.625rem;   /* 26px */
 
-  /* 4px / 8px Spacing Grid */
+  /* Spacing Grid */
   --q-space-1: 4px;
   --q-space-2: 8px;
   --q-space-3: 12px;
@@ -58,6 +86,7 @@
   --q-space-8: 32px;
   --q-space-10: 40px;
   --q-space-12: 48px;
+  --spacing: var(--q-space-4);
 
   /* Corner Radii */
   --q-radius-sm: 6px;
@@ -65,58 +94,17 @@
   --q-radius-lg: 10px;
   --q-radius-xl: 12px;
   --q-radius-full: 9999px;
+  --radius: var(--q-radius-md);
 
   /* Elevation Shadows */
-  --q-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --q-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --q-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --q-shadow-popover: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --q-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --q-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --q-shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --q-shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --shadow: var(--q-shadow-md);
 
   /* Micro-Motion Transitions */
   --q-motion-fast: 80ms ease-out;
   --q-motion-normal: 140ms cubic-bezier(0.16, 1, 0.3, 1);
   --q-motion-slow: 220ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Light Theme Variables */
-[data-theme="light"] {
-  --q-bg-window: #F1F3F5;
-  --q-bg-chrome: #FFFFFF;
-  --q-bg-toolbar: #F8F9FA;
-  --q-bg-surface: #FFFFFF;
-  --q-bg-elevated: #F1F3F5;
-  --q-bg-hover: #E9ECEF;
-  --q-bg-active: #DEE2E6;
-  --q-bg-input: #FFFFFF;
-
-  --q-border-subtle: rgba(0, 0, 0, 0.08);
-  --q-border-medium: rgba(0, 0, 0, 0.15);
-  --q-border-focus: #0f172a;
-
-  --q-text-primary: #202124;
-  --q-text-secondary: #5F6368;
-  --q-text-muted: #80868B;
-  --q-text-disabled: #BDC1C6;
-
-  --q-accent-primary: #0f172a;
-  --q-accent-primary-subtle: rgba(15, 23, 42, 0.08);
-  --q-accent-success: #188038;
-  --q-accent-success-subtle: rgba(24, 128, 56, 0.10);
-  --q-accent-warning: #E37400;
-  --q-accent-warning-subtle: rgba(227, 116, 0, 0.10);
-  --q-accent-danger: #D93025;
-  --q-accent-danger-subtle: rgba(217, 48, 37, 0.10);
-
-  --q-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --q-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
-  --q-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.14);
-  --q-shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --q-motion-fast: 0ms !important;
-    --q-motion-normal: 0ms !important;
-    --q-motion-slow: 0ms !important;
-  }
 }

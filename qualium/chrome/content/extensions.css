@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Qualium Quantum Browser v5 — Extensions Manager Styling
+   Qualium Quantum Browser v5 — Extensions Center Styling
+   Authoritative Qualium Design System · High-DPI Calibrated
    ========================================================================== */
 
 * {
@@ -17,12 +18,12 @@ body {
 }
 
 .page-container {
-  max-width: 800px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: var(--q-space-8);
+  margin-bottom: var(--q-space-6);
   display: flex;
   flex-direction: column;
   gap: var(--q-space-2);
@@ -34,15 +35,158 @@ body {
   gap: var(--q-space-3);
 }
 
+.header-title-row svg {
+  color: var(--q-accent-primary);
+}
+
 .header-title-row h1 {
-  font-size: var(--q-text-xl);
-  font-weight: 600;
+  font-size: var(--q-text-2xl);
+  font-weight: 700;
   color: var(--q-text-primary);
+  letter-spacing: -0.02em;
 }
 
 .header-desc {
   font-size: var(--q-text-sm);
   color: var(--q-text-muted);
+}
+
+.extensions-bar {
+  margin: var(--q-space-6) 0 var(--q-space-4) 0;
+  display: flex;
+  gap: var(--q-space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.extensions-search-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+}
+
+.extensions-search-wrapper svg {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: var(--q-text-muted);
+  pointer-events: none;
+}
+
+.extensions-search-input {
+  width: 100%;
+  padding: 0.65rem 1rem 0.65rem 2.5rem;
+  background: var(--q-bg-input);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-md);
+  color: var(--q-text-primary);
+  font-size: var(--q-text-sm);
+  outline: none;
+  font-family: var(--q-font-sans);
+  transition: border-color var(--q-motion-fast), box-shadow var(--q-motion-fast);
+}
+
+.extensions-search-input:focus {
+  border-color: var(--q-accent-primary);
+  box-shadow: 0 0 0 2px var(--q-accent-subtle);
+}
+
+.extensions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-3);
+  margin-top: var(--q-space-4);
+}
+
+.extension-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-lg);
+  gap: var(--q-space-4);
+  transition: background var(--q-motion-fast), border-color var(--q-motion-fast);
+}
+
+.extension-card:hover {
+  background: var(--q-bg-elevated);
+  border-color: var(--q-border-medium);
+}
+
+.extension-card-left {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-4);
+  flex: 1;
+  min-width: 0;
+}
+
+.extension-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--q-radius-md);
+  background: var(--q-bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.extension-icon-box img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.extension-icon-box svg {
+  width: 24px;
+  height: 24px;
+  color: var(--q-accent-primary);
+}
+
+.extension-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.extension-header-line {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-2);
+}
+
+.extension-name {
+  font-size: var(--q-text-base);
+  font-weight: 600;
+  color: var(--q-text-primary);
+}
+
+.extension-version {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-muted);
+  font-family: var(--q-font-mono);
+}
+
+.extension-desc {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-secondary);
+  line-height: 1.4;
+}
+
+.extension-card-right {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-3);
+  flex-shrink: 0;
 }
 
 .empty-state {
@@ -55,10 +199,18 @@ body {
   background: var(--q-bg-surface);
   border: 1px dashed var(--q-border-medium);
   border-radius: var(--q-radius-xl);
+  margin-top: var(--q-space-6);
 }
 
 .empty-icon {
   color: var(--q-text-muted);
+}
+
+.empty-icon svg {
+  width: 48px;
+  height: 48px;
+  color: var(--q-accent-primary);
+  opacity: 0.8;
 }
 
 .empty-state h3 {
@@ -70,4 +222,6 @@ body {
 .empty-state p {
   font-size: var(--q-text-xs);
   color: var(--q-text-muted);
+  max-width: 380px;
+  line-height: 1.5;
 }

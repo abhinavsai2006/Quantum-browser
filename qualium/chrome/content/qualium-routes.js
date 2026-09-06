@@ -13,10 +13,11 @@
     "qualium://downloads": "chrome://qualium/content/downloads.xhtml",
     "qualium://bookmarks": "chrome://qualium/content/bookmarks.xhtml",
     "qualium://history": "chrome://qualium/content/history.xhtml",
-    "qualium://passwords": "about:logins",
-    "qualium://extensions": "about:addons",
+    "qualium://passwords": "chrome://qualium/content/passwords.xhtml",
+    "qualium://extensions": "chrome://qualium/content/extensions.xhtml",
     "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
-    "qualium://about": "chrome://qualium/content/settings.xhtml#about",
+    "qualium://about": "chrome://qualium/content/about.xhtml",
+    "qualium://diagnostics": "chrome://qualium/content/settings.xhtml#diagnostics",
     "qualium://error": "chrome://qualium/content/error.xhtml"
   };
 
@@ -27,7 +28,10 @@
     { internal: "about:home", public: "qualium://newtab" },
     { internal: "about:privatebrowsing", public: "qualium://newtab" },
     { internal: "chrome://browser/content/blanktab.html", public: "qualium://newtab" },
+    { internal: "chrome://qualium/content/about.xhtml", public: "qualium://about" },
+    { internal: "chrome://browser/content/aboutDialog.xhtml", public: "qualium://about" },
     { internal: "chrome://qualium/content/settings.xhtml#about", public: "qualium://about" },
+    { internal: "chrome://qualium/content/settings.xhtml#diagnostics", public: "qualium://diagnostics" },
     { internal: "chrome://qualium/content/settings.xhtml", public: "qualium://settings" },
     { internal: "about:preferences", public: "qualium://settings" },
     { internal: "chrome://qualium/content/dashboard.xhtml", public: "qualium://privacy" },
@@ -38,7 +42,12 @@
     { internal: "chrome://browser/content/places/places.xhtml", public: "qualium://bookmarks" },
     { internal: "chrome://qualium/content/history.xhtml", public: "qualium://history" },
     { internal: "chrome://browser/content/places/history.xhtml", public: "qualium://history" },
+    { internal: "chrome://qualium/content/passwords.xhtml", public: "qualium://passwords" },
+    { internal: "chrome://browser/content/aboutlogins/aboutLogins.html", public: "qualium://passwords" },
     { internal: "about:logins", public: "qualium://passwords" },
+    { internal: "chrome://qualium/content/extensions.xhtml", public: "qualium://extensions" },
+    { internal: "chrome://mozapps/content/extensions/aboutaddons.html", public: "qualium://extensions" },
+    { internal: "chrome://mozapps/content/extensions/extensions.xhtml", public: "qualium://extensions" },
     { internal: "about:addons", public: "qualium://extensions" },
     { internal: "chrome://qualium/content/onboarding.xhtml", public: "qualium://welcome" },
     { internal: "about:welcome", public: "qualium://welcome" },
@@ -58,6 +67,7 @@
     "qualium://extensions": "Qualium Extensions",
     "qualium://welcome": "Welcome to Qaulium",
     "qualium://about": "Qualium About",
+    "qualium://diagnostics": "Qualium Diagnostics",
     "qualium://error": "Qualium Error"
   };
 

@@ -1,0 +1,175 @@
+/* ==========================================================================
+   Qualium Quantum Browser v5 — About Page Styling
+   Authoritative Design System Tokens · High-DPI Calibrated
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--q-bg-window);
+  color: var(--q-text-primary);
+  font-family: var(--q-font-sans);
+  min-height: 100vh;
+  padding: var(--q-space-8) var(--q-space-12);
+}
+
+.page-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.about-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-6);
+  padding-bottom: var(--q-space-6);
+  border-bottom: 1px solid var(--q-border-subtle);
+  margin-bottom: var(--q-space-6);
+}
+
+.about-logo-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--q-radius-xl);
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--q-shadow-md);
+}
+
+.about-logo-wrapper svg {
+  width: 44px;
+  height: 44px;
+  color: var(--q-accent-primary);
+}
+
+.about-title-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.about-title-info h1 {
+  font-size: var(--q-text-2xl);
+  font-weight: 700;
+  color: var(--q-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.about-version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--q-space-2);
+  font-size: var(--q-text-xs);
+  color: var(--q-accent-primary);
+  font-family: var(--q-font-mono);
+  font-weight: 600;
+}
+
+.about-tagline {
+  font-size: var(--q-text-sm);
+  color: var(--q-text-muted);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--q-space-4);
+  margin-bottom: var(--q-space-6);
+}
+
+.about-card {
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-lg);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.about-card-label {
+  font-size: var(--q-text-xs);
+  color: var(--q-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.about-card-value {
+  font-size: var(--q-text-sm);
+  color: var(--q-text-primary);
+  font-weight: 600;
+  font-family: var(--q-font-mono);
+}
+
+.about-status-active {
+  color: var(--q-success);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.about-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--q-success);
+}
+
+.about-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-3);
+  padding-top: var(--q-space-4);
+  border-top: 1px solid var(--q-border-subtle);
+}
+
+.update-status-box {
+  margin-top: var(--q-space-4);
+  padding: var(--q-space-3) var(--q-space-4);
+  background: var(--q-bg-surface);
+  border: 1px solid var(--q-border-subtle);
+  border-radius: var(--q-radius-md);
+  font-size: var(--q-text-sm);
+  color: var(--q-text-secondary);
+  display: none;
+  align-items: center;
+  gap: var(--q-space-2);
+}
+
+.update-status-box svg {
+  color: var(--q-success);
+}
+
+.q-toast-container {
+  position: fixed;
+  bottom: var(--q-space-5);
+  right: var(--q-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--q-space-2);
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.q-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-3);
+  background: var(--q-bg-elevated);
+  color: var(--q-text-primary);
+  border: 1px solid var(--q-border-medium);
+  border-radius: var(--q-radius-md);
+  padding: var(--q-space-3) var(--q-space-4);
+  font-size: var(--q-text-sm);
+  box-shadow: var(--q-shadow-md);
+}

@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/history.css"/>
+  <script src="chrome://qualium/content/qualium-routes.js"></script>
+  <script src="chrome://qualium/content/favicon-service.js"></script>
   <script>
     //<![CDATA[
     // If opened in a standalone dialog/modal window, immediately redirect to a tab in the main window
@@ -19,65 +21,6 @@
     }
     //]]>
   </script>
-  <style>
-    .history-search-bar {
-      margin: 1.5rem 0;
-      display: flex;
-      gap: 1rem;
-    }
-    .history-search-input {
-      flex: 1;
-      max-width: 400px;
-      padding: 0.6rem 1rem;
-      background: var(--q-bg-input);
-      border: 1px solid var(--q-border-subtle);
-      border-radius: var(--q-radius-md);
-      color: var(--q-text-primary);
-      font-size: var(--q-text-sm);
-    }
-    .history-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-    .history-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.85rem 1.25rem;
-      background: var(--q-bg-surface);
-      border: 1px solid var(--q-border-subtle);
-      border-radius: var(--q-radius-lg);
-      text-decoration: none;
-      color: var(--q-text-primary);
-      transition: background var(--q-motion-fast), border-color var(--q-motion-fast);
-    }
-    .history-item:hover {
-      background: var(--q-bg-elevated);
-      border-color: var(--q-border-medium);
-    }
-    .history-meta {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .history-time {
-      font-size: var(--q-text-xs);
-      color: var(--q-text-muted);
-      font-family: var(--q-font-mono);
-      min-width: 70px;
-    }
-    .history-title {
-      font-size: var(--q-text-sm);
-      font-weight: 500;
-    }
-    .history-url {
-      font-size: var(--q-text-xs);
-      color: var(--q-text-secondary);
-      font-family: var(--q-font-mono);
-    }
-  </style>
 </head>
 <body>
   <div class="page-container">
@@ -86,16 +29,21 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <h1>Browsing &amp; Search History</h1>
       </div>
-      <p class="header-desc">Search through your private session activity. All entries are encrypted and automatically cleared on session end.</p>
+      <p class="header-desc">Search through your private session activity. All entries are encrypted and stored locally in your enclave.</p>
     </header>
 
     <div class="history-search-bar">
-      <input type="text" id="history-search" class="history-search-input" placeholder="Search history..."/>
-      <button type="button" class="q-btn q-btn-secondary" id="btn-clear-history">Clear Session History</button>
+      <div class="history-search-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="history-search" class="history-search-input" placeholder="Search history by title or URL..."/>
+      </div>
+      <div class="history-actions">
+        <button type="button" class="q-btn q-btn-secondary" id="btn-clear-history">Clear History</button>
+      </div>
     </div>
 
     <div class="history-list" id="history-list">
-      <!-- Populated dynamically -->
+      <!-- Populated dynamically from QualiumHistoryStore -->
     </div>
 
     <div class="empty-state" id="empty-state" style="display:none;">
@@ -103,49 +51,139 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
       <h3>No history entries found</h3>
-      <p>Pages and searches you visit during this session will be listed here.</p>
+      <p>Pages and searches you visit during this session will be recorded here automatically.</p>
     </div>
   </div>
 
   <script>
-    function renderHistory(filter) {
+    //<![CDATA[
+    function formatTime(timestamp) {
+      if (!timestamp) return "Recent";
+      const d = new Date(timestamp);
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      if (isToday) return timeStr;
+      const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return `${dateStr}, ${timeStr}`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function renderHistory(filter = "") {
       const listEl = document.getElementById("history-list");
       const emptyEl = document.getElementById("empty-state");
       if (!listEl) return;
 
       let history = [];
-      try {
-        history = JSON.parse(localStorage.getItem("qualium_history") || "[]");
-      } catch(e) {}
-
-      if (filter) {
-        history = history.filter(item => 
-          item.title.toLowerCase().includes(filter.toLowerCase()) || 
-          item.url.toLowerCase().includes(filter.toLowerCase())
-        );
+      if (typeof QualiumHistoryStore !== "undefined") {
+        history = await QualiumHistoryStore.searchHistory(filter);
+      } else {
+        try {
+          history = JSON.parse(localStorage.getItem("qualium_history_v5") || "[]");
+          if (filter) {
+            const q = filter.toLowerCase();
+            history = history.filter(item => 
+              (item.title && item.title.toLowerCase().includes(q)) || 
+              (item.url && item.url.toLowerCase().includes(q))
+            );
+          }
+        } catch(e) {}
       }
 
       listEl.innerHTML = "";
-      if (history.length === 0) {
+      if (!history || history.length === 0) {
         if (emptyEl) emptyEl.style.display = "flex";
         return;
       }
 
       if (emptyEl) emptyEl.style.display = "none";
-      history.forEach(item => {
+
+      for (const item of history) {
         const row = document.createElement("div");
         row.className = "history-item";
+        row.setAttribute("data-url", item.url);
+
+        let iconMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>`;
+
+        if (typeof QualiumFaviconService !== "undefined") {
+          try {
+            const favInfo = await QualiumFaviconService.getForPage(item.url);
+            if (favInfo) {
+              if (favInfo.isInternal && favInfo.svg) {
+                iconMarkup = favInfo.svg;
+              } else if (favInfo.dataUrl) {
+                iconMarkup = `<img src="${favInfo.dataUrl}" alt="" loading="lazy"/>`;
+              } else if (favInfo.svg) {
+                iconMarkup = favInfo.svg;
+              }
+            }
+          } catch(e) {}
+        } else if (item.iconDataUrl) {
+          iconMarkup = `<img src="${item.iconDataUrl}" alt="" loading="lazy"/>`;
+        }
+
+        const visits = item.visitCount || 1;
+        const visitBadge = visits > 1 ? `<span class="history-badge">${visits} visits</span>` : "";
+
         row.innerHTML = `
-          <div class="history-meta">
-            <span class="history-time">${item.time || "Recent"}</span>
-            <div>
-              <div class="history-title">${item.title}</div>
-              <div class="history-url">${item.url}</div>
+          <div class="history-item-left">
+            <div class="history-favicon-box">${iconMarkup}</div>
+            <div class="history-info">
+              <div class="history-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title || item.url)}</div>
+              <div class="history-url" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</div>
             </div>
           </div>
+          <div class="history-item-right">
+            ${visitBadge}
+            <span class="history-time">${formatTime(item.lastVisitedAt || item.time)}</span>
+            <button type="button" class="history-delete-btn" title="Remove from history" aria-label="Delete">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         `;
+
+        // Click navigates inside Qualium browser tab — never external!
+        row.addEventListener("click", (e) => {
+          if (e.target.closest(".history-delete-btn")) {
+            e.stopPropagation();
+            if (typeof QualiumHistoryStore !== "undefined") {
+              QualiumHistoryStore.deleteEntry(item.id);
+            }
+            row.remove();
+            if (listEl.children.length === 0 && emptyEl) {
+              emptyEl.style.display = "flex";
+            }
+            return;
+          }
+
+          const target = (e.ctrlKey || e.metaKey || e.button === 1) ? "tab" : "current";
+          if (typeof QualiumNavigationController !== "undefined") {
+            QualiumNavigationController.navigateTo(item.url, target);
+          } else {
+            window.location.href = item.url;
+          }
+        });
+
+        // Middle click support
+        row.addEventListener("auxclick", (e) => {
+          if (e.button === 1) {
+            e.preventDefault();
+            if (typeof QualiumNavigationController !== "undefined") {
+              QualiumNavigationController.navigateTo(item.url, "tab");
+            }
+          }
+        });
+
         listEl.appendChild(row);
-      });
+      }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -160,12 +198,25 @@
 
       const clearBtn = document.getElementById("btn-clear-history");
       if (clearBtn) {
-        clearBtn.addEventListener("click", () => {
-          localStorage.removeItem("qualium_history");
+        clearBtn.addEventListener("click", async () => {
+          if (typeof QualiumHistoryStore !== "undefined") {
+            await QualiumHistoryStore.clearHistory();
+          } else {
+            localStorage.removeItem("qualium_history_v5");
+          }
           renderHistory("");
         });
       }
+
+      // Auto-refresh when new history events arrive
+      if (typeof QualiumHistoryStore !== "undefined") {
+        QualiumHistoryStore.subscribe(() => {
+          const filter = searchInput ? searchInput.value.trim() : "";
+          renderHistory(filter);
+        });
+      }
     });
+    //]]>
   </script>
 </body>
 </html>

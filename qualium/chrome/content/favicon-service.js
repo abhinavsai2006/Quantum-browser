@@ -5,9 +5,10 @@
   "use strict";
 
   const DB_NAME = "QualiumBrowserDB_v5";
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const STORE_FAVICONS = "favicons";
   const STORE_BOOKMARKS = "bookmarks";
+  const STORE_HISTORY = "history";
 
   const MAX_FAVICON_ENTRIES = 150;
   const FAVICON_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -108,6 +109,7 @@
       this._initPromise = null;
       this._l1Favicons = new Map(); // key -> FaviconRecord
       this._l1Bookmarks = new Map(); // id -> Bookmark
+      this._l1History = new Map(); // id -> HistoryEntry
       this._isReady = false;
       this._isChrome = typeof Services !== "undefined" && !!Services.dirsvc && typeof Cc !== "undefined";
     }
@@ -166,8 +168,10 @@
       try {
         const favArray = Array.from(this._l1Favicons.values());
         const bmArray = Array.from(this._l1Bookmarks.values());
+        const histArray = Array.from(this._l1History.values());
         this._writeNativeJson("qualium_favicons.json", favArray);
         this._writeNativeJson("qualium_bookmarks.json", bmArray);
+        this._writeNativeJson("qualium_history.json", histArray);
       } catch(e) {}
     }
 
@@ -176,8 +180,10 @@
         if (typeof localStorage !== "undefined") {
           const favArray = Array.from(this._l1Favicons.values());
           const bmArray = Array.from(this._l1Bookmarks.values());
+          const histArray = Array.from(this._l1History.values());
           localStorage.setItem("qualium_favicons_v5", JSON.stringify(favArray));
           localStorage.setItem("qualium_bookmarks_v5", JSON.stringify(bmArray));
+          localStorage.setItem("qualium_history_v5", JSON.stringify(histArray));
         }
       } catch(e) {}
     }
@@ -203,6 +209,15 @@
               }
             }
           }
+          const rawHist = localStorage.getItem("qualium_history_v5");
+          if (rawHist) {
+            const arr = JSON.parse(rawHist);
+            if (Array.isArray(arr)) {
+              for (const h of arr) {
+                if (h && h.id && !this._l1History.has(h.id)) this._l1History.set(h.id, h);
+              }
+            }
+          }
         }
       } catch(e) {}
     }
@@ -220,6 +235,7 @@
               await topEngine.init();
               this._l1Favicons = topEngine._l1Favicons;
               this._l1Bookmarks = topEngine._l1Bookmarks;
+              this._l1History = topEngine._l1History;
               this._isReady = true;
               return;
             }
@@ -235,6 +251,12 @@
           const nativeBm = this._readNativeJson("qualium_bookmarks.json");
           if (Array.isArray(nativeBm)) {
             for (const b of nativeBm) this._l1Bookmarks.set(b.id, b);
+          }
+          const nativeHist = this._readNativeJson("qualium_history.json");
+          if (Array.isArray(nativeHist)) {
+            for (const h of nativeHist) {
+              if (h && h.id) this._l1History.set(h.id, h);
+            }
           }
         }
 
@@ -262,6 +284,11 @@
                 bmStore.createIndex("url", "canonicalUrl", { unique: false });
                 bmStore.createIndex("pinned", "pinned", { unique: false });
                 bmStore.createIndex("order", "order", { unique: false });
+              }
+              if (!db.objectStoreNames.contains(STORE_HISTORY)) {
+                const histStore = db.createObjectStore(STORE_HISTORY, { keyPath: "id" });
+                histStore.createIndex("url", "url", { unique: false });
+                histStore.createIndex("lastVisitedAt", "lastVisitedAt", { unique: false });
               }
             };
             req.onsuccess = async (e) => {
@@ -296,12 +323,14 @@
     async _warmupL1() {
       if (!this._db) return;
       try {
-        const tx = this._db.transaction([STORE_FAVICONS, STORE_BOOKMARKS], "readonly");
+        const tx = this._db.transaction([STORE_FAVICONS, STORE_BOOKMARKS, STORE_HISTORY], "readonly");
         const favStore = tx.objectStore(STORE_FAVICONS);
         const bmStore = tx.objectStore(STORE_BOOKMARKS);
+        const histStore = tx.objectStore(STORE_HISTORY);
 
         const favReq = favStore.getAll();
         const bmReq = bmStore.getAll();
+        const histReq = histStore.getAll();
 
         await Promise.all([
           new Promise(res => {
@@ -321,6 +350,15 @@
               res();
             };
             bmReq.onerror = () => res();
+          }),
+          new Promise(res => {
+            histReq.onsuccess = () => {
+              for (const h of histReq.result || []) {
+                if (h && h.id && !this._l1History.has(h.id)) this._l1History.set(h.id, h);
+              }
+              res();
+            };
+            histReq.onerror = () => res();
           })
         ]);
       } catch (e) {
@@ -465,6 +503,88 @@
         }
       }
       return existing;
+    }
+
+    // History Store Operations
+    async getAllHistory() {
+      await this.init();
+      return Array.from(this._l1History.values()).sort((a, b) => (b.lastVisitedAt || 0) - (a.lastVisitedAt || 0));
+    }
+
+    async recordHistoryVisit({ url, title, iconDataUrl }) {
+      await this.init();
+      if (!url) return null;
+      const cleanUrl = url.trim();
+      const now = Date.now();
+
+      let existing = null;
+      for (const h of this._l1History.values()) {
+        if (h.url === cleanUrl) {
+          existing = h;
+          break;
+        }
+      }
+
+      if (existing) {
+        existing.visitCount = (existing.visitCount || 1) + 1;
+        existing.lastVisitedAt = now;
+        if (title && title !== cleanUrl) existing.title = title.trim();
+        if (iconDataUrl) existing.iconDataUrl = iconDataUrl;
+      } else {
+        const id = "hist_" + now + "_" + Math.random().toString(36).substr(2, 6);
+        existing = {
+          id,
+          url: cleanUrl,
+          title: (title || cleanUrl).trim(),
+          iconDataUrl: iconDataUrl || null,
+          visitCount: 1,
+          firstVisitedAt: now,
+          lastVisitedAt: now
+        };
+        this._l1History.set(id, existing);
+      }
+
+      this._persistAllToNative();
+      this._persistToLocalStorage();
+
+      if (this._db) {
+        try {
+          const tx = this._db.transaction(STORE_HISTORY, "readwrite");
+          tx.objectStore(STORE_HISTORY).put(existing);
+        } catch(e) {}
+      }
+
+      return existing;
+    }
+
+    async deleteHistoryEntry(id) {
+      await this.init();
+      this._l1History.delete(id);
+      this._persistAllToNative();
+      this._persistToLocalStorage();
+
+      if (this._db) {
+        try {
+          const tx = this._db.transaction(STORE_HISTORY, "readwrite");
+          tx.objectStore(STORE_HISTORY).delete(id);
+        } catch(e) {}
+      }
+      return true;
+    }
+
+    async clearAllHistory() {
+      await this.init();
+      this._l1History.clear();
+      this._persistAllToNative();
+      this._persistToLocalStorage();
+
+      if (this._db) {
+        try {
+          const tx = this._db.transaction(STORE_HISTORY, "readwrite");
+          tx.objectStore(STORE_HISTORY).clear();
+        } catch(e) {}
+      }
+      return true;
     }
   }
 
@@ -954,20 +1074,83 @@
     }
   };
 
+  /**
+   * Authoritative Qualium History Store
+   */
+  const QualiumHistoryStore = {
+    _subscribers: new Set(),
+
+    subscribe(callback) {
+      if (typeof callback === "function") {
+        this._subscribers.add(callback);
+      }
+      return () => this._subscribers.delete(callback);
+    },
+
+    _notify(action, data) {
+      for (const cb of this._subscribers) {
+        try { cb(action, data); } catch (e) {
+          console.error("[QUALIUM:HISTORY] Subscriber callback error:", e);
+        }
+      }
+      if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+        try {
+          window.dispatchEvent(new CustomEvent("qualium:history-update", { detail: { action, data } }));
+        } catch (e) {}
+      }
+    },
+
+    async getHistory() {
+      return Storage.getAllHistory();
+    },
+
+    async searchHistory(query) {
+      const all = await this.getHistory();
+      if (!query || !query.trim()) return all;
+      const q = query.toLowerCase().trim();
+      return all.filter(item => 
+        (item.title && item.title.toLowerCase().includes(q)) ||
+        (item.url && item.url.toLowerCase().includes(q))
+      );
+    },
+
+    async recordVisit({ url, title, iconDataUrl }) {
+      const rec = await Storage.recordHistoryVisit({ url, title, iconDataUrl });
+      this._notify("visit", rec);
+      return rec;
+    },
+
+    async deleteEntry(id) {
+      await Storage.deleteHistoryEntry(id);
+      this._notify("delete", id);
+      return true;
+    },
+
+    async clearHistory() {
+      await Storage.clearAllHistory();
+      this._notify("clear", null);
+      return true;
+    }
+  };
+
   // Expose services to global scope
   global.QualiumFaviconService = QualiumFaviconService;
   global.QualiumBookmarkStore = QualiumBookmarkStore;
+  global.QualiumHistoryStore = QualiumHistoryStore;
+  QualiumNavigationDispatcher.navigate = QualiumNavigationDispatcher.navigateTo;
   global.QualiumNavigationDispatcher = QualiumNavigationDispatcher;
   if (typeof global.QualiumNavigationController === "undefined" || !global.QualiumNavigationController.prototype) {
     global.QualiumNavigationController = QualiumNavigationDispatcher;
   } else {
     global.QualiumNavigationController.navigateTo = QualiumNavigationDispatcher.navigateTo;
+    global.QualiumNavigationController.navigate = QualiumNavigationDispatcher.navigateTo;
   }
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = {
       QualiumFaviconService,
       QualiumBookmarkStore,
+      QualiumHistoryStore,
       QualiumNavigationController: global.QualiumNavigationController,
       QualiumNavigationDispatcher,
       canonicalizeUrl,
@@ -977,3 +1160,4 @@
   }
 
 })(typeof window !== "undefined" ? window : globalThis);
+

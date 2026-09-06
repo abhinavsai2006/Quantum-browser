@@ -35,8 +35,13 @@ fn main() -> anyhow::Result<()> {
             launch_after_install: false,
             start_with_windows: false,
         };
-        let _ = engine.install(&options, |_, _, _, _, _, _| {});
-        return Ok(());
+        match engine.install(&options, |_, _, _, _, _, _| {}) {
+            Ok(_) => return Ok(()),
+            Err(e) => {
+                let _ = std::fs::write(std::env::temp_dir().join("qualium_install_error.log"), format!("Install error: {:#}", e));
+                return Err(e);
+            }
+        }
     }
 
     win32_gui::run_installer_gui(engine, dest_dir)

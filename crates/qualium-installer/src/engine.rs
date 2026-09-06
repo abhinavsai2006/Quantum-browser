@@ -72,8 +72,8 @@ impl InstallEngine {
             }
         }
 
-        // 2. Prepare staging directory inside destination or temp
-        let staging_dir = dest.join(format!("_stage_{}", std::process::id()));
+        // 2. Prepare staging directory inside system temp directory
+        let staging_dir = std::env::temp_dir().join(format!("qualium_stage_{}", std::process::id()));
         if staging_dir.exists() {
             let _ = fs::remove_dir_all(&staging_dir);
         }

@@ -3,29 +3,218 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Extensions — Qaulium</title>
+  <title>Extensions — Qualium</title>
   <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/extensions.css"/>
+  <script src="chrome://qualium/content/qualium-routes.js"></script>
+  <script>
+    //<![CDATA[
+    if (window.opener && window.opener.openTrustedLinkIn) {
+      try {
+        window.opener.openTrustedLinkIn("qualium://extensions", "tab");
+        window.close();
+      } catch (e) {}
+    }
+    //]]>
+  </script>
 </head>
 <body>
   <div class="page-container">
     <header class="page-header">
       <div class="header-title-row">
         <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        <h1>Extensions</h1>
+        <h1>Extensions Center</h1>
       </div>
-      <p class="header-desc">Native WebExtensions run in isolated execution contexts with strict permission gating.</p>
+      <p class="header-desc">Native WebExtensions run in isolated execution contexts with strict permission gating and zero data leaks.</p>
     </header>
 
-    <div class="empty-state">
+    <div class="extensions-bar">
+      <div class="extensions-search-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="extension-search" class="extensions-search-input" placeholder="Search installed extensions..."/>
+      </div>
+      <button type="button" class="q-btn q-btn-secondary" id="btn-install-addon">Install Add-on from File...</button>
+    </div>
+
+    <div class="extensions-list" id="extensions-list">
+      <!-- Populated dynamically via AddonManager if extensions are present -->
+    </div>
+
+    <div class="empty-state" id="empty-state" style="display:none;">
       <div class="empty-icon">
         <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
       </div>
       <h3>No extensions installed</h3>
-      <p>Qaulium comes with built-in quantum-resistant privacy and ad blocking natively.</p>
+      <p>Qualium comes with built-in quantum-resistant privacy, anti-fingerprinting, and native shield protection without requiring third-party extensions.</p>
     </div>
   </div>
+
+  <script>
+    //<![CDATA[
+    let loadedAddons = [];
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function getAddons() {
+      // Attempt to retrieve addons from Gecko AddonManager
+      try {
+        if (typeof ChromeUtils !== "undefined") {
+          let AddonManager;
+          try {
+            const mod = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
+            AddonManager = mod.AddonManager;
+          } catch(e) {
+            try {
+              const scope = {};
+              ChromeUtils.import("resource://gre/modules/AddonManager.jsm", scope);
+              AddonManager = scope.AddonManager;
+            } catch(e2) {}
+          }
+
+          if (AddonManager && typeof AddonManager.getAddonsByTypes === "function") {
+            const list = await AddonManager.getAddonsByTypes(["extension"]);
+            return list.filter(a => !a.isSystem && !a.isBuiltin);
+          }
+        }
+      } catch(e) {
+        console.warn("[QUALIUM:EXTENSIONS] AddonManager not available:", e);
+      }
+      return [];
+    }
+
+    async function renderExtensions(filter = "") {
+      const listEl = document.getElementById("extensions-list");
+      const emptyEl = document.getElementById("empty-state");
+      if (!listEl) return;
+
+      loadedAddons = await getAddons();
+
+      let filtered = loadedAddons;
+      if (filter) {
+        const q = filter.toLowerCase();
+        filtered = filtered.filter(a => 
+          (a.name && a.name.toLowerCase().includes(q)) ||
+          (a.description && a.description.toLowerCase().includes(q))
+        );
+      }
+
+      listEl.innerHTML = "";
+      if (!filtered || filtered.length === 0) {
+        if (emptyEl) emptyEl.style.display = "flex";
+        return;
+      }
+
+      if (emptyEl) emptyEl.style.display = "none";
+
+      for (const addon of filtered) {
+        const card = document.createElement("div");
+        card.className = "extension-card";
+
+        const iconSrc = addon.iconURL || "";
+        const iconHtml = iconSrc 
+          ? `<img src="${iconSrc}" alt=""/>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`;
+
+        card.innerHTML = `
+          <div class="extension-card-left">
+            <div class="extension-icon-box">${iconHtml}</div>
+            <div class="extension-info">
+              <div class="extension-header-line">
+                <span class="extension-name">${escapeHtml(addon.name)}</span>
+                <span class="extension-version">v${escapeHtml(addon.version || "1.0")}</span>
+              </div>
+              <div class="extension-desc">${escapeHtml(addon.description || "No description provided.")}</div>
+            </div>
+          </div>
+          <div class="extension-card-right">
+            <label class="q-switch" title="${addon.isActive ? 'Disable extension' : 'Enable extension'}">
+              <input type="checkbox" ${addon.isActive ? 'checked="checked"' : ''} class="addon-toggle"/>
+              <span class="q-slider"></span>
+            </label>
+            <button type="button" class="q-btn q-btn-ghost addon-uninstall-btn" title="Uninstall extension">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        `;
+
+        const toggle = card.querySelector(".addon-toggle");
+        if (toggle) {
+          toggle.addEventListener("change", async (e) => {
+            try {
+              if (e.target.checked) {
+                await addon.enable();
+              } else {
+                await addon.disable();
+              }
+            } catch(err) {
+              console.error("[QUALIUM:EXTENSIONS] Toggle error:", err);
+            }
+          });
+        }
+
+        const uninstallBtn = card.querySelector(".addon-uninstall-btn");
+        if (uninstallBtn) {
+          uninstallBtn.addEventListener("click", async () => {
+            if (confirm(`Are you sure you want to remove ${addon.name}?`)) {
+              try {
+                await addon.uninstall();
+                card.remove();
+                if (listEl.children.length === 0 && emptyEl) {
+                  emptyEl.style.display = "flex";
+                }
+              } catch(err) {
+                console.error("[QUALIUM:EXTENSIONS] Uninstall error:", err);
+              }
+            }
+          });
+        }
+
+        listEl.appendChild(card);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderExtensions("");
+
+      const searchInput = document.getElementById("extension-search");
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          renderExtensions(e.target.value.trim());
+        });
+      }
+
+      const installBtn = document.getElementById("btn-install-addon");
+      if (installBtn) {
+        installBtn.addEventListener("click", async () => {
+          try {
+            if (typeof Cc !== "undefined" && typeof Ci !== "undefined") {
+              const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+              fp.init(window, "Select Extension File", Ci.nsIFilePicker.modeOpen);
+              fp.appendFilter("XPI Files", "*.xpi");
+              const res = await new Promise(resolve => fp.open(resolve));
+              if (res === Ci.nsIFilePicker.returnOK && fp.file) {
+                const { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
+                const install = await AddonManager.getInstallForFile(fp.file);
+                await install.install();
+                renderExtensions("");
+              }
+            }
+          } catch(e) {
+            alert("To install an extension, drag and drop the .xpi file into the browser window.");
+          }
+        });
+      }
+    });
+    //]]>
+  </script>
 </body>
 </html>
