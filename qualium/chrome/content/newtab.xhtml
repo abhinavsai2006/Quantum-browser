@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="chrome://qualium/content/newtab.css"/>
   <script src="chrome://qualium/content/qualium-routes.js"></script>
   <script src="chrome://qualium/content/favicon-service.js"></script>
+  <script src="chrome://qualium/content/runtime-state.js"></script>
   <script src="chrome://qualium/content/newtab.js" defer="defer"></script>
 </head>
 <body>
@@ -72,15 +73,13 @@
 
   </main>
 
-  <!-- Bottom Privacy Status Pill (Chrome / Brave Minimal Style) -->
+  <!-- Bottom Privacy Status Pill (Live Circuit Banner) -->
   <footer class="bottom-footer">
-    <a href="dashboard.xhtml" class="security-status-pill" title="View Security Center">
-      <span class="status-dot"></span>
-      <span class="status-label">Post-Quantum Protected</span>
-      <span class="status-sep">·</span>
-      <span class="status-tech">ML-KEM-768 Hybrid</span>
-      <span class="status-sep">·</span>
-      <span class="status-tech">Zero Telemetry</span>
+    <a href="qualium://security" onclick="if(window.QualiumNavigationController){window.QualiumNavigationController.navigateTo('qualium://security'); return false;}" class="security-status-pill" id="security-status-pill" title="View Security Center">
+      <span class="status-dot" id="pill-status-dot"></span>
+      <span class="status-label" id="pill-status-label">● PQC NEGOTIATING</span>
+      <span class="status-sep" id="pill-status-sep">·</span>
+      <span class="status-tech" id="pill-status-hops">Building Circuit...</span>
     </a>
   </footer>
 

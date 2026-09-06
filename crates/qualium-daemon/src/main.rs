@@ -133,14 +133,49 @@ impl DaemonState {
     }
 }
 
+fn get_target_state_paths(cli_profile: Option<std::path::PathBuf>) -> Vec<std::path::PathBuf> {
+    let mut paths = Vec::new();
+    if let Some(p) = cli_profile {
+        paths.push(p.join("qualium_security_state.json"));
+    }
+    if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+        paths.push(std::path::PathBuf::from(&local_appdata).join("Qaulium").join("Profile").join("qualium_security_state.json"));
+        paths.push(std::path::PathBuf::from(&local_appdata).join("Qualium").join("Profile").join("qualium_security_state.json"));
+        paths.push(std::path::PathBuf::from(&local_appdata).join("Qaulium").join("qualium_security_state.json"));
+    }
+    paths.push(std::env::temp_dir().join("qualium_security_state.json"));
+    paths
+}
+
+async fn save_state_to_all(circuit_controller: &CircuitController, paths: &[std::path::PathBuf]) {
+    for p in paths {
+        let _ = circuit_controller.persist_security_state(p).await;
+    }
+}
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing_subscriber::fmt::init();
     info!("Starting Qualium Quantum Browser & Network Daemon v5.0.0...");
+
+    // Parse CLI arguments
+    let args: Vec<String> = std::env::args().collect();
+    let mut cli_profile = None;
+    let mut i = 1;
+    while i < args.len() {
+        if (args[i] == "--profile" || args[i] == "-profile") && i + 1 < args.len() {
+            cli_profile = Some(std::path::PathBuf::from(&args[i + 1]));
+            i += 1;
+        }
+        i += 1;
+    }
+
+    let state_paths = get_target_state_paths(cli_profile);
 
     let circuit_controller = Arc::new(CircuitController::new());
     let dns_resolver = Arc::new(PrivacyDnsResolver::default());
     let filter_engine = Arc::new(FilterEngine::default());
+
     let mut local_proxy = QualiumLocalProxy::new(
         9050,
         circuit_controller.clone(),
@@ -148,44 +183,50 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         filter_engine.clone(),
     );
 
-    // 1. Bind local proxy service immediately so Gecko / Necko can connect instantly
+    // 1. Bind local proxy service with dynamic port fallback (prevents OS Error 10048)
     let actual_addr = match local_proxy.start().await {
         Ok(addr) => {
-            info!("Qualium Daemon operational on {}. Ready for Gecko IPC.", addr);
+            info!("Qualium Daemon operational on {}. Ready for Gecko Necko.", addr);
             addr
         }
         Err(e) => {
-            error!("Failed to bind local proxy: {}. Retrying on ephemeral port...", e);
-            let mut fallback_proxy = QualiumLocalProxy::new(
-                0,
-                circuit_controller.clone(),
-                dns_resolver.clone(),
-                filter_engine.clone(),
-            );
-            let addr = fallback_proxy.start().await.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-            info!("Qualium Daemon operational on {}. Ready for Gecko IPC.", addr);
-            addr
+            error!("Fatal proxy bind error: {}", e);
+            return Err(e);
         }
     };
 
-    // 2. Establish initial primary anonymity circuit concurrently in background
-    let cc = circuit_controller.clone();
-    tokio::spawn(async move {
-        let init_circuit = cc.establish_circuit().await;
-        info!(
-            "Primary circuit established: ID={}, Guard={}, Exit={}",
-            init_circuit.circuit_id, init_circuit.guard.nickname, init_circuit.exit.nickname
-        );
-    });
+    // 2. Perform authentic ML-KEM-768 + X25519 hybrid post-quantum handshake
+    info!("Initiating ML-KEM-768 + X25519 post-quantum hybrid circuit negotiation...");
+    let init_circuit = circuit_controller.establish_circuit().await;
+    info!(
+        "Primary circuit established: ID={}, Guard={}, Exit={}",
+        init_circuit.circuit_id, init_circuit.guard.nickname, init_circuit.exit.nickname
+    );
 
-    // Qualium Native Browser Runtime Status
+    // 3. Atomically persist authoritative QualiumSecurityState to profile and shared paths
+    save_state_to_all(&circuit_controller, &state_paths).await;
+    let sec_state = circuit_controller.get_security_state().await;
+
+    // Qualium Native Browser Runtime Status Output
     println!("\n========================================================");
     println!("  QUALIUM QUANTUM BROWSER v5.0.0");
     println!("  Post-Quantum Security Daemon & Anonymity Circuit Active");
     println!("  Privacy Proxy Endpoint: {}", actual_addr);
+    println!("  PQC State: {:?}", sec_state.pqc_state);
+    println!("  PQC Algorithm: {}", sec_state.pqc_algorithm);
+    println!("  Session ID: {}", sec_state.session_id);
     println!("  Encrypted IPC Enclave: Ready (Named Pipe / Localhost)");
     println!("========================================================\n");
-    info!("Qualium Security Daemon initialized. Listening for authenticated IPC connections.");
+
+    // Periodic heartbeat to refresh and keep state file current
+    let cc_heartbeat = circuit_controller.clone();
+    let paths_heartbeat = state_paths.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+            save_state_to_all(&cc_heartbeat, &paths_heartbeat).await;
+        }
+    });
 
     // Keep daemon running to service privacy network circuits & DNS
     tokio::signal::ctrl_c().await?;

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Qualium Diagnostics</title>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/tokens.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
+  <link rel="stylesheet" href="chrome://qualium/content/diagnostics.css"/>
+  <script src="chrome://qualium/content/qualium-routes.js"></script>
+  <script src="chrome://qualium/content/runtime-state.js"></script>
+  <script src="chrome://qualium/content/diagnostics.js" defer="defer"></script>
+</head>
+<body>
+  <div class="page-container">
+    <div class="diag-hero">
+      <div class="diag-logo-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div class="diag-title-info">
+        <h1>Qualium System Diagnostics</h1>
+        <div class="diag-version-badge">
+          <span id="diag-overall-status">Connecting to Native Runtime...</span>
+        </div>
+        <p class="diag-tagline">Authoritative native telemetry from browser host, security daemon, PQC hybrid transport, and Gecko engine.</p>
+      </div>
+    </div>
+
+    <!-- 1. Post-Quantum Cryptographic Status -->
+    <div class="diag-section-title">POST-QUANTUM HYBRID ENCLAVE</div>
+    <div class="diag-grid">
+      <div class="diag-card">
+        <span class="diag-card-label">PQC Negotiation State</span>
+        <span class="diag-card-value" id="val-pqc-state">Negotiating...</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Post-Quantum Algorithm</span>
+        <span class="diag-card-value" id="val-pqc-algo">ML-KEM-768 (NIST FIPS 203)</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Classical Key Exchange</span>
+        <span class="diag-card-value" id="val-classical-algo">X25519 (RFC 7748)</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Handshake Lifecycle</span>
+        <span class="diag-card-value" id="val-handshake-state">Starting</span>
+      </div>
+      <div class="diag-card full-width">
+        <span class="diag-card-label">Cryptographic Session ID (Transcript Bound)</span>
+        <span class="diag-card-value mono-val" id="val-session-id">Deriving session keys...</span>
+      </div>
+    </div>
+
+    <!-- 2. Security Daemon & Proxy Subsystem -->
+    <div class="diag-section-title">SECURITY DAEMON &amp; LOCAL PROXY</div>
+    <div class="diag-grid">
+      <div class="diag-card">
+        <span class="diag-card-label">Daemon Process (PID)</span>
+        <span class="diag-card-value" id="val-daemon-pid">Locating...</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">SOCKS5 Loopback Endpoint</span>
+        <span class="diag-card-value" id="val-proxy-endpoint">127.0.0.1:9050</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Proxy Health</span>
+        <span class="diag-card-value" id="val-proxy-health">Probing loopback...</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Stream Isolation</span>
+        <span class="diag-card-value" id="val-stream-iso">Active (eTLD+1 Enforced)</span>
+      </div>
+    </div>
+
+    <!-- 3. Multi-Hop Anonymity Circuit -->
+    <div class="diag-section-title">MULTI-HOP CIRCUIT TOPOLOGY</div>
+    <div class="diag-grid">
+      <div class="diag-card">
+        <span class="diag-card-label">Guard Node</span>
+        <span class="diag-card-value" id="val-guard-node">Resolving...</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Relay Node</span>
+        <span class="diag-card-value" id="val-relay-node">Resolving...</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Exit Node</span>
+        <span class="diag-card-value" id="val-exit-node">Resolving...</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Circuit State</span>
+        <span class="diag-card-value" id="val-circuit-state">Building Circuit...</span>
+      </div>
+      <div class="diag-card full-width">
+        <span class="diag-card-label">Circuit Identifier</span>
+        <span class="diag-card-value mono-val" id="val-circuit-id">Allocating...</span>
+      </div>
+    </div>
+
+    <!-- 4. Browser Host & Gecko Engine Runtime -->
+    <div class="diag-section-title">BROWSER HOST &amp; GECKO ENGINE</div>
+    <div class="diag-grid">
+      <div class="diag-card">
+        <span class="diag-card-label">Browser Host Binary</span>
+        <span class="diag-card-value">QualiumQuantumBrowser.exe</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Gecko Platform Runtime</span>
+        <span class="diag-card-value" id="val-gecko-runtime">Gecko 140.0 ESR (64-bit)</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">DocShell / BrowsingContext</span>
+        <span class="diag-card-value" id="val-docshell">Active &amp; Initialized</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">Content Processes</span>
+        <span class="diag-card-value" id="val-content-proc">Multi-Process Active</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">DNS Transport</span>
+        <span class="diag-card-value" id="val-dns-state">Remote In-Circuit (DoH)</span>
+      </div>
+      <div class="diag-card">
+        <span class="diag-card-label">WebRTC Isolation</span>
+        <span class="diag-card-value" id="val-webrtc-state">Protected (Zero Leak)</span>
+      </div>
+    </div>
+
+    <!-- 5. Architectural Boundary Note -->
+    <div class="diag-boundary-notice">
+      <strong>Architectural Security Boundary:</strong> Website HTTPS/TLS is negotiated directly between Gecko and the origin web server (e.g. Google, GitHub, YouTube). Qualium's internal multi-hop transport tunnel is protected end-to-end by ML-KEM-768 + X25519 post-quantum hybrid encapsulation and ChaCha20-Poly1305 AEAD.
+    </div>
+  </div>
+</body>
+</html>

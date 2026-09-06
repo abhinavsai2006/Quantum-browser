@@ -138,25 +138,25 @@
             <div class="q-settings-row">
               <div class="q-settings-info">
                 <span class="q-settings-label">Local SOCKS5 Proxy</span>
-                <span class="q-settings-desc">127.0.0.1:9050 (Active &amp; bound to Necko network layer)</span>
+                <span class="q-settings-desc" id="dash-proxy-desc">127.0.0.1:9050 (Active &amp; bound to Necko network layer)</span>
               </div>
-              <span class="q-chip q-chip-success">Bound</span>
+              <span class="q-chip q-chip-success" id="dash-proxy-chip">Bound</span>
             </div>
 
             <div class="q-settings-row">
               <div class="q-settings-info">
                 <span class="q-settings-label">Circuit Stream Isolation</span>
-                <span class="q-settings-desc">Separate circuit states assigned per first-party domain context.</span>
+                <span class="q-settings-desc" id="dash-circuit-desc">Separate circuit states assigned per first-party domain context.</span>
               </div>
-              <span class="q-chip q-chip-success">Enforced</span>
+              <span class="q-chip q-chip-success" id="dash-circuit-chip">Enforced</span>
             </div>
 
             <div class="q-settings-row">
               <div class="q-settings-info">
                 <span class="q-settings-label">DNS Transport</span>
-                <span class="q-settings-desc">DNS-over-HTTPS via local encrypted resolver proxy.</span>
+                <span class="q-settings-desc" id="dash-dns-desc">DNS-over-HTTPS via local encrypted resolver proxy.</span>
               </div>
-              <span class="q-chip q-chip-success">Encrypted</span>
+              <span class="q-chip q-chip-success" id="dash-dns-chip">Encrypted</span>
             </div>
           </div>
         </div>
@@ -258,9 +258,9 @@
             <div class="q-settings-row">
               <div class="q-settings-info">
                 <span class="q-settings-label">Post-Quantum KEM</span>
-                <span class="q-settings-desc">NIST FIPS 203 ML-KEM-768 (Kyber768 hybrid key encapsulation).</span>
+                <span class="q-settings-desc" id="kem-desc">NIST FIPS 203 ML-KEM-768 (Kyber768 hybrid key encapsulation).</span>
               </div>
-              <span class="q-chip q-chip-success">Available</span>
+              <span class="q-chip" id="kem-chip">Negotiating</span>
             </div>
 
             <div class="q-settings-row">
@@ -268,7 +268,7 @@
                 <span class="q-settings-label">Classical Key Exchange</span>
                 <span class="q-settings-desc">Curve25519 (X25519 ECDH) hybrid combination.</span>
               </div>
-              <span class="q-chip q-chip-success">Active</span>
+              <span class="q-chip q-chip-success" id="classical-chip">Active</span>
             </div>
 
             <div class="q-settings-row">
@@ -276,7 +276,7 @@
                 <span class="q-settings-label">Symmetric Cipher</span>
                 <span class="q-settings-desc">ChaCha20-Poly1305 AEAD authenticated encryption.</span>
               </div>
-              <span class="q-chip q-chip-success">Active</span>
+              <span class="q-chip q-chip-success" id="cipher-chip">Active</span>
             </div>
           </div>
         </div>

@@ -94,4 +94,77 @@ mod tests {
         let tampered_msg = b"Qualium-Update-Manifest-v5.0.0-Malicious";
         assert!(!QualiumSigner::verify(&pk, tampered_msg, &sig), "Signature over tampered message must fail");
     }
+
+    #[test]
+    fn test_hybrid_handshake_authenticated_channel_payload_flow() {
+        // Full integration flow:
+        // Client initiate -> Server respond -> Client finalize -> Authenticated Channel (AEAD payload)
+        let (client_state, offer) = HybridKeyExchange::client_initiate();
+        let (response, server_keys) = HybridKeyExchange::server_respond(&offer).expect("server_respond");
+        let client_keys = HybridKeyExchange::client_finalize(&client_state, &response).expect("client_finalize");
+
+        // Verify shared transcript and session ID
+        assert_eq!(client_keys.session_id, server_keys.session_id);
+        assert_eq!(client_keys.tx_key, server_keys.rx_key);
+        assert_eq!(client_keys.rx_key, server_keys.tx_key);
+
+        // Client encrypts request payload with client tx_key
+        let nonce = [0x42u8; 12];
+        let aad = b"Qualium-Stream-Frame-Header-v5";
+        let request_payload = b"GET / HTTP/1.1\r\nHost: qualium.is\r\n\r\n";
+        let encrypted_frame = QualiumAead::encrypt_chacha(&client_keys.tx_key, &nonce, aad, request_payload)
+            .expect("client encrypt");
+
+        // Server decrypts request with server rx_key
+        let server_decrypted = QualiumAead::decrypt_chacha(&server_keys.rx_key, &nonce, aad, &encrypted_frame)
+            .expect("server decrypt");
+        assert_eq!(request_payload.to_vec(), server_decrypted);
+
+        // Server responds with payload encrypted with server tx_key
+        let resp_nonce = [0x43u8; 12];
+        let response_payload = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nAuthenticated";
+        let server_frame = QualiumAead::encrypt_chacha(&server_keys.tx_key, &resp_nonce, aad, response_payload)
+            .expect("server encrypt");
+
+        // Client decrypts with client rx_key
+        let client_decrypted = QualiumAead::decrypt_chacha(&client_keys.rx_key, &resp_nonce, aad, &server_frame)
+            .expect("client decrypt");
+        assert_eq!(response_payload.to_vec(), client_decrypted);
+    }
+
+    #[test]
+    fn test_hybrid_handshake_tamper_rejection() {
+        let (client_state, offer) = HybridKeyExchange::client_initiate();
+        let (mut response, _server_keys) = HybridKeyExchange::server_respond(&offer).expect("server_respond");
+
+        // MITM Attack 1: Tamper with ML-KEM ciphertext
+        response.ml_kem_ciphertext.bytes[0] ^= 0xaa;
+        // Under NIST FIPS 203 implicit rejection, client derives a distinct pseudorandom secret,
+        // causing HKDF-derived session keys to NOT match the server's session keys.
+        let corrupted_client_keys = HybridKeyExchange::client_finalize(&client_state, &response).expect("finalize");
+        assert_ne!(
+            corrupted_client_keys.session_id,
+            _server_keys.session_id,
+            "Corrupted ML-KEM ciphertext must NEVER derive matching session ID"
+        );
+        assert_ne!(
+            corrupted_client_keys.tx_key,
+            _server_keys.rx_key,
+            "Corrupted ML-KEM ciphertext must NEVER derive matching session keys"
+        );
+    }
+
+    #[test]
+    fn test_hybrid_server_response_downgrade_rejection() {
+        let (client_state, offer) = HybridKeyExchange::client_initiate();
+        let (mut response, _server_keys) = HybridKeyExchange::server_respond(&offer).expect("server_respond");
+
+        // MITM Attack 2: Attempt downgrade in server response selected version
+        response.selected_version = "Insecure-Classical-TLS-v1.0".to_string();
+        let finalize_res = HybridKeyExchange::client_finalize(&client_state, &response);
+        assert!(
+            finalize_res.is_err(),
+            "Client must reject server response attempting protocol downgrade"
+        );
+    }
 }

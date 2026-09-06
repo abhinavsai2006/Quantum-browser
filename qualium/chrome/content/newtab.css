@@ -383,10 +383,26 @@ html, body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #34d399;
-  box-shadow: 0 0 8px #34d399;
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
   margin-right: 9px;
   animation: beaconPulse 2.5s infinite;
+}
+
+.status-dot.active {
+  background-color: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.status-dot.negotiating {
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.status-dot.unavailable {
+  background-color: #f43f5e;
+  box-shadow: 0 0 8px #f43f5e;
+  animation: none;
 }
 
 @keyframes beaconPulse {

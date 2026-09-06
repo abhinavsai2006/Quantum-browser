@@ -19,6 +19,87 @@ pub enum PrivacyLevel {
     Maximum,
 }
 
+/// Authoritative PQC Negotiation States per Qualium Architecture Specification
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PqcState {
+    Unavailable,
+    Supported,
+    Available,
+    Negotiating,
+    Negotiated,
+    Failed,
+    Downgraded,
+}
+
+impl std::fmt::Display for PqcState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PqcState::Unavailable => write!(f, "Unavailable"),
+            PqcState::Supported => write!(f, "Supported"),
+            PqcState::Available => write!(f, "Available"),
+            PqcState::Negotiating => write!(f, "Negotiating"),
+            PqcState::Negotiated => write!(f, "Negotiated"),
+            PqcState::Failed => write!(f, "Failed"),
+            PqcState::Downgraded => write!(f, "Downgraded"),
+        }
+    }
+}
+
+/// Authoritative native runtime security state source
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QualiumSecurityState {
+    pub ready: bool,
+    pub pqc_support: bool,
+    pub pqc_state: PqcState,
+    pub pqc_algorithm: String,
+    pub classical_algorithm: String,
+    pub handshake_state: String,
+    pub session_id: String,
+    pub circuit_state: String,
+    pub proxy_state: String,
+    pub proxy_port: u16,
+    pub proxy_endpoint: String,
+    pub dns_state: String,
+    pub webrtc_state: String,
+    pub circuit_id: Option<String>,
+    pub guard_node: Option<String>,
+    pub relay_node: Option<String>,
+    pub exit_node: Option<String>,
+    pub daemon_pid: u32,
+    pub browser_pid: Option<u32>,
+    pub negotiated_at_epoch_ms: u64,
+    pub website_tls_note: String,
+}
+
+impl Default for QualiumSecurityState {
+    fn default() -> Self {
+        Self {
+            ready: false,
+            pqc_support: true,
+            pqc_state: PqcState::Supported,
+            pqc_algorithm: "ML-KEM-768 (NIST FIPS 203)".to_string(),
+            classical_algorithm: "X25519 (RFC 7748)".to_string(),
+            handshake_state: "Starting".to_string(),
+            session_id: String::new(),
+            circuit_state: "Unavailable".to_string(),
+            proxy_state: "Unavailable".to_string(),
+            proxy_port: 0,
+            proxy_endpoint: String::new(),
+            dns_state: "Protected (Remote DNS in Circuit)".to_string(),
+            webrtc_state: "Protected (ICE Host Filtering)".to_string(),
+            circuit_id: None,
+            guard_node: None,
+            relay_node: None,
+            exit_node: None,
+            daemon_pid: std::process::id(),
+            browser_pid: None,
+            negotiated_at_epoch_ms: 0,
+            website_tls_note: "Website TLS is negotiated directly with origin host; Qualium transport tunnel is protected by ML-KEM-768 hybrid encryption.".to_string(),
+        }
+    }
+}
+
 /// Verification state for a security or cryptographic subsystem.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

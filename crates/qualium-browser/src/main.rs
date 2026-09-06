@@ -25,57 +25,35 @@ use std::os::windows::process::CommandExt;
 
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-#[cfg(target_os = "windows")]
-mod win_branding {
-    type HWND = *mut std::ffi::c_void;
-    type BOOL = i32;
-    type LPARAM = isize;
-    type WNDENUMPROC = unsafe extern "system" fn(HWND, LPARAM) -> BOOL;
-
-    #[link(name = "user32")]
-    extern "system" {
-        fn EnumWindows(lpEnumFunc: WNDENUMPROC, lParam: LPARAM) -> BOOL;
-        fn IsWindowVisible(hWnd: HWND) -> BOOL;
-        fn GetClassNameW(hWnd: HWND, lpClassName: *mut u16, nMaxCount: i32) -> i32;
-        fn SetWindowTextW(hWnd: HWND, lpString: *const u16) -> BOOL;
-    }
-
-    unsafe extern "system" fn enum_proc(hwnd: HWND, _lparam: LPARAM) -> BOOL {
-        if IsWindowVisible(hwnd) != 0 {
-            let mut class_buf = [0u16; 256];
-            let len = GetClassNameW(hwnd, class_buf.as_mut_ptr(), 256);
-            if len > 0 {
-                let class_str = String::from_utf16_lossy(&class_buf[..len as usize]);
-                if class_str == "MozillaWindowClass" {
-                    let title: Vec<u16> = "Qaulium Quantum Browser\0".encode_utf16().collect();
-                    SetWindowTextW(hwnd, title.as_ptr());
-                }
-            }
-        }
-        1
-    }
-
-    pub fn rebrand_all() {
-        unsafe {
-            EnumWindows(enum_proc, 0);
-        }
+fn append_boot_log(msg: &str) {
+    use std::io::Write;
+    let log_file = env::temp_dir().join("qualium_boot.log");
+    if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(log_file) {
+        let _ = writeln!(f, "[pid={}] {}", std::process::id(), msg);
     }
 }
 
 fn get_app_dir() -> PathBuf {
     if let Ok(current_exe) = env::current_exe() {
         if let Some(parent) = current_exe.parent() {
-            return parent.to_path_buf();
+            if parent.join("runtime").exists() || parent.join("qualium-core.exe").exists() {
+                return parent.to_path_buf();
+            }
         }
     }
     if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
+        let p_qua = PathBuf::from(&local_appdata).join("Programs").join("Qualium");
+        if p_qua.exists() {
+            return p_qua;
+        }
         let p_qau = PathBuf::from(&local_appdata).join("Programs").join("Qaulium");
         if p_qau.exists() {
             return p_qau;
         }
-        let p_qua = PathBuf::from(&local_appdata).join("Programs").join("Qualium");
-        if p_qua.exists() {
-            return p_qua;
+    }
+    if let Ok(current_exe) = env::current_exe() {
+        if let Some(parent) = current_exe.parent() {
+            return parent.to_path_buf();
         }
     }
     PathBuf::from("C:\\Qaulium")
@@ -99,6 +77,9 @@ fn get_profile_dir() -> PathBuf {
 }
 
 fn wait_for_port_ready(port: u16, max_wait_ms: u64) -> bool {
+    if port == 0 {
+        return false;
+    }
     let start = std::time::Instant::now();
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
     while start.elapsed().as_millis() < max_wait_ms as u128 {
@@ -110,15 +91,43 @@ fn wait_for_port_ready(port: u16, max_wait_ms: u64) -> bool {
     false
 }
 
-fn configure_profile(app_dir: &Path, profile_dir: &Path, use_proxy: bool) {
-    let proxy_config = if use_proxy {
-        r#"user_pref("network.proxy.type", 1);
+fn discover_active_proxy(profile_dir: &Path, max_wait_ms: u64) -> Option<u16> {
+    let start = std::time::Instant::now();
+    let state_file = profile_dir.join("qualium_security_state.json");
+    let fallback_state = env::temp_dir().join("qualium_security_state.json");
+
+    while start.elapsed().as_millis() < max_wait_ms as u128 {
+        for path in [&state_file, &fallback_state] {
+            if let Ok(content) = fs::read_to_string(path) {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                    if val.get("ready").and_then(|v| v.as_bool()).unwrap_or(false) {
+                        if let Some(port) = val.get("proxyPort").and_then(|v| v.as_u64()) {
+                            let p = port as u16;
+                            if wait_for_port_ready(p, 150) {
+                                return Some(p);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    None
+}
+
+fn configure_profile(app_dir: &Path, profile_dir: &Path, proxy_port: Option<u16>) {
+    let proxy_config = if let Some(port) = proxy_port {
+        format!(
+            r#"user_pref("network.proxy.type", 1);
 user_pref("network.proxy.socks", "127.0.0.1");
-user_pref("network.proxy.socks_port", 9050);
+user_pref("network.proxy.socks_port", {});
 user_pref("network.proxy.socks_version", 5);
-user_pref("network.proxy.socks_remote_dns", true);"#
+user_pref("network.proxy.socks_remote_dns", true);"#,
+            port
+        )
     } else {
-        r#"user_pref("network.proxy.type", 0);"#
+        r#"user_pref("network.proxy.type", 0);"#.to_string()
     };
 
     let user_js_content = format!(
@@ -151,6 +160,8 @@ user_pref("privacy.trackingprotection.pbmode.enabled", true);
 user_pref("privacy.resistFingerprinting", true);
 user_pref("media.peerconnection.ice.default_address_only", true);
 user_pref("media.peerconnection.ice.no_host", true);
+user_pref("gfx.webrender.software", true);
+user_pref("layers.acceleration.disabled", true);
 "#,
         proxy_config
     );
@@ -227,17 +238,33 @@ fn get_target_url_from_args() -> Option<String> {
     None
 }
 
-fn spawn_daemon(app_dir: &Path) -> Option<Child> {
-    let daemon_exe = app_dir.join("qualium-daemon.exe");
-    if daemon_exe.exists() {
-        let mut cmd = Command::new(&daemon_exe);
-        cmd.current_dir(app_dir);
-        #[cfg(windows)]
-        cmd.creation_flags(CREATE_NO_WINDOW);
-        cmd.spawn().ok()
-    } else {
-        None
+fn spawn_daemon(app_dir: &Path, profile_dir: &Path) -> Option<Child> {
+    let mut candidate_paths = vec![
+        app_dir.join("qualium-daemon.exe"),
+        PathBuf::from("target").join("release").join("qualium-daemon.exe"),
+        PathBuf::from("target").join("debug").join("qualium-daemon.exe"),
+    ];
+
+    if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
+        candidate_paths.push(PathBuf::from(&local_appdata).join("Programs").join("Qualium").join("qualium-daemon.exe"));
+        candidate_paths.push(PathBuf::from(&local_appdata).join("Programs").join("Qaulium").join("qualium-daemon.exe"));
     }
+
+    for daemon_exe in candidate_paths {
+        if daemon_exe.exists() {
+            let cwd = daemon_exe.parent().unwrap_or(app_dir);
+            let mut cmd = Command::new(&daemon_exe);
+            cmd.current_dir(cwd);
+            cmd.arg("--profile");
+            cmd.arg(profile_dir.to_string_lossy().as_ref());
+            #[cfg(windows)]
+            cmd.creation_flags(CREATE_NO_WINDOW);
+            if let Ok(child) = cmd.spawn() {
+                return Some(child);
+            }
+        }
+    }
+    None
 }
 
 fn find_gecko_runtime(app_dir: &Path) -> Option<(PathBuf, PathBuf)> {
@@ -253,7 +280,30 @@ fn find_gecko_runtime(app_dir: &Path) -> Option<(PathBuf, PathBuf)> {
         return Some((p2, app_dir.to_path_buf()));
     }
 
-    // 3. Check repo root runtime/qualium-core.exe during development
+    // 3. Check installed app directory in LocalAppData
+    if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
+        let p3 = PathBuf::from(&local_appdata).join("Programs").join("Qualium").join("runtime").join("qualium-core.exe");
+        if p3.exists() {
+            let cwd = p3.parent().unwrap().to_path_buf();
+            return Some((p3, cwd));
+        }
+        let p3b = PathBuf::from(&local_appdata).join("Programs").join("Qaulium").join("runtime").join("qualium-core.exe");
+        if p3b.exists() {
+            let cwd = p3b.parent().unwrap().to_path_buf();
+            return Some((p3b, cwd));
+        }
+    }
+
+    // 4. Check current working directory runtime
+    let p_cwd = PathBuf::from("runtime").join("qualium-core.exe");
+    if p_cwd.exists() {
+        if let Ok(full) = p_cwd.canonicalize() {
+            let cwd = full.parent().unwrap().to_path_buf();
+            return Some((full, cwd));
+        }
+    }
+
+    // 5. Check repo root runtime/qualium-core.exe during development
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let p4 = PathBuf::from(manifest_dir).join("..").join("..").join("runtime").join("qualium-core.exe");
         if p4.exists() {
@@ -266,7 +316,7 @@ fn find_gecko_runtime(app_dir: &Path) -> Option<(PathBuf, PathBuf)> {
 }
 
 #[cfg(windows)]
-fn is_gecko_running() -> bool {
+fn count_processes_named(target_name: &str) -> usize {
     use std::mem::size_of;
     #[repr(C)]
     struct PROCESSENTRY32W {
@@ -291,7 +341,7 @@ fn is_gecko_running() -> bool {
     unsafe {
         let snapshot = CreateToolhelp32Snapshot(0x00000002, 0); // TH32CS_SNAPPROCESS
         if snapshot.is_null() || snapshot as isize == -1 {
-            return false;
+            return 0;
         }
         let mut entry = PROCESSENTRY32W {
             dw_size: size_of::<PROCESSENTRY32W>() as u32,
@@ -305,14 +355,13 @@ fn is_gecko_running() -> bool {
             dw_flags: 0,
             sz_exe_file: [0; 260],
         };
-        let mut found = false;
+        let mut count = 0;
         if Process32FirstW(snapshot, &mut entry) != 0 {
             loop {
                 let len = entry.sz_exe_file.iter().position(|&c| c == 0).unwrap_or(260);
                 let name = String::from_utf16_lossy(&entry.sz_exe_file[..len]);
-                if name.eq_ignore_ascii_case("qualium-core.exe") {
-                    found = true;
-                    break;
+                if name.eq_ignore_ascii_case(target_name) {
+                    count += 1;
                 }
                 if Process32NextW(snapshot, &mut entry) == 0 {
                     break;
@@ -320,40 +369,55 @@ fn is_gecko_running() -> bool {
             }
         }
         CloseHandle(snapshot);
-        found
+        count
     }
 }
 
-#[cfg(not(windows))]
 fn is_gecko_running() -> bool {
-    false
+    #[cfg(windows)]
+    {
+        count_processes_named("qualium-core.exe") > 0
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
 }
 
+fn is_primary_instance() -> bool {
+    #[cfg(windows)]
+    {
+        let current_exe_name = env::current_exe()
+            .ok()
+            .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
+            .unwrap_or_else(|| "QualiumQuantumBrowser.exe".to_string());
 
+        let browser_count = count_processes_named(&current_exe_name);
+        let default_host_count = count_processes_named("QualiumQuantumBrowser.exe");
+        let qualium_browser_count = count_processes_named("qualium-browser.exe");
+        let gecko_count = count_processes_named("qualium-core.exe");
 
-extern "system" {
-    fn CreateMutexW(lp_mutex_attributes: *mut std::ffi::c_void, b_initial_owner: i32, lp_name: *const u16) -> *mut std::ffi::c_void;
-    fn GetLastError() -> u32;
+        let total_host_count = browser_count.max(default_host_count).max(qualium_browser_count);
+        total_host_count <= 1 || gecko_count == 0
+    }
+    #[cfg(not(windows))]
+    {
+        true
+    }
 }
 
 fn main() -> anyhow::Result<()> {
     let app_dir = get_app_dir();
     let profile_dir = get_profile_dir();
 
-    // Check if this is the primary supervisor instance
-    let (is_primary, _supervisor_mutex_handle) = {
-        #[cfg(windows)]
-        {
-            use std::ffi::OsStr;
-            use std::os::windows::ffi::OsStrExt;
-            let name: Vec<u16> = OsStr::new("Local\\QualiumQuantumBrowser_Supervisor_Mutex\0").encode_wide().collect();
-            let handle = unsafe { CreateMutexW(std::ptr::null_mut(), 0, name.as_ptr()) };
-            let is_first = !handle.is_null() && unsafe { GetLastError() } != 183; // 183 = ERROR_ALREADY_EXISTS
-            (is_first, handle)
-        }
-        #[cfg(not(windows))]
-        (true, std::ptr::null_mut())
-    };
+    let is_primary = is_primary_instance();
+
+    append_boot_log(&format!(
+        "Qualium Boot: is_primary={}, app_dir={}, profile_dir={}",
+        is_primary,
+        app_dir.display(),
+        profile_dir.display()
+    ));
 
     if is_primary {
         // 1. Primary instance: purge all stale background zombies from previous sessions/crashes
@@ -379,39 +443,39 @@ fn main() -> anyhow::Result<()> {
             let _ = fs::remove_file(&lock2);
         }
 
-        let log_file = env::temp_dir().join("qualium_boot.log");
-        let mut log = format!("Qualium Boot (Primary): app_dir={}\n", app_dir.display());
+        append_boot_log(&format!("Primary supervisor: app_dir={}", app_dir.display()));
 
-        // 2. Start Post-Quantum Security Daemon
-        let daemon_child = spawn_daemon(&app_dir);
-        let daemon_ready = if daemon_child.is_some() {
-            wait_for_port_ready(9050, 2500)
-        } else {
-            wait_for_port_ready(9050, 500)
-        };
-        log.push_str(&format!("Daemon spawned: {}, SOCKS5 port 9050 ready: {}\n", daemon_child.is_some(), daemon_ready));
+        // 2. Start Post-Quantum Security Daemon with active profile context
+        let daemon_child = spawn_daemon(&app_dir, &profile_dir);
+        let active_proxy_port = discover_active_proxy(&profile_dir, 4000);
+        let proxy_enabled = active_proxy_port.is_some();
+        append_boot_log(&format!(
+            "Daemon spawned: {}, Active SOCKS5 port: {:?}, Proxy enabled: {}",
+            daemon_child.is_some(),
+            active_proxy_port,
+            proxy_enabled
+        ));
 
-        // 3. Configure profile
-        configure_profile(&app_dir, &profile_dir, daemon_ready);
-        log.push_str(&format!("Profile dir: {}, proxy_enabled: {}\n", profile_dir.display(), daemon_ready));
+        // 3. Configure profile with dynamic proxy port
+        configure_profile(&app_dir, &profile_dir, active_proxy_port);
+        append_boot_log(&format!("Profile dir configured: {}, proxy_enabled: {}", profile_dir.display(), proxy_enabled));
 
         // 4. Locate Gecko runtime
         let (gecko_exe, gecko_cwd) = match find_gecko_runtime(&app_dir) {
             Some(pair) => pair,
             None => {
-                log.push_str("Gecko runtime not found!\n");
-                let _ = fs::write(&log_file, log);
+                append_boot_log("Gecko runtime not found!");
                 return Ok(());
             }
         };
-        log.push_str(&format!("Gecko exe: {}\n", gecko_exe.display()));
+        append_boot_log(&format!("Gecko runtime located: {}", gecko_exe.display()));
 
         // 5. Target URL handling
         let target_url = get_target_url_from_args();
         if let Some(ref u) = target_url {
-            log.push_str(&format!("Target url: {}\n", u));
+            append_boot_log(&format!("Target url: {}", u));
         } else {
-            log.push_str("Target url: None (loading default homepage from user.js)\n");
+            append_boot_log("Target url: None (loading default homepage)");
         }
 
         // 6. Launch native Gecko browser engine with Qualium branding & profile
@@ -425,46 +489,28 @@ fn main() -> anyhow::Result<()> {
             gecko_cmd.arg(url);
         }
 
-        let _gecko_child = gecko_cmd.spawn()?;
-        log.push_str("Gecko proc spawned successfully. Beginning supervision loop...\n");
-        let _ = fs::write(&log_file, &log);
+        let mut gecko_child = gecko_cmd.spawn()?;
+        append_boot_log("Gecko process spawned successfully. Supervising browser session...");
 
-        // 7. Supervise browser lifecycle & rebrand window title
-        let mut started = false;
-        for _ in 0..20 {
-            if is_gecko_running() {
-                started = true;
-                break;
-            }
+        // 7. Supervise browser lifecycle until Gecko terminates
+        let _ = gecko_child.wait();
+
+        let mut checks = 0;
+        while is_gecko_running() && checks < 8 {
             std::thread::sleep(std::time::Duration::from_millis(500));
+            checks += 1;
         }
 
-        if started {
-            let mut missing_count = 0;
-            while missing_count < 4 {
-                if is_gecko_running() {
-                    missing_count = 0;
-                    #[cfg(target_os = "windows")]
-                    win_branding::rebrand_all();
-                } else {
-                    missing_count += 1;
-                }
-                std::thread::sleep(std::time::Duration::from_millis(500));
-            }
-        }
-
-        log.push_str("Gecko browser closed. Terminating background daemon...\n");
-        let _ = fs::write(&log_file, &log);
+        append_boot_log("Gecko browser closed. Terminating background daemon...");
 
         // 8. Browser closed: kill daemon cleanly
         if let Some(mut child) = daemon_child {
             let _ = child.kill();
-            log.push_str("Daemon killed cleanly.\n");
-            let _ = fs::write(&log_file, &log);
+            append_boot_log("Daemon killed cleanly.");
         }
     } else {
         // Secondary instance: Browser is ALREADY running!
-        // Delegate cleanly via Gecko native remoting without killing anything or touching locks
+        append_boot_log("Secondary instance: delegating URL to running Gecko instance");
         let (gecko_exe, gecko_cwd) = match find_gecko_runtime(&app_dir) {
             Some(pair) => pair,
             None => return Ok(()),

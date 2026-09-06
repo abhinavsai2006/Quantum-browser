@@ -17,7 +17,7 @@
     "qualium://extensions": "chrome://qualium/content/extensions.xhtml",
     "qualium://welcome": "chrome://qualium/content/onboarding.xhtml",
     "qualium://about": "chrome://qualium/content/about.xhtml",
-    "qualium://diagnostics": "chrome://qualium/content/settings.xhtml#diagnostics",
+    "qualium://diagnostics": "chrome://qualium/content/diagnostics.xhtml",
     "qualium://error": "chrome://qualium/content/error.xhtml"
   };
 
@@ -31,6 +31,7 @@
     { internal: "chrome://qualium/content/about.xhtml", public: "qualium://about" },
     { internal: "chrome://browser/content/aboutDialog.xhtml", public: "qualium://about" },
     { internal: "chrome://qualium/content/settings.xhtml#about", public: "qualium://about" },
+    { internal: "chrome://qualium/content/diagnostics.xhtml", public: "qualium://diagnostics" },
     { internal: "chrome://qualium/content/settings.xhtml#diagnostics", public: "qualium://diagnostics" },
     { internal: "chrome://qualium/content/settings.xhtml", public: "qualium://settings" },
     { internal: "about:preferences", public: "qualium://settings" },

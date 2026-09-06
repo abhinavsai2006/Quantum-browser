@@ -39,22 +39,44 @@ impl QualiumLocalProxy {
         }
     }
 
-    /// Start the local SOCKS5 proxy listener. If port is 0 or occupied, automatically uses free ephemeral port.
+    /// Start the local SOCKS5 proxy listener. If port is occupied (e.g. error 10048),
+    /// tries subsequent ports (9050..9060) then falls back to ephemeral port 0.
     pub async fn start(&mut self) -> Result<SocketAddr, Box<dyn std::error::Error + Send + Sync>> {
-        let listener = match TcpListener::bind(self.bind_addr).await {
-            Ok(l) => l,
-            Err(_) if self.bind_addr.port() != 0 => {
-                // Fallback to ephemeral port 0 if primary port is occupied (e.g. error 10048)
-                let fallback_addr = SocketAddr::from(([127, 0, 0, 1], 0));
-                TcpListener::bind(fallback_addr).await?
+        let preferred_port = self.bind_addr.port();
+        let mut bound_listener = None;
+
+        if preferred_port != 0 {
+            for p in preferred_port..=preferred_port + 10 {
+                let candidate = SocketAddr::from(([127, 0, 0, 1], p));
+                match TcpListener::bind(candidate).await {
+                    Ok(l) => {
+                        bound_listener = Some(l);
+                        break;
+                    }
+                    Err(e) => {
+                        tracing::warn!("Port {} unavailable ({}). Checking next candidate...", p, e);
+                    }
+                }
             }
-            Err(e) => return Err(Box::new(e)),
+        }
+
+        let listener = match bound_listener {
+            Some(l) => l,
+            None => {
+                let fallback = SocketAddr::from(([127, 0, 0, 1], 0));
+                TcpListener::bind(fallback).await?
+            }
         };
 
         let actual_addr = listener.local_addr()?;
         self.bind_addr = actual_addr;
         info!("Qualium Local SOCKS5 Proxy successfully bound on {}", actual_addr);
         *self.is_running.write().await = true;
+
+        // Update circuit controller with actual active proxy endpoint
+        self.circuit_controller
+            .update_proxy_status(actual_addr.port(), &actual_addr.to_string(), "Connected", true)
+            .await;
 
         let running_flag = self.is_running.clone();
         let circuit_ctrl = self.circuit_controller.clone();
@@ -77,16 +99,35 @@ impl QualiumLocalProxy {
         Ok(actual_addr)
     }
 
-    /// Handle RFC 1928 SOCKS5 Handshake and Tunneling
+    /// Handle RFC 1928 SOCKS5 Handshake and Tunneling + Local Diagnostics Endpoint
     pub async fn handle_socks5_connection(
         mut socket: TcpStream,
         circuit_controller: Arc<CircuitController>,
         filter_engine: Arc<FilterEngine>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // 1. Read SOCKS version and auth methods count
+        // 1. Read first 2 bytes (SOCKS VER + NMETHODS, or HTTP GET prefix)
         let mut ver_methods = [0u8; 2];
         socket.read_exact(&mut ver_methods).await?;
+
         if ver_methods[0] != 0x05 {
+            // Check for direct HTTP GET diagnostic request (e.g. GET /api/security-state)
+            if ver_methods[0] == b'G' && ver_methods[1] == b'E' {
+                let mut rest = [0u8; 256];
+                let n = socket.read(&mut rest).await.unwrap_or(0);
+                let req_line = format!("GE{}", String::from_utf8_lossy(&rest[..n]));
+                if req_line.contains("/api/security-state") || req_line.contains("/status") {
+                    let state = circuit_controller.get_security_state().await;
+                    let json = serde_json::to_string_pretty(&state).unwrap_or_default();
+                    let resp = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                        json.len(),
+                        json
+                    );
+                    let _ = socket.write_all(resp.as_bytes()).await;
+                    let _ = socket.shutdown().await;
+                    return Ok(());
+                }
+            }
             return Err("Invalid SOCKS version: expected 0x05".into());
         }
         let nmethods = ver_methods[1] as usize;

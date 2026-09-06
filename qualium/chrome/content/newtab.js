@@ -263,6 +263,11 @@
       }, 50);
     }
 
+    // Subscribe to Authoritative Circuit Status & PQC State
+    if (typeof QualiumRuntimeState !== "undefined") {
+      QualiumRuntimeState.subscribe(updateCircuitBanner);
+    }
+
     // Modal Events
     const saveBtn = document.getElementById("sc-save-btn");
     if (saveBtn) {
@@ -275,6 +280,47 @@
       }
     });
   });
+
+  function updateCircuitBanner(state) {
+    const dot = document.getElementById("pill-status-dot");
+    const label = document.getElementById("pill-status-label");
+    const sep = document.getElementById("pill-status-sep");
+    const hops = document.getElementById("pill-status-hops");
+    if (!dot || !label) return;
+
+    const isNegotiated = state.pqcState === "Negotiated" || state.pqcState === "negotiated";
+    const isCircuitActive = state.circuitState === "ACTIVE" || state.circuitState === "Active";
+    const isProxyConnected = state.proxyState === "Connected" || state.proxyState === "connected";
+
+    if (isNegotiated && isCircuitActive && isProxyConnected) {
+      dot.className = "status-dot active";
+      label.textContent = "● POST-QUANTUM CIRCUIT ACTIVE";
+      if (hops && sep) {
+        sep.style.display = "inline";
+        hops.style.display = "inline";
+        const g = state.guard ? state.guard.split(" ")[0] : "Guard";
+        const r = state.relay ? state.relay.split(" ")[0] : "Relay";
+        const e = state.exit ? state.exit.split(" ")[0] : "Exit";
+        hops.textContent = `${g} → ${r} → ${e}`;
+      }
+    } else if (state.circuitState === "BUILDING CIRCUIT" || state.pqcState === "Negotiating") {
+      dot.className = "status-dot negotiating";
+      label.textContent = state.pqcState === "Negotiating" ? "● PQC NEGOTIATING" : "● BUILDING CIRCUIT";
+      if (hops && sep) {
+        sep.style.display = "inline";
+        hops.style.display = "inline";
+        hops.textContent = "Establishing Multi-Hop Enclave...";
+      }
+    } else {
+      dot.className = "status-dot unavailable";
+      label.textContent = "● CIRCUIT UNAVAILABLE";
+      if (hops && sep) {
+        sep.style.display = "inline";
+        hops.style.display = "inline";
+        hops.textContent = isProxyConnected ? "Circuit Reconnecting..." : "Proxy Unavailable";
+      }
+    }
+  }
 
   // Global exports for modal handlers
   window.closeShortcutModal = closeShortcutModal;
