@@ -123,7 +123,9 @@ fn configure_profile(app_dir: &Path, profile_dir: &Path, proxy_port: Option<u16>
 user_pref("network.proxy.socks", "127.0.0.1");
 user_pref("network.proxy.socks_port", {});
 user_pref("network.proxy.socks_version", 5);
-user_pref("network.proxy.socks_remote_dns", true);"#,
+user_pref("network.proxy.socks_remote_dns", true);
+user_pref("network.proxy.no_proxies_on", "");
+user_pref("network.trr.mode", 5);"#,
             port
         )
     } else {
@@ -434,13 +436,19 @@ fn main() -> anyhow::Result<()> {
                 .status();
         }
 
-        let lock1 = profile_dir.join("parent.lock");
-        if lock1.exists() {
-            let _ = fs::remove_file(&lock1);
-        }
-        let lock2 = profile_dir.join(".parentlock");
-        if lock2.exists() {
-            let _ = fs::remove_file(&lock2);
+        for _ in 0..5 {
+            let lock1 = profile_dir.join("parent.lock");
+            if lock1.exists() {
+                let _ = fs::remove_file(&lock1);
+            }
+            let lock2 = profile_dir.join(".parentlock");
+            if lock2.exists() {
+                let _ = fs::remove_file(&lock2);
+            }
+            if !profile_dir.join("parent.lock").exists() && !profile_dir.join(".parentlock").exists() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
         }
 
         append_boot_log(&format!("Primary supervisor: app_dir={}", app_dir.display()));
@@ -474,6 +482,7 @@ fn main() -> anyhow::Result<()> {
         let target_url = get_target_url_from_args();
         if let Some(ref u) = target_url {
             append_boot_log(&format!("Target url: {}", u));
+            let _ = fs::write(env::temp_dir().join("qualium_pending_nav.txt"), u);
         } else {
             append_boot_log("Target url: None (loading default homepage)");
         }
@@ -495,10 +504,8 @@ fn main() -> anyhow::Result<()> {
         // 7. Supervise browser lifecycle until Gecko terminates
         let _ = gecko_child.wait();
 
-        let mut checks = 0;
-        while is_gecko_running() && checks < 8 {
+        while is_gecko_running() {
             std::thread::sleep(std::time::Duration::from_millis(500));
-            checks += 1;
         }
 
         append_boot_log("Gecko browser closed. Terminating background daemon...");

@@ -1,4 +1,5 @@
 use qualium_core::{CircuitNode, CircuitTopology, PqcState, QualiumSecurityState, VerificationState};
+use qualium_crypto::hybrid::HybridSessionKeys;
 use qualium_crypto::HybridKeyExchange;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -9,11 +10,21 @@ use tracing::{error, info};
 use uuid::Uuid;
 
 #[derive(Clone)]
+pub struct ActiveCircuitSession {
+    pub topology: CircuitTopology,
+    pub session_id_hex: String,
+    pub client_keys: HybridSessionKeys,
+    pub server_keys: HybridSessionKeys,
+}
+
+#[derive(Clone)]
 pub struct CircuitController {
     relays_pool: Vec<CircuitNode>,
     active_circuits: Arc<RwLock<HashMap<Uuid, CircuitTopology>>>,
+    active_sessions: Arc<RwLock<HashMap<Uuid, ActiveCircuitSession>>>,
     destination_circuits: Arc<RwLock<HashMap<String, Uuid>>>, // Stream isolation by eTLD+1
     current_primary_circuit: Arc<RwLock<Option<CircuitTopology>>>,
+    current_primary_session: Arc<RwLock<Option<ActiveCircuitSession>>>,
     security_state: Arc<RwLock<QualiumSecurityState>>,
 }
 
@@ -69,8 +80,10 @@ impl CircuitController {
         Self {
             relays_pool,
             active_circuits: Arc::new(RwLock::new(HashMap::new())),
+            active_sessions: Arc::new(RwLock::new(HashMap::new())),
             destination_circuits: Arc::new(RwLock::new(HashMap::new())),
             current_primary_circuit: Arc::new(RwLock::new(None)),
+            current_primary_session: Arc::new(RwLock::new(None)),
             security_state: Arc::new(RwLock::new(initial_state)),
         }
     }
@@ -220,11 +233,32 @@ impl CircuitController {
             streams_count: 1,
         };
 
-        let mut active = self.active_circuits.write().await;
-        active.insert(circuit_id, topology.clone());
+        let session = ActiveCircuitSession {
+            topology: topology.clone(),
+            session_id_hex: session_id_hex.clone(),
+            client_keys,
+            server_keys,
+        };
 
-        let mut primary = self.current_primary_circuit.write().await;
-        *primary = Some(topology.clone());
+        {
+            let mut active = self.active_circuits.write().await;
+            active.insert(circuit_id, topology.clone());
+        }
+
+        {
+            let mut sessions = self.active_sessions.write().await;
+            sessions.insert(circuit_id, session.clone());
+        }
+
+        {
+            let mut primary = self.current_primary_circuit.write().await;
+            *primary = Some(topology.clone());
+        }
+
+        {
+            let mut primary_sess = self.current_primary_session.write().await;
+            *primary_sess = Some(session);
+        }
 
         topology
     }
@@ -243,6 +277,33 @@ impl CircuitController {
         let new_topo = self.establish_circuit().await;
         dest_map.insert(destination_domain.to_string(), new_topo.circuit_id);
         new_topo
+    }
+
+    /// Retrieve or allocate an isolated circuit session with PQC keys for a given destination
+    pub async fn get_session_for_destination(&self, destination_domain: &str) -> ActiveCircuitSession {
+        let dest_map = self.destination_circuits.read().await;
+        if let Some(cid) = dest_map.get(destination_domain) {
+            let sessions = self.active_sessions.read().await;
+            if let Some(sess) = sessions.get(cid) {
+                return sess.clone();
+            }
+        }
+        drop(dest_map);
+
+        if let Some(primary) = self.get_primary_session().await {
+            return primary;
+        }
+
+        self.establish_circuit().await;
+        self.get_primary_session()
+            .await
+            .expect("Primary session must be established")
+    }
+
+    /// Get current primary circuit session with PQC keys
+    pub async fn get_primary_session(&self) -> Option<ActiveCircuitSession> {
+        let primary = self.current_primary_session.read().await;
+        primary.clone()
     }
 
     /// Get current primary circuit topology for live telemetry / UI

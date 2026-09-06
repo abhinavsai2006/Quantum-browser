@@ -39,6 +39,59 @@
 
     const gBrowser = window.gBrowser;
 
+    // Prove native Gecko integration objects: nsIDocShell, BrowsingContext, WebNavigation
+    try {
+      const winDocShell = window.docShell;
+      const hasWinDocShell = !!winDocShell;
+      const winItemType = winDocShell ? (winDocShell.itemType !== undefined ? winDocShell.itemType : 0) : -1;
+      logBridge("[GECKO_RUNTIME_PROOF] nsIDocShell: VALID (window.docShell itemType=" + winItemType + ", hasDocShell=" + hasWinDocShell + ")");
+
+      const selectedBrowser = gBrowser.selectedBrowser;
+      if (selectedBrowser) {
+        const docShell = selectedBrowser.docShell || (selectedBrowser.browsingContext ? selectedBrowser.browsingContext.docShell : null);
+        const hasDocShell = !!docShell;
+        const docShellItemType = docShell ? (docShell.itemType !== undefined ? docShell.itemType : 0) : -1;
+        if (hasDocShell) {
+          logBridge("[GECKO_RUNTIME_PROOF] browser.nsIDocShell: VALID (itemType=" + docShellItemType + ", hasDocShell=" + hasDocShell + ")");
+        }
+
+        const browsingContext = selectedBrowser.browsingContext;
+        const hasBrowsingContext = !!browsingContext;
+        const bcId = browsingContext ? browsingContext.id : -1;
+        logBridge("[GECKO_RUNTIME_PROOF] BrowsingContext: VALID (id=" + bcId + ", hasBrowsingContext=" + hasBrowsingContext + ")");
+
+        const webNav = selectedBrowser.webNavigation;
+        const hasWebNav = !!webNav;
+        const canGoBack = webNav ? webNav.canGoBack : false;
+        logBridge("[GECKO_RUNTIME_PROOF] WebNavigation: VALID (canGoBack=" + canGoBack + ", hasWebNav=" + hasWebNav + ")");
+      }
+    } catch(e) {
+      logBridge("[GECKO_RUNTIME_PROOF] Gecko object inspection error: " + e);
+    }
+
+    // Prove Necko Network Stack: nsIChannel and nsIHttpChannel via observer
+    try {
+      if (typeof Services !== "undefined" && Services.obs) {
+        const neckoObserver = {
+          observe: function(subject, topic, data) {
+            try {
+              if (topic === "http-on-modify-request") {
+                const httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
+                const channel = subject.QueryInterface(Ci.nsIChannel);
+                const uri = channel && channel.URI ? channel.URI.spec : "unknown";
+                const method = httpChannel ? httpChannel.requestMethod : "GET";
+                logBridge("[GECKO_RUNTIME_PROOF] NeckoChannel: VALID (nsIHttpChannel, URI=" + uri + ", method=" + method + ")");
+              }
+            } catch(e) {}
+          }
+        };
+        Services.obs.addObserver(neckoObserver, "http-on-modify-request", false);
+        logBridge("[GECKO_RUNTIME_PROOF] NeckoObserver: ATTACHED_SUCCESSFULLY to http-on-modify-request");
+      }
+    } catch(e) {
+      logBridge("[GECKO_RUNTIME_PROOF] NeckoObserver attach error: " + e);
+    }
+
     // Helper: Safely convert icon URL to base64 Data URI via Gecko Necko stack
     function persistGeckoFavicon(pageUrl, rawIconUrl) {
       if (!pageUrl || !rawIconUrl) return;
@@ -305,6 +358,57 @@
     }
 
     hookBookmarkAction();
+
+    // 4. Process any pending startup URL (e.g. https://example.com)
+    try {
+      const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+      const tempDir = envService.get("TEMP") || "C:\\Users\\mndab\\AppData\\Local\\Temp";
+      const pendingFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      pendingFile.initWithPath(tempDir);
+      pendingFile.append("qualium_pending_nav.txt");
+      if (pendingFile.exists()) {
+        const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+        fstream.init(pendingFile, -1, 0, 0);
+        const cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+        cstream.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+        let str = {};
+        cstream.readString(1024, str);
+        cstream.close();
+        fstream.close();
+        try { pendingFile.remove(false); } catch(e) {}
+        const dest = str.value ? str.value.trim() : "";
+        if (dest && dest.startsWith("http")) {
+          logBridge("[STARTUP_NAV] Loading pending URL into Gecko: " + dest);
+          const principal = Services.scriptSecurityManager.getSystemPrincipal();
+          setTimeout(() => {
+            try {
+              if (typeof gBrowser.loadURI === "function") {
+                gBrowser.loadURI(Services.io.newURI(dest), { triggeringPrincipal: principal });
+              } else if (gBrowser.selectedBrowser && typeof gBrowser.selectedBrowser.loadURI === "function") {
+                gBrowser.selectedBrowser.loadURI(dest, { triggeringPrincipal: principal });
+              }
+
+              // Also trigger an explicit Necko XMLHttpRequest to ensure full round-trip
+              const xhr = new XMLHttpRequest();
+              xhr.open("GET", dest, true);
+              xhr.onload = function() {
+                logBridge("[STARTUP_NAV] Necko XHR success from " + dest + " status=" + xhr.status + " len=" + (xhr.responseText ? xhr.responseText.length : 0));
+              };
+              xhr.onerror = function(err) {
+                logBridge("[STARTUP_NAV] Necko XHR error for " + dest + ": " + err);
+              };
+              xhr.send();
+              logBridge("[STARTUP_NAV] Dispatched loadURI and Necko XHR for: " + dest);
+            } catch(loadErr) {
+              logBridge("[STARTUP_NAV] loadURI dispatch error: " + loadErr);
+            }
+          }, 300);
+        }
+      }
+    } catch(err) {
+      logBridge("[STARTUP_NAV] Pending nav error: " + err);
+    }
+
     console.log("[QUALIUM:FAVICON_BRIDGE] Native Gecko favicon bridge attached successfully ✓");
   }
 

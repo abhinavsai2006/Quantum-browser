@@ -358,10 +358,51 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial tab load
   switchTab("tab-1");
 
-  if (window.arguments && window.arguments.length > 0) {
-    const initArg = window.arguments[0];
-    if (initArg && typeof initArg === "string") {
-      navCtrl.navigate(initArg);
+  try {
+    let startupTarget = null;
+    if (window.arguments && window.arguments.length > 0) {
+      for (let i = 0; i < window.arguments.length; i++) {
+        const arg = window.arguments[i];
+        if (typeof arg === "string" && (arg.startsWith("http://") || arg.startsWith("https://") || arg.startsWith("qualium://"))) {
+          startupTarget = arg;
+          break;
+        } else if (arg && typeof arg.data === "string" && (arg.data.startsWith("http://") || arg.data.startsWith("https://"))) {
+          startupTarget = arg.data;
+          break;
+        }
+      }
     }
+
+    // Check temp pending nav file
+    const pendingFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    const tempDir = envService.get("TEMP") || "C:\\Users\\mndab\\AppData\\Local\\Temp";
+    pendingFile.initWithPath(tempDir);
+    pendingFile.append("qualium_pending_nav.txt");
+
+    if (pendingFile.exists()) {
+      const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+      fstream.init(pendingFile, -1, 0, 0);
+      const cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+      cstream.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+      let str = {};
+      cstream.readString(1024, str);
+      cstream.close();
+      fstream.close();
+      try { pendingFile.remove(false); } catch(e) {}
+      if (str.value && str.value.trim().length > 0) {
+        startupTarget = str.value.trim();
+      }
+    }
+
+    if (startupTarget) {
+      console.log("[QUALIUM:STARTUP] Navigating to startup target: " + startupTarget);
+      setTimeout(() => {
+        navCtrl.navigate(startupTarget);
+      }, 200);
+    }
+  } catch(e) {
+    console.warn("[QUALIUM:STARTUP] Startup nav check error: ", e);
   }
 });
+

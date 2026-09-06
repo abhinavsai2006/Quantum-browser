@@ -50,7 +50,7 @@ pub struct HybridServerResponse {
     pub selected_version: String,
 }
 
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct HybridSessionKeys {
     pub tx_key: [u8; 32],
     pub rx_key: [u8; 32],

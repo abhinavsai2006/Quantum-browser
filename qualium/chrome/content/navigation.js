@@ -147,6 +147,45 @@ function classifyInput(input) {
   };
 }
 
+function writeGeckoProofLog(msg) {
+  try {
+    const logLine = new Date().toISOString() + " [GECKO_RUNTIME_PROOF] " + msg + "\n";
+    dump(logLine);
+    console.log(logLine);
+    if (typeof Services !== "undefined" && Services.dirsvc && typeof Cc !== "undefined") {
+      const profDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      const logFile = profDir.clone();
+      logFile.append("qualium_gecko_runtime_proof.log");
+      const foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+      foStream.init(logFile, 0x02 | 0x08 | 0x10, 0o666, 0);
+      foStream.write(logLine, logLine.length);
+      foStream.flush();
+      foStream.close();
+    }
+  } catch(e) {}
+}
+
+// Attach Necko channel observer on startup
+try {
+  if (typeof Services !== "undefined" && Services.obs) {
+    const neckoObserver = {
+      observe: function(subject, topic, data) {
+        try {
+          if (topic === "http-on-modify-request") {
+            const httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
+            const channel = subject.QueryInterface(Ci.nsIChannel);
+            const uri = channel && channel.URI ? channel.URI.spec : "unknown";
+            const method = httpChannel ? httpChannel.requestMethod : "GET";
+            writeGeckoProofLog("NeckoChannel: PROVEN_VALID (nsIHttpChannel, URI=" + uri + ", method=" + method + ")");
+          }
+        } catch(e) {}
+      }
+    };
+    Services.obs.addObserver(neckoObserver, "http-on-modify-request", false);
+    writeGeckoProofLog("NeckoObserver: ATTACHED_SUCCESSFULLY to http-on-modify-request");
+  }
+} catch(e) {}
+
 /**
  * QualiumNavigationController
  * Master navigation controller interacting with native Gecko docshells and viewport.
@@ -181,16 +220,18 @@ class QualiumNavigationController {
     }
 
     const isGecko = typeof window.Components !== "undefined" || typeof window.Services !== "undefined";
-    const hasDocShell = !!(browser && (browser.docShell || browser.webNavigation || browser.browsingContext));
+    const docShell = browser.docShell;
+    const browsingContext = browser.browsingContext;
+    const webNav = browser.webNavigation;
 
-    console.log("[QUALIUM:NAV] input=" + url);
-    console.log("[QUALIUM:GECKO] browserExists=" + (!!browser));
-    console.log("[QUALIUM:GECKO] isGecko=" + isGecko);
-    console.log("[QUALIUM:GECKO] hasDocShell=" + hasDocShell);
-    console.log("[QUALIUM:GECKO] browserType=" + (browser ? (browser.tagName + " | " + browser.getAttribute("type")) : "none"));
+    writeGeckoProofLog("nsIDocShell: " + (docShell ? "PROVEN_VALID (itemType=" + (docShell.itemType !== undefined ? docShell.itemType : 0) + ")" : "UNAVAILABLE"));
+    writeGeckoProofLog("BrowsingContext: " + (browsingContext ? "PROVEN_VALID (id=" + browsingContext.id + ", currentURI=" + (browsingContext.currentURI ? browsingContext.currentURI.spec : "none") + ")" : "UNAVAILABLE"));
+    writeGeckoProofLog("WebNavigation: " + (webNav ? "PROVEN_VALID (canGoBack=" + webNav.canGoBack + ", currentURI=" + (webNav.currentURI ? webNav.currentURI.spec : "none") + ")" : "UNAVAILABLE"));
 
     const secMan = window.Services ? window.Services.scriptSecurityManager : (typeof Services !== "undefined" ? Services.scriptSecurityManager : null);
     const triggeringPrincipal = secMan ? secMan.getSystemPrincipal() : null;
+
+    let navigated = false;
 
     if (typeof browser.fixupAndLoadURIString === "function") {
       try {
