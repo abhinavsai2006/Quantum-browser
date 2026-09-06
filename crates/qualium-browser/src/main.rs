@@ -24,6 +24,7 @@ use std::process::{Child, Command};
 use std::os::windows::process::CommandExt;
 
 const CREATE_NO_WINDOW: u32 = 0x08000000;
+const EMBEDDED_USER_CHROME: &str = include_str!("../../../qualium/chrome/userChrome.css");
 
 fn append_boot_log(msg: &str) {
     use std::io::Write;
@@ -171,13 +172,11 @@ user_pref("layers.acceleration.disabled", true);
     let user_js_path = profile_dir.join("user.js");
     let _ = fs::write(&user_js_path, user_js_content);
 
-    // Copy userChrome.css and userContent.css to profile
+    // Write userChrome.css to profile
     let chrome_dir = profile_dir.join("chrome");
     let _ = fs::create_dir_all(&chrome_dir);
-    let src_user_chrome = app_dir.join("chrome").join("userChrome.css");
-    if src_user_chrome.exists() {
-        let _ = fs::copy(&src_user_chrome, chrome_dir.join("userChrome.css"));
-    }
+    let _ = fs::write(chrome_dir.join("userChrome.css"), EMBEDDED_USER_CHROME);
+
     let src_user_content = app_dir.join("chrome").join("userContent.css");
     if src_user_content.exists() {
         let _ = fs::copy(&src_user_content, chrome_dir.join("userContent.css"));

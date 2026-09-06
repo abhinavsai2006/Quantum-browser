@@ -174,6 +174,11 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
         '<script src="chrome://browser/content/browser-main.js"></script>',
         '<script src="chrome://browser/content/browser-main.js"></script>\n  <script src="chrome://qualium/content/qualium-routes.js"></script>\n  <script src="chrome://qualium/content/favicon-service.js"></script>\n  <script src="chrome://qualium/content/favicon-bridge.js"></script>'
     )
+    if 'chrome://qualium/content/qualium-tabs.css' not in mod_xhtml:
+        mod_xhtml = mod_xhtml.replace(
+            '<link rel="stylesheet" href="chrome://browser/skin/" />',
+            '<link rel="stylesheet" href="chrome://browser/skin/" />\n  <link rel="stylesheet" href="chrome://qualium/content/qualium-tabs.css" />'
+        )
 
     # Physically remove the gap elements between Extensions and Settings
     ext_idx = mod_xhtml.find('id="appMenu-extensions-themes-button"')
@@ -230,11 +235,16 @@ override chrome://browser/content/aboutDialog.xhtml chrome://qualium/content/abo
 override chrome://branding/content/icon32.png chrome://qualium/skin/qualium-shield.svg
 override chrome://branding/content/icon16.png chrome://qualium/skin/qualium-shield.svg
 override chrome://global/skin/icons/defaultFavicon.svg chrome://qualium/skin/qualium-shield.svg
+override chrome://browser/skin/tabbrowser/loading.svg chrome://qualium/skin/qualium-spinner.svg
+override chrome://browser/skin/tabbrowser/loading-burst.svg chrome://qualium/skin/loading-burst.svg
+override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-spinner.svg
 """
-    if "content qualium browser/content/qualium/" not in orig_manifest:
-        mod_manifest = orig_manifest + "\n" + qualium_manifest_entries
-    else:
-        mod_manifest = orig_manifest
+    clean_lines = []
+    for line in orig_manifest.splitlines():
+        if any(token in line for token in ["qualium", "qaulium", "loading.svg", "loading-burst.svg", "defaultFavicon.svg", "icon32.png", "icon16.png"]):
+            continue
+        clean_lines.append(line)
+    mod_manifest = "\n".join(clean_lines).rstrip() + "\n" + qualium_manifest_entries.strip() + "\n"
 
     # 7. Patch modules/UrlbarInput.sys.mjs for clean qualium:// omnibox display and routing
     orig_urlbar = src_zf.read("modules/UrlbarInput.sys.mjs").decode("utf-8", "ignore")
@@ -619,6 +629,27 @@ graph-week-summary-private-window = All trackers blocked this week
             dst_zf.writestr(name, mod_bch.encode("utf-8"))
         elif name == "chrome/chrome.manifest":
             dst_zf.writestr(name, mod_manifest.encode("utf-8"))
+        elif name == "chrome/browser/skin/classic/browser/tabbrowser/tabs.css":
+            orig_tabs_css = src_zf.read(name).decode("utf-8", "ignore")
+            if '@import url("chrome://qualium/content/qualium-tabs.css");' in orig_tabs_css:
+                orig_tabs_css = orig_tabs_css.replace('@import url("chrome://qualium/content/qualium-tabs.css");\n', '').replace('@import url("chrome://qualium/content/qualium-tabs.css");', '')
+            mod_tabs_css = "@import url(\"chrome://qualium/content/qualium-tabs.css\");\n" + orig_tabs_css.replace(
+                "--tab-loading-fill: #0A84FF;",
+                "--tab-loading-fill: #00f0ff;"
+            ).replace(
+                'url("chrome://browser/skin/tabbrowser/loading.svg")',
+                'url("chrome://qualium/skin/qualium-spinner.svg")'
+            ).replace(
+                'url("chrome://browser/skin/tabbrowser/loading-burst.svg")',
+                'url("chrome://qualium/skin/loading-burst.svg")'
+            )
+            dst_zf.writestr(name, mod_tabs_css.encode("utf-8"))
+        elif name == "chrome/browser/skin/classic/browser/browser.css":
+            orig_b_css = src_zf.read(name).decode("utf-8", "ignore")
+            if '@import url("chrome://qualium/content/qualium-tabs.css");' in orig_b_css:
+                orig_b_css = orig_b_css.replace('@import url("chrome://qualium/content/qualium-tabs.css");\n', '').replace('@import url("chrome://qualium/content/qualium-tabs.css");', '')
+            mod_b_css = "@import url(\"chrome://qualium/content/qualium-tabs.css\");\n" + orig_b_css
+            dst_zf.writestr(name, mod_b_css.encode("utf-8"))
         else:
             dst_zf.writestr(name, src_zf.read(name))
 

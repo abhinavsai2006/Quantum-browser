@@ -248,7 +248,31 @@
         } catch (e) {}
       },
 
-      onStateChange() {},
+      onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+        try {
+          if (!aBrowser) return;
+          const tab = gBrowser.getTabForBrowser(aBrowser);
+          if (!tab) return;
+
+          const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK);
+          const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK);
+
+          if (isStart) {
+            tab.setAttribute("qualium-loading", "true");
+            tab.classList.add("qualium-tab-loading");
+            tab.removeAttribute("qualium-loaded");
+            tab.removeAttribute("qualium-error");
+          } else if (isStop) {
+            tab.removeAttribute("qualium-loading");
+            tab.classList.remove("qualium-tab-loading");
+            if (Components.isSuccessCode(aStatus)) {
+              tab.setAttribute("qualium-loaded", "true");
+            } else if (aStatus !== Cr.NS_BINDING_ABORTED) {
+              tab.setAttribute("qualium-error", "true");
+            }
+          }
+        } catch (e) {}
+      },
       onStatusChange() {},
       onProgressChange() {},
       onSecurityChange() {}
@@ -260,6 +284,27 @@
       }
     } catch (e) {
       console.warn("[QUALIUM:FAVICON_BRIDGE] addTabsProgressListener error:", e);
+    }
+
+    // Attach Qualium tab classes to all tabs
+    function styleTabAsQualium(tab) {
+      if (!tab) return;
+      tab.classList.add("qualium-tab");
+      const closeBtn = tab.querySelector(".tab-close-button");
+      if (closeBtn) closeBtn.classList.add("qualium-tab-close");
+      const icon = tab.querySelector(".tab-icon-image");
+      if (icon) icon.classList.add("qualium-tab-favicon");
+      const label = tab.querySelector(".tab-label");
+      if (label) label.classList.add("qualium-tab-title");
+    }
+
+    if (gBrowser.tabContainer) {
+      for (const t of gBrowser.tabs) {
+        styleTabAsQualium(t);
+      }
+      gBrowser.tabContainer.addEventListener("TabOpen", (e) => {
+        styleTabAsQualium(e.target);
+      }, false);
     }
 
     // 3. Hook Omnibox Navigation & Protocol Routing for qualium://
