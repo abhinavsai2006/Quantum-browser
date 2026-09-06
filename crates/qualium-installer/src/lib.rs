@@ -27,6 +27,7 @@ pub mod win32 {
         _icon_path: Option<&Path>,
     ) -> anyhow::Result<()> {
         anyhow::bail!("Windows shortcuts are only supported on Windows")
+        anyhow::bail!("Windows shortcut creation is only supported on Windows")
     }
 
     pub fn register_uninstall(
@@ -52,6 +53,11 @@ pub mod win32 {
         } else {
             PathBuf::from("/tmp/.qualium")
         }
+        std::env::temp_dir().join("Qualium")
+    }
+
+    pub fn get_user_data_dir() -> PathBuf {
+        std::env::temp_dir().join("QualiumProfile")
     }
 
     pub fn get_desktop_shortcut_paths() -> Vec<PathBuf> {
@@ -71,6 +77,20 @@ pub mod engine;
 pub mod uninstaller_engine;
 #[cfg(windows)]
 pub mod win32_gui;
+#[cfg(not(windows))]
+pub mod win32_gui {
+    use crate::engine::InstallEngine;
+    use crate::uninstaller_engine::UninstallerEngine;
+    use std::path::PathBuf;
+
+    pub fn run_installer_gui(_engine: InstallEngine, _default_dest: PathBuf) -> anyhow::Result<()> {
+        anyhow::bail!("Windows GUI installer is only supported on Windows")
+    }
+
+    pub fn run_uninstaller_gui(_engine: UninstallerEngine, _install_dir: PathBuf) -> anyhow::Result<()> {
+        anyhow::bail!("Windows GUI uninstaller is only supported on Windows")
+    }
+}
 
 pub use manifest::{InstallManifest, ManifestFileEntry};
 pub use engine::{InstallEngine, InstallOptions, PayloadMetrics};
