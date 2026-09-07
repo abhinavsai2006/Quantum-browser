@@ -1,6 +1,6 @@
 // Qaulium Quantum Browser v1 — Native Gecko Favicon & Tab Bridge
 // Runs in Gecko Browser Chrome context (chrome://browser/content/browser/browser.xhtml)
-// Connects real Gecko page favicon and title events directly into QualiumFaviconService
+// Connects real Gecko page favicon and title events directly into QauliumFaviconService
 
 (function() {
   "use strict";

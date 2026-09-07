@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v1 — Central Authoritative Internal Route Registry
+// Qaulium Quantum Browser v1 — Central Authoritative Internal Route Registry
 // Single source of truth for all qualium:// public protocols and internal chrome resources
 
 (function(global) {
@@ -59,14 +59,14 @@
   // User-Facing Tab / Page Titles
   const TITLES = {
     "qualium://newtab": "New Tab",
-    "qualium://privacy": "Qualium Privacy",
-    "qualium://security": "Qualium Security",
-    "qualium://settings": "Qualium Settings",
-    "qualium://downloads": "Qualium Downloads",
-    "qualium://bookmarks": "Qualium Bookmarks",
-    "qualium://history": "Qualium History",
-    "qualium://passwords": "Qualium Passwords",
-    "qualium://extensions": "Qualium Extensions",
+    "qualium://privacy": "Qaulium Privacy",
+    "qualium://security": "Qaulium Security",
+    "qualium://settings": "Qaulium Settings",
+    "qualium://downloads": "Qaulium Downloads",
+    "qualium://bookmarks": "Qaulium Bookmarks",
+    "qualium://history": "Qaulium History",
+    "qualium://passwords": "Qaulium Passwords",
+    "qualium://extensions": "Qaulium Extensions",
     "qualium://welcome": "Welcome to Qaulium",
     "qualium://about": "Qualium About",
     "qualium://diagnostics": "Qualium Diagnostics",

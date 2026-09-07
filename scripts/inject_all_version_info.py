@@ -121,38 +121,38 @@ def main():
     local_app_qaulium = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qaulium")
 
     core_strings = {
-        'Comments': 'Qualium Quantum Browser with Post-Quantum Security',
+        'Comments': 'Qaulium Quantum Browser with Post-Quantum Security',
         'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qualium Quantum Browser',
+        'FileDescription': 'Qaulium Quantum Browser',
         'FileVersion': '5.0.0.0',
         'InternalName': 'qualium-core',
         'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
         'OriginalFilename': 'qualium-core.exe',
-        'ProductName': 'Qualium Quantum Browser',
+        'ProductName': 'Qaulium Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     launcher_strings = {
-        'Comments': 'Qualium Quantum Browser Launcher',
+        'Comments': 'Qaulium Quantum Browser Launcher',
         'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qualium Quantum Browser',
+        'FileDescription': 'Qaulium Quantum Browser',
         'FileVersion': '5.0.0.0',
         'InternalName': 'QualiumQuantumBrowser',
         'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
         'OriginalFilename': 'QualiumQuantumBrowser.exe',
-        'ProductName': 'Qualium Quantum Browser',
+        'ProductName': 'Qaulium Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     sandbox_strings = {
-        'Comments': 'Qualium Quantum Content Sandbox Process',
+        'Comments': 'Qaulium Quantum Content Sandbox Process',
         'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qualium Quantum Tab Sandbox',
+        'FileDescription': 'Qaulium Quantum Tab Sandbox',
         'FileVersion': '5.0.0.0',
         'InternalName': 'plugin-container',
         'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
         'OriginalFilename': 'plugin-container.exe',
-        'ProductName': 'Qualium Quantum Browser',
+        'ProductName': 'Qaulium Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 

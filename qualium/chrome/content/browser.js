@@ -1,4 +1,4 @@
-// Qualium Quantum Browser v1 — "Qualium Quiet Precision" Browser Controller
+// Qaulium Quantum Browser v1 — "Qualium Quiet Precision" Browser Controller
 document.addEventListener("DOMContentLoaded", () => {
   const browserDeck = document.getElementById("browser-deck");
   const contentBrowser = document.getElementById("content-browser") || document.getElementById("content-frame");

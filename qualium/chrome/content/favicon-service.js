@@ -1190,7 +1190,7 @@
   };
 
   /**
-   * Authoritative Single Qualium Navigation Controller
+   * Authoritative Single Qaulium Navigation Controller
    * Ensures all bookmark and shortcut navigations stay inside Qualium tabs.
    * NEVER opens external browsers (Chrome, Edge, Firefox).
    */
@@ -1267,7 +1267,7 @@
   };
 
   /**
-   * Authoritative Qualium History Store
+   * Authoritative Qaulium History Store
    */
   const QualiumHistoryStore = {
     _subscribers: new Set(),

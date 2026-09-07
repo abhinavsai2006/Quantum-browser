@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Qualium Quantum Browser v1 — 100% Qualium-Owned Browser Chrome & Tab System
+   Qaulium Quantum Browser v1 — 100% Qualium-Owned Browser Chrome & Tab System
    Eliminates all Firefox Proton/Photon theme leakage, blue sprites, and stock UI
    ========================================================================== */
 
@@ -309,7 +309,7 @@
   fill: #ffffff !important;
 }
 
-/* 8. Qualium Navigation Toolbar (#nav-bar) */
+/* 8. Qaulium Navigation Toolbar (#nav-bar) */
 #nav-bar {
   background-color: #1c1d22 !important;
   border-top: none !important;

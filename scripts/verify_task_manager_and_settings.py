@@ -20,8 +20,9 @@ def verify_pe_version(exe_path):
     assert "Firefox" not in desc, f"FileDescription still contains 'Firefox' in {exe_path}"
     assert "Firefox" not in prod, f"ProductName still contains 'Firefox' in {exe_path}"
     assert "Mozilla" not in comp, f"CompanyName still contains 'Mozilla' in {exe_path}"
-    assert "Qualium" in desc or "Qaulium" in desc, f"FileDescription missing Qualium branding in {exe_path}"
-    print("  [PASS] Clean Qualium branding verified in PE version resource.")
+    assert "Qaulium" in desc, f"FileDescription does not contain 'Qaulium' in {exe_path} (got: {desc})"
+    assert "Qaulium" in prod, f"ProductName does not contain 'Qaulium' in {exe_path} (got: {prod})"
+    print("  [PASS] Clean Qaulium branding verified in PE version resource.")
 
 def verify_settings_no_mock():
     print("\n[Check] Verifying Settings Page Interactive Controls & Zero Mock Badges...")
