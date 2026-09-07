@@ -1,3 +1,4 @@
+import os
 import ctypes
 from ctypes import wintypes
 import time
@@ -32,12 +33,12 @@ def brand_windows():
     hicon_small = user32.LoadImageW(0, target_ico, IMAGE_ICON, 16, 16, LR_LOADFROMFILE)
 
     for hwnd in found:
-        user32.SetWindowTextW(hwnd, "Qualium Quantum Browser")
+        user32.SetWindowTextW(hwnd, "Qaulium Quantum Browser")
         if hicon_big:
             user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, hicon_big)
         if hicon_small:
             user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, hicon_small)
-        print(f"Branded HWND {hwnd} with title and Qualium Quantum Browser icon.")
+        print(f"Branded HWND {hwnd} with title and Qaulium Quantum Browser icon.")
 
 if __name__ == "__main__":
     brand_windows()

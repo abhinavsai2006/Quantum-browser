@@ -4,54 +4,51 @@ from PIL import Image, ImageFilter
 import numpy as np
 from collections import deque
 
-def create_transparent_master(source_jpg_path):
-    print(f"Reading source image from {source_jpg_path}...")
-    im = Image.open(source_jpg_path).convert('RGB')
-    arr = np.array(im)
-    h, w, _ = arr.shape
+def create_transparent_master(source_logo_path):
+    print(f"Reading old green logo from {source_logo_path}...")
+    import cv2
+    img_bgr = cv2.imread(source_logo_path)
+    h, w, _ = img_bgr.shape
 
-    # Flood fill from corners to find outside dark background
-    visited = np.zeros((h, w), dtype=bool)
-    q = deque([(0, 0), (0, w - 1), (h - 1, 0), (h - 1, w - 1)])
-    for pt in q:
-        visited[pt] = True
+    # Find the outer contour of the crystal shield
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+    roi_mask = np.zeros((h, w), dtype=np.uint8)
+    roi_mask[200:820, 240:784] = 255
+    bright = (gray > 100).astype(np.uint8) * roi_mask
+    contours, _ = cv2.findContours(bright, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    shield_cnt = max(contours, key=cv2.contourArea)
 
-    brightness = np.max(arr, axis=2)
+    # Draw filled mask of the shield
+    mask = np.zeros((h, w), dtype=np.uint8)
+    cv2.drawContours(mask, [shield_cnt], -1, 255, -1)
+    
+    # Anti-alias mask with 3x3 gaussian blur for crisp subpixel edges
+    mask_blurred = cv2.GaussianBlur(mask, (3, 3), 0)
 
-    while q:
-        y, x = q.popleft()
-        for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-            ny, nx = y + dy, x + dx
-            if 0 <= ny < h and 0 <= nx < w:
-                if not visited[ny, nx] and brightness[ny, nx] < 12:
-                    visited[ny, nx] = True
-                    q.append((ny, nx))
+    # Convert to RGBA
+    img_rgba = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGBA)
+    img_rgba[:, :, 3] = mask_blurred
 
-    badge_mask = (~visited).astype(np.uint8) * 255
-    mask_img = Image.fromarray(badge_mask)
-    # 0.8px gaussian blur for soft anti-aliased edges
-    mask_img = mask_img.filter(ImageFilter.GaussianBlur(radius=0.8))
+    im_pil = Image.fromarray(img_rgba)
 
-    rgba = im.convert('RGBA')
-    rgba.putalpha(mask_img)
+    # Crop precisely to bounding box of the shield
+    bbox = im_pil.getbbox()
+    print(f"Shield bounding box: {bbox}")
+    cropped = im_pil.crop(bbox)
 
-    # Crop precisely around the squircle with balanced padding
-    bbox = (128 - 8, 126 - 8, 895 + 8, 895 + 8)
-    cropped = rgba.crop(bbox)
-
-    # Place in 1024x1024 square canvas with ~7.5% margins (modern standard)
-    target_dim = 904
+    # Center in 1024x1024 square with 6.5% padding (height = 890px)
+    target_h = 890
     cw, ch = cropped.size
-    scale = target_dim / max(cw, ch)
-    new_w = int(cw * scale)
-    new_h = int(ch * scale)
-    resized = cropped.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    scale = target_h / ch
+    target_w = int(cw * scale)
+    scaled = cropped.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
     canvas_1024 = Image.new('RGBA', (1024, 1024), (0, 0, 0, 0))
-    offset_x = (1024 - new_w) // 2
-    offset_y = (1024 - new_h) // 2
-    canvas_1024.paste(resized, (offset_x, offset_y), resized)
-    
+    offset_x = (1024 - target_w) // 2
+    offset_y = (1024 - target_h) // 2
+    canvas_1024.paste(scaled, (offset_x, offset_y), scaled)
+    print(f"Created 1024x1024 transparent master (shield size {target_w}x{target_h})")
+
     return canvas_1024
 
 def save_ico_custom(img_1024, ico_path, sizes=(256, 128, 64, 48, 32, 24, 16)):
@@ -89,8 +86,8 @@ def save_ico_custom(img_1024, ico_path, sizes=(256, 128, 64, 48, 32, 24, 16)):
     print(f"Saved ICO ({len(sizes)} resolutions, {len(ico_bytes)} bytes) to {ico_path}")
 
 def main():
-    src_jpg = r"C:\Users\mndab\.gemini\antigravity-ide\brain\b0a47078-44ea-43d7-ae34-0240dd9ce43a\qualium_browser_app_icon_1788767191732.jpg"
-    master = create_transparent_master(src_jpg)
+    src_logo = r"e:\Qaulium AI\Broswer\scratch\old_green_logo\old_qaulium_logo.png"
+    master = create_transparent_master(src_logo)
     
     os.makedirs("scratch/generated_icons", exist_ok=True)
     master_1024_path = "scratch/generated_icons/qualium_app_icon_1024.png"
