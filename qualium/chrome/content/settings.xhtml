@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="chrome://qualium/content/styles/icons.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/styles/components.css"/>
   <link rel="stylesheet" href="chrome://qualium/content/settings.css"/>
+  <script src="chrome://qualium/content/qualium-routes.js"></script>
+  <script src="chrome://qualium/content/settings.js" defer="defer"></script>
   <script>
     //<![CDATA[
     if (window.opener && window.opener.openTrustedLinkIn) {
@@ -19,62 +21,6 @@
     }
     //]]>
   </script>
-  <script type="application/javascript"><![CDATA[
-    function switchTab(tabId) {
-      if (!tabId) tabId = "general";
-      tabId = tabId.replace("#", "").trim();
-
-      const targetPane = document.getElementById("pane-" + tabId) || document.getElementById("pane-general");
-      const activeTabName = targetPane ? targetPane.id.replace("pane-", "") : "general";
-
-      document.querySelectorAll(".nav-btn").forEach(btn => {
-        if (btn.dataset.tab === activeTabName) {
-          btn.classList.add("active");
-        } else {
-          btn.classList.remove("active");
-        }
-      });
-
-      document.querySelectorAll(".settings-pane").forEach(pane => {
-        pane.style.display = "none";
-      });
-
-      if (targetPane) {
-        targetPane.style.display = "block";
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const tab = btn.dataset.tab;
-          window.location.hash = tab;
-          switchTab(tab);
-        });
-      });
-
-      window.addEventListener("hashchange", () => {
-        switchTab(window.location.hash);
-      });
-
-      const initialHash = window.location.hash || "general";
-      switchTab(initialHash);
-
-      const engineSelect = document.getElementById("search-engine-select");
-      if (engineSelect) {
-        try {
-          const saved = localStorage.getItem("qualium_search_engine") || "google";
-          engineSelect.value = saved;
-        } catch(e) {}
-
-        engineSelect.addEventListener("change", () => {
-          try {
-            localStorage.setItem("qualium_search_engine", engineSelect.value);
-          } catch(e) {}
-        });
-      }
-    });
-  ]]></script>
   <style>
     .settings-layout {
       display: flex;
@@ -146,13 +92,13 @@
       background: rgba(255, 255, 255, 0.09);
       color: #ffffff;
       font-weight: 600;
-      border-left: 3px solid #e2e8f0;
+      border-left: 3px solid #34d399;
       border-radius: 0 8px 8px 0;
     }
     .settings-content {
       flex: 1;
       padding: 2.5rem 3.5rem;
-      max-width: 860px;
+      max-width: 880px;
       overflow-y: auto;
     }
     .settings-header {
@@ -194,6 +140,7 @@
       align-items: center;
       padding: 1rem 1.25rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      gap: 1rem;
     }
     .q-row:last-child {
       border-bottom: none;
@@ -202,7 +149,7 @@
       display: flex;
       flex-direction: column;
       gap: 3px;
-      max-width: 520px;
+      max-width: 540px;
     }
     .q-label {
       font-size: 0.9rem;
@@ -214,23 +161,24 @@
       color: #94a3b8;
       line-height: 1.4;
     }
-    .q-badge-success {
-      font-size: 0.75rem;
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 500;
+    .q-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .q-badge-pqc {
-      font-size: 0.75rem;
-      background: rgba(255, 255, 255, 0.07);
+    .q-radio-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
       color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 500;
+      cursor: pointer;
+    }
+    .q-radio-label input[type="radio"] {
+      accent-color: #34d399;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
     :root {
       color-scheme: dark;
@@ -263,6 +211,77 @@
       color: #f8fafc !important;
       padding: 8px 12px;
     }
+    .q-text-input {
+      background: #16181d;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #f8fafc;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      width: 180px;
+      transition: all 0.15s ease;
+    }
+    .q-text-input:focus {
+      border-color: rgba(52, 211, 153, 0.6);
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.15);
+    }
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-dialog {
+      background: #18191e;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      width: 440px;
+      max-width: 90vw;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .modal-header h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .modal-check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .modal-check-item input[type="checkbox"] {
+      accent-color: #34d399;
+      width: 17px;
+      height: 17px;
+      cursor: pointer;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -270,19 +289,15 @@
     <!-- Sidebar -->
     <aside class="settings-sidebar">
       <div class="sidebar-brand">
-        <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
-          <rect width="48" height="48" rx="12" fill="#18191e"/>
-          <path d="M24 10L35 15V23C35 30 29.5 35.5 24 38C18.5 35.5 13 30 13 23V15L24 10Z" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="24" cy="24" r="3.5" fill="#34d399"/>
-        </svg>
-        <span class="sidebar-brand-title">Qaulium</span>
+        <img src="chrome://qualium/content/qaulium_logo_128.png" width="28" height="28" alt="Qualium" style="border-radius: 6px;"/>
+        <span class="sidebar-brand-title">Qualium</span>
         <span class="sidebar-brand-badge">Settings</span>
       </div>
 
       <nav class="settings-nav">
         <button class="nav-btn active" data-tab="general">General &amp; Tabs</button>
         <button class="nav-btn" data-tab="search">Search Engine</button>
-        <button class="nav-btn" data-tab="privacy">Privacy &amp; Telemetry</button>
+        <button class="nav-btn" data-tab="privacy">Privacy &amp; Defense</button>
         <button class="nav-btn" data-tab="security">Post-Quantum Security</button>
         <button class="nav-btn" data-tab="network">Anonymous Routing</button>
         <button class="nav-btn" data-tab="passwords">Encrypted Vault</button>
@@ -290,7 +305,7 @@
         <button class="nav-btn" data-tab="bookmarks">Bookmarks</button>
         <button class="nav-btn" data-tab="history">History &amp; Retention</button>
         <button class="nav-btn" data-tab="extensions">Extensions</button>
-        <button class="nav-btn" data-tab="about">About Qaulium</button>
+        <button class="nav-btn" data-tab="about">About Qualium</button>
       </nav>
     </aside>
 
@@ -300,7 +315,7 @@
       <section id="pane-general" class="settings-pane">
         <header class="settings-header">
           <h1>General &amp; Browser Behavior</h1>
-          <p>Customize startup behaviors, tab policies, and default interfaces.</p>
+          <p>Customize startup policies, tab behavior, and hardware rendering performance.</p>
         </header>
 
         <div class="q-section">
@@ -308,30 +323,90 @@
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Homepage &amp; New Windows</span>
-                <span class="q-desc">Opens Qaulium Quantum New Tab page with live anonymity circuit visualizer.</span>
+                <span class="q-label">When Qualium Opens</span>
+                <span class="q-desc">Choose what displays when you launch a new browser window.</span>
               </div>
-              <span class="q-badge-pqc">qaulium://newtab</span>
+              <div class="q-radio-group">
+                <label class="q-radio-label">
+                  <input type="radio" name="startup-behavior" id="radio-startup-newtab" value="newtab" checked="checked"/>
+                  <span>Open Qualium Quantum New Tab page</span>
+                </label>
+                <label class="q-radio-label">
+                  <input type="radio" name="startup-behavior" id="radio-startup-restore" value="restore"/>
+                  <span>Restore previous session tabs</span>
+                </label>
+              </div>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Session Memory Mode</span>
-                <span class="q-desc">Always start fresh in clean RAM memory mode; previous session tabs are erased for security.</span>
+                <span class="q-label">Quantum Memory Mode</span>
+                <span class="q-desc">Run in clean volatile memory mode; all cache and previous session state are cleared on restart.</span>
               </div>
-              <span class="q-badge-success">Enabled</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-memory-mode" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Confirm Multiple Tab Closure</span>
+                <span class="q-desc">Prompt for confirmation when closing a window with multiple active tabs.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-warn-close-tabs" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
           </div>
         </div>
 
         <div class="q-section">
-          <span class="q-section-title">Tabs</span>
+          <span class="q-section-title">Tabs &amp; Performance</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Multi-Process Tab Segregation</span>
-                <span class="q-desc">Runs each web tab in a segregated OS sandbox process to prevent cross-site memory inspection.</span>
+                <span class="q-label">Multi-Process Tab Sandboxing</span>
+                <span class="q-desc">Segregate web tabs into isolated OS processes to protect system memory.</span>
               </div>
-              <span class="q-badge-success">Active</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-tab-sandboxing" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Discard Inactive Background Tabs</span>
+                <span class="q-desc">Automatically sleep inactive tabs after 15 minutes to preserve system RAM.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-discard-inactive-tabs" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Hardware Graphics Acceleration</span>
+                <span class="q-desc">Use GPU hardware acceleration for smooth 60fps canvas, CSS rendering, and video decoding.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-hardware-acceleration" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Smooth Scrolling</span>
+                <span class="q-desc">Enable sub-pixel interpolated scrolling animation.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-smooth-scrolling" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -341,7 +416,7 @@
       <section id="pane-search" class="settings-pane" style="display: none;">
         <header class="settings-header">
           <h1>Search Engine &amp; Omnibox</h1>
-          <p>Choose your preferred private search engine used for omnibox queries.</p>
+          <p>Configure your default search engine and address bar query behaviors.</p>
         </header>
 
         <div class="q-section">
@@ -349,22 +424,38 @@
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Active Provider</span>
-                <span class="q-desc">Address bar queries will be routed directly to this provider over the encrypted circuit.</span>
+                <span class="q-label">Default Search Engine</span>
+                <span class="q-desc">Searches entered into the omnibox address bar or New Tab will use this provider.</span>
               </div>
               <select id="search-engine-select" class="q-select">
                 <option value="google">Google</option>
                 <option value="duckduckgo">DuckDuckGo (Private)</option>
                 <option value="brave">Brave Search (Private)</option>
                 <option value="bing">Bing</option>
+                <option value="startpage">Startpage (Private)</option>
               </select>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Search Query Telemetry</span>
-                <span class="q-desc">Qaulium never logs, intercepts, or retains user search strings.</span>
+                <span class="q-label">Address Bar Search Suggestions</span>
+                <span class="q-desc">Provide interactive autocomplete suggestions as you type in the address bar.</span>
               </div>
-              <span class="q-badge-success">Zero Logging</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-search-suggestions" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Zero Query Logging Guarantee</span>
+                <span class="q-desc">Qualium never intercepts, records, or uploads your search terms or browsing keystrokes.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-zero-query-logging" checked="checked" disabled="disabled"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -373,8 +464,8 @@
       <!-- 3. Section: Privacy & Telemetry -->
       <section id="pane-privacy" class="settings-pane" style="display: none;">
         <header class="settings-header">
-          <h1>Privacy &amp; Data Protection</h1>
-          <p>Local content filtering, anti-tracking, and telemetry policy.</p>
+          <h1>Privacy &amp; Data Defense</h1>
+          <p>Local content filtering, anti-tracking, and fingerprint normalization.</p>
         </header>
 
         <div class="q-section">
@@ -383,23 +474,69 @@
             <div class="q-row">
               <div class="q-info">
                 <span class="q-label">Enhanced Tracking Protection</span>
-                <span class="q-desc">Blocks third-party tracking cookies, cryptominers, and fingerprinters natively.</span>
+                <span class="q-desc">Automatically block third-party cookies, tracking pixels, and malicious cryptominers.</span>
               </div>
-              <span class="q-badge-success">Strict Mode Active</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-tracking-protection" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Fingerprint Normalization</span>
-                <span class="q-desc">Normalizes Canvas, WebGL, system fonts, and screen dimensions to common buckets.</span>
+                <span class="q-label">Anti-Fingerprinting (Canvas &amp; WebGL Bucket Normalization)</span>
+                <span class="q-desc">Normalizes canvas renders, font enumerations, and device metrics to common buckets.</span>
               </div>
-              <span class="q-badge-success">Protected</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-anti-fingerprinting" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Qaulium Telemetry</span>
-                <span class="q-desc">All crash reporting, telemetry, and usage submission are permanently removed.</span>
+                <span class="q-label">Send "Do Not Track" &amp; Global Privacy Control (GPC)</span>
+                <span class="q-desc">Signal websites that you request not to be tracked or profiled.</span>
               </div>
-              <span class="q-badge-success">Disabled</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-gpc-signal" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Strip Tracking Parameters from URLs</span>
+                <span class="q-desc">Automatically remove advertising tracking tokens (e.g. utm_source, fbclid, gclid) from clicked links.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-strip-tracking-params" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-section">
+          <span class="q-section-title">Browsing Data &amp; Cache</span>
+          <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Clear Browsing Data</span>
+                <span class="q-desc">Clear cached images, cookies, active sessions, and browsing history.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-open-clear-modal">Clear Data...</button>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Delete Cookies and Site Data on Exit</span>
+                <span class="q-desc">Purge all persistent cookies and site cache whenever Qualium closes.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-clear-on-exit" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -409,66 +546,68 @@
       <section id="pane-security" class="settings-pane" style="display: none;">
         <header class="settings-header">
           <h1>Post-Quantum Cryptography &amp; Security</h1>
-          <p>Cryptographic key encapsulation, cipher parameters, and zero-trust verification.</p>
+          <p>Quantum-resistant key encapsulation mechanisms (NIST FIPS 203) and cipher parameters.</p>
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">Post-Quantum Key Encapsulation (NIST FIPS 203 ML-KEM)</span>
+          <span class="q-section-title">Key Encapsulation Mechanism (KEM)</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Hybrid Key Establishment (Default)</span>
-                <span class="q-desc">Standardized NIST FIPS 203 ML-KEM-768 combined with classical X25519 ECDH via HKDF-SHA384 transcript binding.</span>
+                <span class="q-label">PQC Key Establishment Mode</span>
+                <span class="q-desc">Select the cryptographic parameter set used for circuit handshakes and TLS encapsulation.</span>
               </div>
-              <span class="q-badge-pqc">X25519 + ML-KEM-768</span>
+              <select id="select-pqc-mode" class="q-select">
+                <option value="hybrid">Hybrid: ML-KEM-768 + X25519 (Recommended)</option>
+                <option value="level5">Max Security: ML-KEM-1024 (Kyber-1024)</option>
+                <option value="level1">Low Latency: ML-KEM-512 (Kyber-512)</option>
+              </select>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">High-Security PQC Mode (NIST Level 5)</span>
-                <span class="q-desc">NIST Category 5 maximum security parameter set equivalent to AES-256 quantum brute-force resistance.</span>
+                <span class="q-label">Enforce Quantum-Resistant Cipher Suites</span>
+                <span class="q-desc">Reject non-PQC classical handshakes on supported Qualium circuits.</span>
               </div>
-              <span class="q-badge-pqc">ML-KEM-1024 (Kyber-1024)</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-enforce-pqc" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Low-Latency PQC Mode (NIST Level 1)</span>
-                <span class="q-desc">NIST Category 1 lightweight parameter set optimized for constrained or high-throughput connections.</span>
+                <span class="q-label">Hardware AES Acceleration Fallback</span>
+                <span class="q-desc">Utilize CPU AES-NI instructions when processing authenticated payloads.</span>
               </div>
-              <span class="q-badge-pqc">ML-KEM-512 (Kyber-512)</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-hardware-aes" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Symmetric Data Encryption</span>
-                <span class="q-desc">High-speed authenticated encryption with 256-bit keys and hardware AES acceleration fallback.</span>
+                <span class="q-label">Certificate Transparency Verification</span>
+                <span class="q-desc">Audit TLS certificate validity against public append-only cryptographic logs.</span>
               </div>
-              <span class="q-badge-pqc">ChaCha20-Poly1305 / AES-256-GCM</span>
-            </div>
-            <div class="q-row">
-              <div class="q-info">
-                <span class="q-label">Hash &amp; Key Derivation Functions</span>
-                <span class="q-desc">Cryptographically secure SHA-384, SHA3-256/512, and HKDF transcript derivation.</span>
-              </div>
-              <span class="q-badge-success">SHA3 / HKDF-SHA384</span>
-            </div>
-            <div class="q-row">
-              <div class="q-info">
-                <span class="q-label">Digital Signatures &amp; Manifest Integrity</span>
-                <span class="q-desc">High-assurance signature authentication for browser binaries, updates, and IPC channels.</span>
-              </div>
-              <span class="q-badge-success">Ed25519 / ML-DSA Ready</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-cert-transparency" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
           </div>
         </div>
 
         <div class="q-section">
-          <span class="q-section-title">Security Center</span>
+          <span class="q-section-title">Circuit Telemetry</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Inspect Active Circuits</span>
-                <span class="q-desc">View real-time hop latency, node fingerprints, and crypto handshakes.</span>
+                <span class="q-label">Live Circuit Anonymity Dashboard</span>
+                <span class="q-desc">Inspect active guard, relay, and exit node hops, latency, and cryptographic digests.</span>
               </div>
-              <a href="dashboard.xhtml" style="color: #e2e8f0; text-decoration: none; font-size: 0.85rem; font-weight: 500;">Open Privacy Center &#8594;</a>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-open-circuit-dashboard">Open Security Center &#8594;</button>
             </div>
           </div>
         </div>
@@ -478,32 +617,59 @@
       <section id="pane-network" class="settings-pane" style="display: none;">
         <header class="settings-header">
           <h1>Anonymous Network Routing</h1>
-          <p>Multi-hop encrypted onion circuits and network layer leak prevention.</p>
+          <p>Multi-hop encrypted onion tunnel configuration and leak defense.</p>
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">Circuit Architecture</span>
+          <span class="q-section-title">Circuit Proxy Configuration</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">SOCKS5 Proxy Tunnel</span>
-                <span class="q-desc">All outbound web traffic is piped through qualium-daemon on 127.0.0.1:9050.</span>
+                <span class="q-label">Route Traffic Through Anonymous SOCKS5 Daemon</span>
+                <span class="q-desc">Pipe all outbound web traffic through the local qualium-daemon onion circuit.</span>
               </div>
-              <span class="q-badge-pqc">127.0.0.1:9050 Active</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-socks5-routing" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">In-Circuit DNS (Remote DNS)</span>
-                <span class="q-desc">Domain queries are resolved at the exit node inside the encrypted circuit to prevent ISP DNS leaks.</span>
+                <span class="q-label">SOCKS5 Endpoint</span>
+                <span class="q-desc">Local interface address and port for the onion routing daemon.</span>
               </div>
-              <span class="q-badge-success">Protected</span>
+              <input type="text" id="input-socks5-endpoint" class="q-text-input" value="127.0.0.1:9050"/>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">WebRTC IP Leak Defense</span>
-                <span class="q-desc">Blocks ICE host candidates and non-proxied UDP bindings to guarantee real IP is hidden.</span>
+                <span class="q-label">In-Circuit Remote DNS Resolution</span>
+                <span class="q-desc">Resolve domain names at the exit node inside the encrypted circuit to prevent ISP DNS leaks.</span>
               </div>
-              <span class="q-badge-success">Isolated</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-remote-dns" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">WebRTC Candidate Isolation</span>
+                <span class="q-desc">Suppress local and public network interface IP exposure during media sessions.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-webrtc-isolation" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Test Circuit Handshake</span>
+                <span class="q-desc" id="circuit-test-desc">Ping the local onion daemon to verify circuit readiness.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-test-circuit">Test Connection</button>
             </div>
           </div>
         </div>
@@ -517,21 +683,47 @@
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">Vault Status</span>
+          <span class="q-section-title">Vault Preferences</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Local Storage Encryption</span>
-                <span class="q-desc">Saved passwords are encrypted locally using ChaCha20-Poly1305 with user-derived key.</span>
+                <span class="q-label">Offer to Save Passwords</span>
+                <span class="q-desc">Ask to store usernames and passwords when submitting web forms.</span>
               </div>
-              <span class="q-badge-success">Encrypted</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-save-passwords" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Cloud Synchronization</span>
-                <span class="q-desc">Passwords are never uploaded to any remote server or cloud account.</span>
+                <span class="q-label">Autofill Credentials</span>
+                <span class="q-desc">Automatically populate saved logins when navigating to recognized domains.</span>
               </div>
-              <span class="q-badge-success">Zero Cloud (Local Only)</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-autofill-passwords" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Primary Password Protection</span>
+                <span class="q-desc">Require master passphrase authentication to decrypt saved credentials.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-primary-password"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Manage Saved Passwords</span>
+                <span class="q-desc">View, search, edit, or delete encrypted vault entries.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-primary" id="btn-open-vault">Open Password Vault &#8594;</button>
             </div>
           </div>
         </div>
@@ -541,7 +733,7 @@
       <section id="pane-downloads" class="settings-pane" style="display: none;">
         <header class="settings-header">
           <h1>Downloads &amp; File Safety</h1>
-          <p>Download locations and verification policies.</p>
+          <p>Download locations and security verification policies.</p>
         </header>
 
         <div class="q-section">
@@ -549,17 +741,43 @@
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Save Files To</span>
-                <span class="q-desc">Default destination: standard system Downloads folder.</span>
+                <span class="q-label">Always Ask Where to Save Files</span>
+                <span class="q-desc">Prompt for directory destination before initiating any file download.</span>
               </div>
-              <span class="q-badge-pqc">Downloads</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-always-ask-download"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Malware Inspection</span>
-                <span class="q-desc">Local reputation verification of executable binaries prior to disk write.</span>
+                <span class="q-label">Malware Signature Inspection</span>
+                <span class="q-desc">Perform local heuristic checks on downloaded executable files.</span>
               </div>
-              <span class="q-badge-success">Active</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-download-inspection" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Clear Download History on Exit</span>
+                <span class="q-desc">Remove the downloaded files record list when closing the browser.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-clear-downloads-exit" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Downloads Manager</span>
+                <span class="q-desc">View active and completed file downloads.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-open-downloads">Open Downloads &#8594;</button>
             </div>
           </div>
         </div>
@@ -573,14 +791,25 @@
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">Storage</span>
+          <span class="q-section-title">Bookmarks Bar</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Storage Location</span>
-                <span class="q-desc">Local SQLite database stored in your secure profile directory.</span>
+                <span class="q-label">Show Bookmarks Bar</span>
+                <span class="q-desc">Display the bookmarks toolbar below the address bar.</span>
               </div>
-              <span class="q-badge-success">Local Only</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-bookmarks-bar" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Bookmarks Manager</span>
+                <span class="q-desc">View, search, edit, import, or export your saved bookmarks.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-secondary" id="btn-open-bookmarks">Open Bookmarks &#8594;</button>
             </div>
           </div>
         </div>
@@ -594,34 +823,50 @@
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">History Management</span>
+          <span class="q-section-title">History Retention</span>
           <div class="q-card">
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Remember Browsing History</span>
+                <span class="q-desc">Disabled by default for zero-retention privacy. Turn on if you wish to retain local history.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-remember-history"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Remember Search and Form History</span>
+                <span class="q-desc">Save text entered into web search boxes and form fields.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-remember-forms"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Clear All History on Exit</span>
+                <span class="q-desc">Automatically purge browsing history, cookies, and cache when the window closes.</span>
+              </div>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-wipe-history-exit" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
             <div class="q-row">
               <div class="q-info">
                 <span class="q-label">Session History Manager</span>
-                <span class="q-desc">View, search, or clear your private browsing and search history.</span>
+                <span class="q-desc">Search, inspect, or delete individual history entries.</span>
               </div>
-              <button type="button" class="q-btn q-btn-secondary" id="btn-open-history" onclick="if(window.opener &amp;&amp; window.opener.openTrustedLinkIn){ window.opener.openTrustedLinkIn('qualium://history', 'tab'); } else if(window.parent &amp;&amp; window.parent.qualiumNav){ window.parent.qualiumNav.navigateInternal('qualium://history'); } else if(typeof QualiumNavigationController !== 'undefined' &amp;&amp; window.QualiumNavigationController.navigateTo){ window.QualiumNavigationController.navigateTo('qualium://history'); } else { window.location.href='chrome://qualium/content/history.xhtml'; }">Open History Manager</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="q-section">
-          <span class="q-section-title">Retention Settings</span>
-          <div class="q-card">
-            <div class="q-row">
-              <div class="q-info">
-                <span class="q-label">Browsing History</span>
-                <span class="q-desc">Disabled by default per SRS specification. Browsing activities remain memory-only.</span>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="q-btn q-btn-ghost" id="btn-clear-history-instant">Clear History</button>
+                <button type="button" class="q-btn q-btn-secondary" id="btn-open-history">Open History Manager</button>
               </div>
-              <span class="q-badge-success">Disabled (Zero Retention)</span>
-            </div>
-            <div class="q-row">
-              <div class="q-info">
-                <span class="q-label">Wipe on Exit</span>
-                <span class="q-desc">Automatically purge cookies, cached files, and session storage when the window closes.</span>
-              </div>
-              <span class="q-badge-success">Automatic</span>
             </div>
           </div>
         </div>
@@ -635,87 +880,136 @@
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">Add-ons Management</span>
+          <span class="q-section-title">Add-ons Security</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Manage Extensions</span>
-                <span class="q-desc">Install, configure, enable, or remove WebExtensions and add-ons.</span>
+                <span class="q-label">Allow Extensions in Private Windows</span>
+                <span class="q-desc">Permit installed extensions to run when navigating in private browsing mode.</span>
               </div>
-              <button type="button" class="q-btn q-btn-primary" id="btn-manage-extensions" onclick="if(window.opener &amp;&amp; window.opener.openTrustedLinkIn){ window.opener.openTrustedLinkIn('qualium://extensions', 'tab'); } else if(window.parent &amp;&amp; window.parent.qualiumNav){ window.parent.qualiumNav.navigateInternal('qualium://extensions'); } else if(typeof QualiumNavigationController !== 'undefined' &amp;&amp; window.QualiumNavigationController.navigateTo){ window.QualiumNavigationController.navigateTo('qualium://extensions'); } else { window.location.href='chrome://qualium/content/extensions.xhtml'; }">Manage Extensions</button>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-extensions-private"/>
+                <span class="q-slider"></span>
+              </label>
             </div>
-          </div>
-        </div>
 
-        <div class="q-section">
-          <span class="q-section-title">Policy</span>
-          <div class="q-card">
             <div class="q-row">
               <div class="q-info">
                 <span class="q-label">Network Permission Isolation</span>
-                <span class="q-desc">Restricts extensions from bypassing the SOCKS5 anonymous proxy tunnel.</span>
+                <span class="q-desc">Prevents extensions from bypassing the anonymous proxy tunnel.</span>
               </div>
-              <span class="q-badge-success">Enforced</span>
+              <label class="q-switch">
+                <input type="checkbox" id="toggle-extensions-network-gate" checked="checked"/>
+                <span class="q-slider"></span>
+              </label>
+            </div>
+
+            <div class="q-row">
+              <div class="q-info">
+                <span class="q-label">Manage Extensions</span>
+                <span class="q-desc">Enable, disable, configure, or uninstall WebExtensions.</span>
+              </div>
+              <button type="button" class="q-btn q-btn-primary" id="btn-manage-extensions">Manage Extensions &#8594;</button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- 11. Section: About Qaulium -->
+      <!-- 11. Section: About Qualium -->
       <section id="pane-about" class="settings-pane" style="display: none;">
         <header class="settings-header">
-          <h1>About Qaulium Quantum Browser</h1>
-          <p>Next-generation post-quantum secure privacy browser.</p>
+          <h1>About Qualium Quantum Browser</h1>
+          <p>Post-quantum cryptographic privacy browser.</p>
         </header>
 
         <div class="q-section">
-          <span class="q-section-title">System &amp; Engine Overview</span>
+          <span class="q-section-title">System Overview</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
                 <span class="q-label">Application</span>
-                <span class="q-desc">Qualium Quantum Browser</span>
+                <span class="q-desc">Qualium Quantum Browser (x86_64 Production Build)</span>
               </div>
-              <span class="q-badge-pqc">v1.0.0 (Release)</span>
+              <span class="q-chip q-chip-success">v5.0.0 Release</span>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Rendering Engine</span>
-                <span class="q-desc">Native Gecko Quantum Core</span>
+                <span class="q-label">Rendering Core</span>
+                <span class="q-desc">Real Native Gecko Quantum Engine</span>
               </div>
-              <span style="color: #94a3b8; font-size: 0.85rem;">Gecko 140 ESR</span>
+              <span style="color: #94a3b8; font-size: 0.85rem;" id="about-engine-ver">Gecko 140 ESR</span>
             </div>
+
             <div class="q-row">
               <div class="q-info">
                 <span class="q-label">Post-Quantum Security Daemon</span>
-                <span class="q-desc">Qaulium Security Engine (ML-KEM / Multi-Hop Network Engine)</span>
+                <span class="q-desc">Qaulium Security Engine (ML-KEM / Onion Routing Core)</span>
               </div>
-              <span class="q-badge-success">Running</span>
+              <span class="q-chip q-chip-success">Running on 127.0.0.1:9050</span>
             </div>
+
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">Telemetry &amp; Data Collection</span>
-                <span class="q-desc">Zero telemetry, zero user tracking, zero data submission.</span>
+                <span class="q-label">Telemetry &amp; Data Submission</span>
+                <span class="q-desc">Zero telemetry, zero user tracking, zero data collection.</span>
               </div>
-              <span class="q-badge-success">Disabled Permanently</span>
+              <span class="q-chip q-chip-success">Permanently Disabled</span>
             </div>
           </div>
         </div>
 
         <div class="q-section">
-          <span class="q-section-title">Detailed Information</span>
+          <span class="q-section-title">System Actions</span>
           <div class="q-card">
             <div class="q-row">
               <div class="q-info">
-                <span class="q-label">System Diagnostics &amp; Updates</span>
-                <span class="q-desc">Check for browser updates, inspect platform build IDs, and copy system diagnostic reports.</span>
+                <span class="q-label">Diagnostics &amp; System Info</span>
+                <span class="q-desc">Inspect build details, security policies, and copy diagnostic reports.</span>
               </div>
-              <button type="button" class="q-btn q-btn-secondary" id="btn-open-about-page" onclick="if(window.opener &amp;&amp; window.opener.openTrustedLinkIn){ window.opener.openTrustedLinkIn('qualium://about', 'tab'); } else if(window.parent &amp;&amp; window.parent.qualiumNav){ window.parent.qualiumNav.navigateInternal('qualium://about'); } else if(typeof QualiumNavigationController !== 'undefined' &amp;&amp; window.QualiumNavigationController.navigateTo){ window.QualiumNavigationController.navigateTo('qualium://about'); } else { window.location.href='chrome://qualium/content/about.xhtml'; }">View Full About Page</button>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="q-btn q-btn-secondary" id="btn-copy-sys-diag">Copy System Info</button>
+                <button type="button" class="q-btn q-btn-primary" id="btn-open-about-page">View Full About Page &#8594;</button>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </main>
   </div>
+
+  <!-- Clear Data Modal -->
+  <div class="modal-overlay" id="clear-data-modal" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Clear Browsing Data</h3>
+        <button type="button" class="q-icon-btn" id="btn-close-clear-modal">&#215;</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-check-item">
+          <input type="checkbox" id="check-clear-cache" checked="checked"/>
+          <span>Cached images and temporary web files</span>
+        </label>
+        <label class="modal-check-item">
+          <input type="checkbox" id="check-clear-cookies" checked="checked"/>
+          <span>Cookies and active site session data</span>
+        </label>
+        <label class="modal-check-item">
+          <input type="checkbox" id="check-clear-history" checked="checked"/>
+          <span>Browsing and download history records</span>
+        </label>
+        <label class="modal-check-item">
+          <input type="checkbox" id="check-clear-passwords"/>
+          <span>Saved logins and password vault data</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="q-btn q-btn-ghost" id="btn-cancel-clear-modal">Cancel</button>
+        <button type="button" class="q-btn q-btn-primary" id="btn-execute-clear-data">Clear Data Now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-toast-container" id="toast-container"></div>
 </body>
 </html>

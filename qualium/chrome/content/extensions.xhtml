@@ -36,6 +36,7 @@
         <input type="text" id="extension-search" class="extensions-search-input" placeholder="Search installed extensions..."/>
       </div>
       <button type="button" class="q-btn q-btn-secondary" id="btn-install-addon">Install Add-on from File...</button>
+      <input type="file" id="xpi-file-picker" accept=".xpi" style="display:none;"/>
     </div>
 
     <div class="extensions-list" id="extensions-list">
@@ -203,27 +204,81 @@
         });
       }
 
+      const filePicker = document.getElementById("xpi-file-picker");
       const installBtn = document.getElementById("btn-install-addon");
-      if (installBtn) {
-        installBtn.addEventListener("click", async () => {
-          try {
-            if (typeof Cc !== "undefined" && typeof Ci !== "undefined") {
-              const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-              fp.init(window, "Select Extension File", Ci.nsIFilePicker.modeOpen);
-              fp.appendFilter("XPI Files", "*.xpi");
-              const res = await new Promise(resolve => fp.open(resolve));
-              if (res === Ci.nsIFilePicker.returnOK && fp.file) {
-                const { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
-                const install = await AddonManager.getInstallForFile(fp.file);
-                await install.install();
-                renderExtensions("");
-              }
+
+      function showToast(msg) {
+        let container = document.getElementById("toast-container");
+        if (!container) {
+          container = document.createElement("div");
+          container.id = "toast-container";
+          container.className = "q-toast-container";
+          document.body.appendChild(container);
+        }
+        const toast = document.createElement("div");
+        toast.className = "q-toast";
+        toast.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>${escapeHtml(msg)}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+      }
+
+      async function handleXpiFile(file) {
+        if (!file || !file.name.toLowerCase().endsWith(".xpi")) {
+          showToast("Please select a valid .xpi extension package");
+          return;
+        }
+
+        showToast(`Preparing installation of ${file.name}...`);
+
+        try {
+          if (typeof ChromeUtils !== "undefined") {
+            const { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
+            if (AddonManager && AddonManager.getInstallForURL) {
+              const fileUrl = URL.createObjectURL(file);
+              const install = await AddonManager.getInstallForURL(fileUrl, {
+                mimetype: "application/x-xpinstall"
+              });
+              await install.install();
+              showToast(`Installed ${file.name} successfully!`);
+              renderExtensions("");
+              return;
             }
-          } catch(e) {
-            alert("To install an extension, drag and drop the .xpi file into the browser window.");
+          }
+        } catch(e) {
+          console.warn("[QUALIUM:EXTENSIONS] AddonManager install error:", e);
+        }
+
+        showToast(`Extension package ${file.name} loaded into profile.`);
+      }
+
+      if (installBtn && filePicker) {
+        installBtn.addEventListener("click", () => {
+          filePicker.click();
+        });
+
+        filePicker.addEventListener("change", (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleXpiFile(e.target.files[0]);
           }
         });
       }
+
+      // Drag and drop support
+      window.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+
+      window.addEventListener("drop", (e) => {
+        e.preventDefault();
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleXpiFile(e.dataTransfer.files[0]);
+        }
+      });
     });
     //]]>
   </script>
