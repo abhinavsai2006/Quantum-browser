@@ -274,6 +274,10 @@ const ID_CHK_STARTMENU: usize = 1011;
 const ID_CHK_LAUNCH: usize = 1012;
 const ID_CHK_STARTWIN: usize = 1013;
 const ID_CHK_LICENSE: usize = 1014;
+const ID_LBL_DESKTOP_SUB: usize = 1015;
+const ID_LBL_STARTMENU_SUB: usize = 1016;
+const ID_LBL_LAUNCH_SUB: usize = 1017;
+const ID_LBL_STARTWIN_SUB: usize = 1018;
 
 const ID_RAD_KEEP: usize = 1020;
 const ID_RAD_PURGE: usize = 1021;
@@ -292,6 +296,7 @@ const COLOR_ALERT_GREEN: u32 = 0x005EC522; // Green 500 (RGB 34, 197, 94)
 
 fn set_window_icon(hwnd: ffi::HWND) {
     let candidates = [
+        PathBuf::from(r"C:\Users\mndab\AppData\Local\Programs\Qaulium\resources\qualium.ico"),
         PathBuf::from(r"C:\Users\mndab\AppData\Local\Programs\Qualium\resources\qualium.ico"),
         PathBuf::from(r"E:\Qaulium AI\Broswer\qualium.ico"),
         PathBuf::from(r"E:\Qaulium AI\Broswer\dist\qualium.ico"),
@@ -460,7 +465,7 @@ pub fn run_installer_gui(engine: InstallEngine, default_dest: PathBuf) -> anyhow
         let pos_x = (screen_w - win_w) / 2;
         let pos_y = (screen_h - win_h) / 2;
 
-        let title = to_wide_null("Qualium Quantum Browser v5.0.0 Setup");
+        let title = to_wide_null("Qaulium Quantum Browser v5.0.0 Setup");
         let hwnd = ffi::CreateWindowExW(
             0,
             class_name.as_ptr(),
@@ -564,16 +569,16 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
 
         // Header Title
         state.hwnd_title = ffi::CreateWindowExW(
-            0, static_class.as_ptr(), to_wide_null("QUALIUM QUANTUM BROWSER").as_ptr(),
-            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            0, static_class.as_ptr(), to_wide_null("QAULIUM QUANTUM BROWSER").as_ptr(),
+            ffi::WS_CHILD | ffi::WS_VISIBLE | 0x00000080, // SS_NOPREFIX
             35, 18, content_w, 30, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_title, ffi::WM_SETFONT, state.font_title as usize, 1);
 
-        // Header Subtitle
+        // Header Subtitle (SS_NOPREFIX prevents & from showing as underscore)
         state.hwnd_subtitle = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Welcome to Setup").as_ptr(),
-            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            ffi::WS_CHILD | ffi::WS_VISIBLE | 0x00000080, // SS_NOPREFIX
             35, 50, content_w, 24, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_subtitle, ffi::WM_SETFONT, state.font_subtitle as usize, 1);
@@ -581,7 +586,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         // Page Description (Static label at Y=105, H=45)
         state.hwnd_desc = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("").as_ptr(),
-            ffi::WS_CHILD | ffi::WS_VISIBLE,
+            ffi::WS_CHILD | ffi::WS_VISIBLE | 0x00000080, // SS_NOPREFIX
             35, 105, content_w, 45, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_desc, ffi::WM_SETFONT, state.font_desc as usize, 1);
@@ -633,9 +638,9 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         );
         ffi::SendMessageW(state.hwnd_lbl_space, ffi::WM_SETFONT, state.font_body as usize, 1);
 
-        // Options Page Checkboxes & Subtitles
+        // Options Page Checkboxes & Subtitles (SS_NOTIFY makes clicking description toggle checkbox)
         state.hwnd_chk_desktop = ffi::CreateWindowExW(
-            0, btn_class.as_ptr(), to_wide_null("Create a Desktop Shortcut (Qualium Quantum Browser.lnk)").as_ptr(),
+            0, btn_class.as_ptr(), to_wide_null("Create a Desktop Shortcut (Qaulium Quantum Browser.lnk)").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
             40, 150, content_w - 10, 26, hwnd, ID_CHK_DESKTOP as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
@@ -644,8 +649,8 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
 
         state.hwnd_lbl_desktop_sub = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Places a quick launch shortcut on your active Windows Desktop screen.").as_ptr(),
-            ffi::WS_CHILD,
-            65, 178, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            ffi::WS_CHILD | 0x00000100, // SS_NOTIFY
+            65, 178, content_w - 35, 20, hwnd, ID_LBL_DESKTOP_SUB as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_desktop_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
@@ -658,14 +663,14 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_SETCHECK, ffi::BST_CHECKED, 0);
 
         state.hwnd_lbl_startmenu_sub = ffi::CreateWindowExW(
-            0, static_class.as_ptr(), to_wide_null("Adds Qualium Quantum Browser and Uninstaller under Start Menu > Programs > Qualium.").as_ptr(),
-            ffi::WS_CHILD,
-            65, 243, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            0, static_class.as_ptr(), to_wide_null("Adds Qaulium Quantum Browser and Uninstaller under Start Menu > Programs > Qaulium.").as_ptr(),
+            ffi::WS_CHILD | 0x00000100, // SS_NOTIFY
+            65, 243, content_w - 35, 20, hwnd, ID_LBL_STARTMENU_SUB as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_startmenu_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
         state.hwnd_chk_launch = ffi::CreateWindowExW(
-            0, btn_class.as_ptr(), to_wide_null("Launch Qualium Quantum Browser after installation").as_ptr(),
+            0, btn_class.as_ptr(), to_wide_null("Launch Qaulium Quantum Browser after installation").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTOCHECKBOX | ffi::WS_TABSTOP,
             40, 280, content_w - 10, 26, hwnd, ID_CHK_LAUNCH as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
@@ -674,8 +679,8 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
 
         state.hwnd_lbl_launch_sub = ffi::CreateWindowExW(
             0, static_class.as_ptr(), to_wide_null("Automatically launches the browser immediately upon clicking Finish.").as_ptr(),
-            ffi::WS_CHILD,
-            65, 308, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            ffi::WS_CHILD | 0x00000100, // SS_NOTIFY
+            65, 308, content_w - 35, 20, hwnd, ID_LBL_LAUNCH_SUB as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_launch_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
@@ -688,9 +693,9 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_SETCHECK, ffi::BST_UNCHECKED, 0);
 
         state.hwnd_lbl_startwin_sub = ffi::CreateWindowExW(
-            0, static_class.as_ptr(), to_wide_null("Launches the Qualium background privacy daemon when Windows starts (Default: Off).").as_ptr(),
-            ffi::WS_CHILD,
-            65, 373, content_w - 35, 20, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            0, static_class.as_ptr(), to_wide_null("Launches the Qaulium background privacy daemon when Windows starts (Default: Off).").as_ptr(),
+            ffi::WS_CHILD | 0x00000100, // SS_NOTIFY
+            65, 373, content_w - 35, 20, hwnd, ID_LBL_STARTWIN_SUB as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_lbl_startwin_sub, ffi::WM_SETFONT, state.font_sub as usize, 1);
 
@@ -706,7 +711,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_complete_box = ffi::CreateWindowExW(
             0, edit_class.as_ptr(), to_wide_null("").as_ptr(),
             ffi::WS_CHILD | ffi::ES_MULTILINE | ffi::ES_READONLY,
-            35, 155, content_w, 320, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
+            35, 155, content_w, 370, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_complete_box, ffi::WM_SETFONT, state.font_body as usize, 1);
 
@@ -725,7 +730,7 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         );
         ffi::SendMessageW(state.hwnd_prog_text, ffi::WM_SETFONT, state.font_body as usize, 1);
 
-        // Bottom Action Buttons
+        // Bottom Action Buttons (Next button is 190px wide to fit 'Agree & Continue >' comfortably)
         state.hwnd_btn_cancel = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Cancel").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
@@ -736,14 +741,14 @@ unsafe fn create_installer_controls(hwnd: ffi::HWND) {
         state.hwnd_btn_back = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("< Back").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            client_w - 325, bar_y, 135, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
+            client_w - 360, bar_y, 120, 38, hwnd, ID_BTN_BACK as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_back, ffi::WM_SETFONT, state.font_bold as usize, 1);
 
         state.hwnd_btn_next = ffi::CreateWindowExW(
             0, btn_class.as_ptr(), to_wide_null("Next >").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE | ffi::WS_TABSTOP,
-            client_w - 175, bar_y, 145, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
+            client_w - 225, bar_y, 190, 38, hwnd, ID_BTN_NEXT as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
         ffi::SendMessageW(state.hwnd_btn_next, ffi::WM_SETFONT, state.font_bold as usize, 1);
     }
@@ -780,9 +785,9 @@ unsafe fn update_installer_page() {
         match state.page {
             InstallerPage::Welcome => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 1 of 8: Welcome to Setup").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Welcome to the Qualium Quantum Browser v5.0.0 Installation Wizard.").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Welcome to the Qaulium Quantum Browser v5.0.0 Installation Wizard.").as_ptr());
                 
-                let welcome_txt = "QUALIUM QUANTUM BROWSER v5.0.0 (x64 Native)\r\n\r\n\
+                let welcome_txt = "QAULIUM QUANTUM BROWSER v5.0.0 (x64 Native)\r\n\r\n\
                     • Ultimate Privacy Architecture\r\n\
                       Zero corporate telemetry, zero keystroke logging, and complete hardware-level session isolation.\r\n\r\n\
                     • Native Gecko ESR 140 Engine\r\n\
@@ -802,24 +807,26 @@ unsafe fn update_installer_page() {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 2 of 8: License Agreement & Notices").as_ptr());
                 ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Please read the following license agreement and privacy disclosures:").as_ptr());
 
-                let lic_txt = "MOZILLA PUBLIC LICENSE Version 2.0 & QUALIUM QUANTUM BROWSER TERMS\r\n\r\n\
+                let lic_txt = "MOZILLA PUBLIC LICENSE Version 2.0 & QAULIUM QUANTUM BROWSER TERMS\r\n\r\n\
                     1. Definitions\r\n\
                     1.1. \"Contributor\" means each individual or legal entity that creates, contributes to the creation of, or owns Covered Software.\r\n\
                     1.2. \"Covered Software\" means Source Code Form to which the initial Contributor has attached the notice in Exhibit A, the Executable Form of such Source Code Form, and Modifications of such Source Code Form.\r\n\r\n\
                     2. License Grants and Conditions\r\n\
                     Each Contributor hereby grants You a world-wide, royalty-free, non-exclusive license to use, reproduce, make available, modify, display, perform, distribute, and otherwise exploit its Contributions.\r\n\r\n\
-                    3. Qualium Privacy & Security Assurance\r\n\
-                    Qualium Quantum Browser guarantees that no telemetry data, browsing history, keystrokes, or search requests are transmitted to Qualium or external third parties without explicit user consent. All cryptographic vault data remains strictly local on your device.\r\n\r\n\
+                    3. Qaulium Privacy & Security Assurance\r\n\
+                    Qaulium Quantum Browser guarantees that no telemetry data, browsing history, keystrokes, or search requests are transmitted to Qaulium or external third parties without explicit user consent. All cryptographic vault data remains strictly local on your device.\r\n\r\n\
                     Portions of this software are based on Mozilla Gecko and Firefox technology under MPL 2.0.";
                 ffi::SetWindowTextW(state.hwnd_license_edit, to_wide_null(lic_txt).as_ptr());
                 show(state.hwnd_license_edit);
                 show(state.hwnd_chk_license);
 
+                ffi::SendMessageW(state.hwnd_chk_license, ffi::BM_SETCHECK, if state.license_accepted { ffi::BST_CHECKED } else { ffi::BST_UNCHECKED }, 0);
+                ffi::EnableWindow(state.hwnd_btn_next, if state.license_accepted { 1 } else { 0 });
                 ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Agree && Continue >").as_ptr());
             }
             InstallerPage::Location => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 3 of 8: Choose Install Location").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Setup will install Qualium Quantum Browser into the destination directory below:").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Setup will install Qaulium Quantum Browser into the destination directory below:").as_ptr());
 
                 show(state.hwnd_path_edit);
                 show(state.hwnd_btn_browse);
@@ -843,7 +850,12 @@ unsafe fn update_installer_page() {
             }
             InstallerPage::Options => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 4 of 8: Installation Options").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Select shortcuts and startup preferences for Qualium Quantum Browser:").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Select shortcuts and startup preferences for Qaulium Quantum Browser:").as_ptr());
+
+                ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_SETCHECK, if state.create_desktop { ffi::BST_CHECKED } else { ffi::BST_UNCHECKED }, 0);
+                ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_SETCHECK, if state.create_startmenu { ffi::BST_CHECKED } else { ffi::BST_UNCHECKED }, 0);
+                ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_SETCHECK, if state.launch_after { ffi::BST_CHECKED } else { ffi::BST_UNCHECKED }, 0);
+                ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_SETCHECK, if state.start_with_win { ffi::BST_CHECKED } else { ffi::BST_UNCHECKED }, 0);
 
                 show(state.hwnd_chk_desktop);
                 show(state.hwnd_lbl_desktop_sub);
@@ -858,32 +870,34 @@ unsafe fn update_installer_page() {
             }
             InstallerPage::Ready => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 5 of 8: Ready to Install").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Setup is now ready to begin installing Qualium Quantum Browser on your computer.").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Setup is now ready to begin installing Qaulium Quantum Browser on your computer.").as_ptr());
 
                 let req_mb = (state.req_bytes as f64 / (1024.0 * 1024.0)).ceil();
                 let avail_gb = state.avail_bytes as f64 / (1024.0 * 1024.0 * 1024.0);
                 let ready_summary = format!(
                     "INSTALLATION SPECIFICATION:\r\n\r\n\
-                    • Product Name: Qualium Quantum Browser v5.0.0 (x64 Native)\r\n\
+                    • Product Name: Qaulium Quantum Browser v5.0.0 (x64 Native)\r\n\
                     • Install Folder: {}\r\n\
                     • Required Space: {:.1} MB\r\n\
                     • Available Space: {:.2} GB\r\n\
                     • Desktop Shortcut: {}\r\n\
                     • Start Menu Shortcut: {}\r\n\
-                    • Launch After Install: {}\r\n\r\n\
+                    • Launch After Install: {}\r\n\
+                    • Start With Windows: {}\r\n\r\n\
                     COMPONENTS TO BE INSTALLED:\r\n\
-                    1. QualiumQuantumBrowser.exe (Primary Desktop Browser)\r\n\
+                    1. QauliumQuantumBrowser.exe (Primary Desktop Browser)\r\n\
                     2. qualium-daemon.exe (Background Privacy & Crypto Daemon)\r\n\
                     3. Gecko ESR 140 Engine Runtime & Necko Stack ({} files)\r\n\
-                    4. Qualium Chrome Assets & In-Tab Schemes (qualium://)\r\n\
-                    5. QualiumUninstall.exe (Independent Windows Uninstaller)\r\n\r\n\
+                    4. Qaulium Chrome Assets & In-Tab Schemes (qualium://)\r\n\
+                    5. QauliumUninstall.exe (Independent Windows Uninstaller)\r\n\r\n\
                     Click 'Install' to start copying files.",
                     state.dest_dir.display(),
                     req_mb,
                     avail_gb,
-                    if state.create_desktop { "Yes (Active Desktop)" } else { "No" },
-                    if state.create_startmenu { "Yes (Programs\\Qualium)" } else { "No" },
+                    if state.create_desktop { "Yes (Qaulium Quantum Browser.lnk)" } else { "No" },
+                    if state.create_startmenu { "Yes (Programs\\Qaulium)" } else { "No" },
                     if state.launch_after { "Yes" } else { "No" },
+                    if state.start_with_win { "Yes (Startup Run Key)" } else { "No" },
                     state.total_files
                 );
                 ffi::SetWindowTextW(state.hwnd_ready_box, to_wide_null(&ready_summary).as_ptr());
@@ -892,7 +906,7 @@ unsafe fn update_installer_page() {
                 ffi::SetWindowTextW(state.hwnd_btn_next, to_wide_null("Install").as_ptr());
             }
             InstallerPage::Installing => {
-                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 6 of 8: Installing Qualium Quantum Browser...").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 6 of 8: Installing Qaulium Quantum Browser...").as_ptr());
                 ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Copying and verifying components into the installation directory:").as_ptr());
 
                 show(state.hwnd_progress);
@@ -911,23 +925,24 @@ unsafe fn update_installer_page() {
             }
             InstallerPage::Complete => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 8 of 8: Installation Complete!").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Qualium Quantum Browser v5.0.0 has been successfully installed on your computer.").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Qaulium Quantum Browser v5.0.0 has been successfully installed on your computer.").as_ptr());
 
                 let done_txt = format!(
                     "INSTALLATION COMPLETE!\r\n\r\n\
                     • Installed Path:\r\n  {}\r\n\r\n\
                     • Authoritative Inventory Generated:\r\n  {}\\install-manifest.json\r\n\r\n\
-                    • Shortcuts Configured:\r\n  - Desktop Shortcut: Qualium Quantum Browser.lnk\r\n  - Start Menu: Programs\\Qualium\r\n\r\n\
-                    • Windows Registration:\r\n  - Registered in Windows Installed Apps under Qualium Quantum Browser.\r\n\r\n\
+                    • Shortcuts Configured:\r\n  - Desktop Shortcut: {}\r\n  - Start Menu: {}\r\n  - Start with Windows: {}\r\n  - Launch on Finish: {}\r\n\r\n\
+                    • Windows Registration:\r\n  - Registered in Windows Installed Apps under Qaulium Quantum Browser.\r\n\r\n\
                     Click 'Finish' to exit Setup.",
                     state.dest_dir.display(),
-                    state.dest_dir.display()
+                    state.dest_dir.display(),
+                    if state.create_desktop { "Qaulium Quantum Browser.lnk (Desktop)" } else { "Disabled" },
+                    if state.create_startmenu { "Programs\\Qaulium" } else { "Disabled" },
+                    if state.start_with_win { "Enabled (HKCU Run)" } else { "Disabled" },
+                    if state.launch_after { "Enabled (Browser will launch)" } else { "Disabled" }
                 );
                 ffi::SetWindowTextW(state.hwnd_complete_box, to_wide_null(&done_txt).as_ptr());
                 show(state.hwnd_complete_box);
-
-                show(state.hwnd_chk_launch);
-                show(state.hwnd_lbl_launch_sub);
 
                 hide(state.hwnd_progress);
                 hide(state.hwnd_prog_text);
@@ -976,7 +991,7 @@ fn start_install_worker(hwnd: ffi::HWND) {
             let mb_tot = tot_b as f64 / (1024.0 * 1024.0);
             let pct_100 = if tot_b > 0 { (cur_b as f64 / tot_b as f64 * 100.0) as usize } else { 0 };
             let msg = format!(
-                "Installing Qualium Quantum Browser\r\nComponent: {}\r\nFiles: {} / {} | {:.1} MB / {:.1} MB ({}%)\r\nExtracting: {}",
+                "Installing Qaulium Quantum Browser\r\nComponent: {}\r\nFiles: {} / {} | {:.1} MB / {:.1} MB ({}%)\r\nExtracting: {}",
                 comp, cur_f, tot_f, mb_cur, mb_tot, pct_100, path
             );
             let boxed = Box::into_raw(Box::new(msg)) as isize;
@@ -1099,6 +1114,53 @@ unsafe extern "system" fn installer_wndproc(
                         update_installer_page();
                     }
                 }
+                ID_CHK_LICENSE => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        let checked = ffi::SendMessageW(state.hwnd_chk_license, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                        state.license_accepted = checked;
+                        ffi::EnableWindow(state.hwnd_btn_next, if checked { 1 } else { 0 });
+                    }
+                }
+                ID_CHK_DESKTOP | ID_LBL_DESKTOP_SUB => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        if cmd_id == ID_LBL_DESKTOP_SUB {
+                            let cur = ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_GETCHECK, 0, 0);
+                            let next = if cur == ffi::BST_CHECKED as isize { ffi::BST_UNCHECKED } else { ffi::BST_CHECKED };
+                            ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_SETCHECK, next, 0);
+                        }
+                        state.create_desktop = ffi::SendMessageW(state.hwnd_chk_desktop, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                    }
+                }
+                ID_CHK_STARTMENU | ID_LBL_STARTMENU_SUB => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        if cmd_id == ID_LBL_STARTMENU_SUB {
+                            let cur = ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_GETCHECK, 0, 0);
+                            let next = if cur == ffi::BST_CHECKED as isize { ffi::BST_UNCHECKED } else { ffi::BST_CHECKED };
+                            ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_SETCHECK, next, 0);
+                        }
+                        state.create_startmenu = ffi::SendMessageW(state.hwnd_chk_startmenu, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                    }
+                }
+                ID_CHK_LAUNCH | ID_LBL_LAUNCH_SUB => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        if cmd_id == ID_LBL_LAUNCH_SUB {
+                            let cur = ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_GETCHECK, 0, 0);
+                            let next = if cur == ffi::BST_CHECKED as isize { ffi::BST_UNCHECKED } else { ffi::BST_CHECKED };
+                            ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_SETCHECK, next, 0);
+                        }
+                        state.launch_after = ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                    }
+                }
+                ID_CHK_STARTWIN | ID_LBL_STARTWIN_SUB => {
+                    if let Some(state) = G_INSTALLER_STATE.as_mut() {
+                        if cmd_id == ID_LBL_STARTWIN_SUB {
+                            let cur = ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_GETCHECK, 0, 0);
+                            let next = if cur == ffi::BST_CHECKED as isize { ffi::BST_UNCHECKED } else { ffi::BST_CHECKED };
+                            ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_SETCHECK, next, 0);
+                        }
+                        state.start_with_win = ffi::SendMessageW(state.hwnd_chk_startwin, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
+                    }
+                }
                 ID_BTN_NEXT => {
                     if let Some(state) = G_INSTALLER_STATE.as_mut() {
                         match state.page {
@@ -1133,11 +1195,10 @@ unsafe extern "system" fn installer_wndproc(
                                 update_installer_page();
                             }
                             InstallerPage::Complete => {
-                                let do_launch = ffi::SendMessageW(state.hwnd_chk_launch, ffi::BM_GETCHECK, 0, 0) == ffi::BST_CHECKED as isize;
-                                if do_launch {
-                                    let exe_path = state.dest_dir.join("QualiumQuantumBrowser.exe");
-                                    let alt_exe = state.dest_dir.join("QauliumQuantumBrowser.exe");
-                                    let target = if exe_path.exists() { exe_path } else { alt_exe };
+                                if state.launch_after {
+                                    let exe1 = state.dest_dir.join("QauliumQuantumBrowser.exe");
+                                    let exe2 = state.dest_dir.join("QualiumQuantumBrowser.exe");
+                                    let target = if exe1.exists() { exe1 } else { exe2 };
                                     if target.exists() {
                                         let _ = std::process::Command::new(&target)
                                             .current_dir(&state.dest_dir)
@@ -1151,7 +1212,7 @@ unsafe extern "system" fn installer_wndproc(
                     }
                 }
                 ID_BTN_BROWSE => {
-                    if let Some(folder) = browse_for_folder(hwnd, "Select Qualium Destination Folder") {
+                    if let Some(folder) = browse_for_folder(hwnd, "Select Qaulium Destination Folder") {
                         if let Some(state) = G_INSTALLER_STATE.as_mut() {
                             state.dest_dir = folder;
                             ffi::SetWindowTextW(state.hwnd_path_edit, to_wide_null(&state.dest_dir.to_string_lossy()).as_ptr());
@@ -1318,7 +1379,7 @@ pub fn run_uninstaller_gui(engine: UninstallerEngine, install_dir: PathBuf) -> a
         let pos_x = (screen_w - win_w) / 2;
         let pos_y = (screen_h - win_h) / 2;
 
-        let title = to_wide_null("Qualium Quantum Browser — Uninstaller");
+        let title = to_wide_null("Qaulium Quantum Browser — Uninstaller");
         let hwnd = ffi::CreateWindowExW(
             0,
             class_name.as_ptr(),
@@ -1409,7 +1470,7 @@ unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
 
         // Header Title
         state.hwnd_title = ffi::CreateWindowExW(
-            0, static_class.as_ptr(), to_wide_null("QUALIUM QUANTUM BROWSER").as_ptr(),
+            0, static_class.as_ptr(), to_wide_null("QAULIUM QUANTUM BROWSER").as_ptr(),
             ffi::WS_CHILD | ffi::WS_VISIBLE,
             35, 18, content_w, 30, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
@@ -1455,7 +1516,7 @@ unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
         ffi::SendMessageW(state.hwnd_btn_retry, ffi::WM_SETFONT, state.font_bold as usize, 1);
 
         state.hwnd_lbl_clean = ffi::CreateWindowExW(
-            0, static_class.as_ptr(), to_wide_null("[✓] No active Qualium browser processes detected. Safe to continue.").as_ptr(),
+            0, static_class.as_ptr(), to_wide_null("[✓] No active Qaulium browser processes detected. Safe to continue.").as_ptr(),
             ffi::WS_CHILD,
             35, 360, content_w, 30, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
@@ -1472,7 +1533,7 @@ unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
 
         state.hwnd_lbl_keep_sub = ffi::CreateWindowExW(
             0, static_class.as_ptr(),
-            to_wide_null("Preserves your bookmarks, history, passwords, and cryptographic vault in %LOCALAPPDATA%\\Qualium so they remain available if you reinstall.").as_ptr(),
+            to_wide_null("Preserves your bookmarks, history, passwords, and cryptographic vault in %LOCALAPPDATA%\\Qaulium so they remain available if you reinstall.").as_ptr(),
             ffi::WS_CHILD,
             65, 195, content_w - 35, 40, hwnd, std::ptr::null_mut(), hinstance, std::ptr::null_mut()
         );
@@ -1480,7 +1541,7 @@ unsafe fn create_uninstaller_controls(hwnd: ffi::HWND) {
 
         // Options Page: Radio Button 2 (Purge)
         state.hwnd_rad_purge = ffi::CreateWindowExW(
-            0, btn_class.as_ptr(), to_wide_null("Remove all Qualium personal data").as_ptr(),
+            0, btn_class.as_ptr(), to_wide_null("Remove all Qaulium personal data").as_ptr(),
             ffi::WS_CHILD | ffi::BS_AUTORADIOBUTTON | ffi::WS_TABSTOP,
             40, 250, content_w - 10, 26, hwnd, ID_RAD_PURGE as ffi::HMENU, hinstance, std::ptr::null_mut()
         );
@@ -1583,18 +1644,18 @@ unsafe fn update_uninstaller_page() {
         match state.page {
             UninstallerPage::ProcessCheck => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 1 of 5: Process Detection & Confirmation").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("This wizard will uninstall Qualium Quantum Browser v5.0.0 from your system.").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("This wizard will uninstall Qaulium Quantum Browser v5.0.0 from your system.").as_ptr());
 
                 let welcome_msg = format!(
                     "INSTALLED APPLICATION DETAILS:\r\n\r\n\
                     • Installation Directory:\r\n  {}\r\n\r\n\
                     • Components to be Removed:\r\n\
-                      - Primary Browser Executable (QualiumQuantumBrowser.exe)\r\n\
-                      - Background Network & Privacy Daemon (qualium-daemon.exe)\r\n\
+                      - Primary Browser Executable (QauliumQuantumBrowser.exe)\r\n\
+                      - Background Network & Privacy Daemon (qaulium-daemon.exe)\r\n\
                       - Bundled Gecko ESR 140 Runtime & Necko Engine\r\n\
                       - Desktop & Start Menu Shortcuts\r\n\
                       - Windows Installed Apps Registry Registration\r\n\r\n\
-                    Before proceeding, setup verifies whether any Qualium processes are currently open.",
+                    Before proceeding, setup verifies whether any Qaulium processes are currently open.",
                     state.install_dir.display()
                 );
                 ffi::SetWindowTextW(state.hwnd_info_box, to_wide_null(&welcome_msg).as_ptr());
@@ -1602,7 +1663,7 @@ unsafe fn update_uninstaller_page() {
 
                 state.running_procs = win32::get_running_qualium_processes();
                 if !state.running_procs.is_empty() {
-                    let warn = format!("[!] Qualium is currently running ({})!\r\nPlease close all browser windows and click 'Retry Detection' before continuing.", state.running_procs.join(", "));
+                    let warn = format!("[!] Qaulium is currently running ({})!\r\nPlease close all browser windows and click 'Retry Detection' before continuing.", state.running_procs.join(", "));
                     ffi::SetWindowTextW(state.hwnd_lbl_warning, to_wide_null(&warn).as_ptr());
                     show(state.hwnd_lbl_warning);
                     show(state.hwnd_btn_retry);
@@ -1638,19 +1699,19 @@ unsafe fn update_uninstaller_page() {
             }
             UninstallerPage::Ready => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 3 of 5: Ready to Remove").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("The uninstaller has all required information and is ready to remove Qualium Quantum Browser.").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("The uninstaller has all required information and is ready to remove Qaulium Quantum Browser.").as_ptr());
 
                 let data_choice_str = if state.keep_user_data {
-                    "PRESERVE USER DATA (Recommended)\r\n    Retains your bookmarks, settings, and vault in %LOCALAPPDATA%\\Qualium."
+                    "PRESERVE USER DATA (Recommended)\r\n    Retains your bookmarks, settings, and vault in %LOCALAPPDATA%\\Qaulium."
                 } else {
-                    "PURGE ALL USER DATA\r\n    Permanently removes %LOCALAPPDATA%\\Qualium alongside application files."
+                    "PURGE ALL USER DATA\r\n    Permanently removes %LOCALAPPDATA%\\Qaulium alongside application files."
                 };
 
                 let ready_summary = format!(
                     "UNINSTALLATION SPECIFICATION:\r\n\r\n\
                     • Application Directory to Delete:\r\n  {}\r\n\r\n\
-                    • Shortcuts to Remove:\r\n  - Desktop: Qualium Quantum Browser.lnk\r\n  - Start Menu: Programs\\Qualium\r\n\r\n\
-                    • Windows Registry Entry to Delete:\r\n  HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\QualiumQuantumBrowser\r\n\r\n\
+                    • Shortcuts to Remove:\r\n  - Desktop: Qaulium Quantum Browser.lnk\r\n  - Start Menu: Programs\\Qaulium\r\n\r\n\
+                    • Windows Registry Entry to Delete:\r\n  HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\QauliumQuantumBrowser\r\n\r\n\
                     • User Profile Data Action:\r\n  {}\r\n\r\n\
                     Click 'Uninstall' to begin removing the product.",
                     state.install_dir.display(),
@@ -1676,7 +1737,7 @@ unsafe fn update_uninstaller_page() {
             }
             UninstallerPage::Complete => {
                 ffi::SetWindowTextW(state.hwnd_subtitle, to_wide_null("Step 5 of 5: Uninstallation Complete").as_ptr());
-                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Qualium Quantum Browser v5.0.0 has been successfully removed from your computer.").as_ptr());
+                ffi::SetWindowTextW(state.hwnd_desc, to_wide_null("Qaulium Quantum Browser v5.0.0 has been successfully removed from your computer.").as_ptr());
 
                 let done_msg = format!(
                     "UNINSTALLATION SUCCESSFUL\r\n\r\n\
@@ -1687,7 +1748,7 @@ unsafe fn update_uninstaller_page() {
                     The uninstaller will now clean up remaining uninstall artifacts and exit.\r\n\
                     Click 'Close' to finish.",
                     state.install_dir.display(),
-                    if state.keep_user_data { "Preserved in %LOCALAPPDATA%\\Qualium" } else { "Completely Purged" }
+                    if state.keep_user_data { "Preserved in %LOCALAPPDATA%\\Qaulium" } else { "Completely Purged" }
                 );
                 ffi::SetWindowTextW(state.hwnd_complete_box, to_wide_null(&done_msg).as_ptr());
                 show(state.hwnd_complete_box);

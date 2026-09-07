@@ -271,14 +271,14 @@
 
     const searchInput = document.getElementById("search-input");
     if (searchInput) {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         try {
           searchInput.focus({ preventScroll: true });
         } catch (e) {
           searchInput.focus();
         }
         window.scrollTo(0, 0);
-      }, 50);
+      });
     }
 
     // Subscribe to Authoritative Circuit Status & PQC State

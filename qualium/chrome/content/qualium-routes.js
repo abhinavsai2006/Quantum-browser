@@ -26,6 +26,7 @@
     { internal: "chrome://qualium/content/newtab.xhtml", public: "qualium://newtab" },
     { internal: "about:newtab", public: "qualium://newtab" },
     { internal: "about:home", public: "qualium://newtab" },
+    { internal: "about:blank", public: "qualium://newtab" },
     { internal: "about:privatebrowsing", public: "qualium://newtab" },
     { internal: "chrome://browser/content/blanktab.html", public: "qualium://newtab" },
     { internal: "chrome://qualium/content/about.xhtml", public: "qualium://about" },

@@ -152,26 +152,18 @@ function writeGeckoProofLog(msg) {
     const logLine = new Date().toISOString() + " [GECKO_RUNTIME_PROOF] " + msg + "\n";
     dump(logLine);
     console.log(logLine);
-    if (typeof Services !== "undefined" && Services.dirsvc && typeof Cc !== "undefined") {
-      const profDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      const logFile = profDir.clone();
-      logFile.append("qualium_gecko_runtime_proof.log");
-      const foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      foStream.init(logFile, 0x02 | 0x08 | 0x10, 0o666, 0);
-      foStream.write(logLine, logLine.length);
-      foStream.flush();
-      foStream.close();
-    }
   } catch(e) {}
 }
 
 // Attach Necko channel observer on startup
 try {
   if (typeof Services !== "undefined" && Services.obs) {
+    let neckoObserverLogged = false;
     const neckoObserver = {
       observe: function(subject, topic, data) {
         try {
-          if (topic === "http-on-modify-request") {
+          if (topic === "http-on-modify-request" && !neckoObserverLogged) {
+            neckoObserverLogged = true;
             const httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
             const channel = subject.QueryInterface(Ci.nsIChannel);
             const uri = channel && channel.URI ? channel.URI.spec : "unknown";

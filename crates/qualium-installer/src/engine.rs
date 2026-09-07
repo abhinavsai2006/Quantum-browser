@@ -126,9 +126,9 @@ impl InstallEngine {
             let component = if raw_path.starts_with("runtime") {
                 "Gecko Runtime & Necko Stack"
             } else if raw_path.starts_with("chrome") {
-                "Qualium UI Chrome Resources"
+                "Qaulium UI Chrome Resources"
             } else if raw_path.ends_with(".exe") {
-                "Qualium Core Binaries"
+                "Qaulium Core Binaries"
             } else {
                 "Application Resources & Configurations"
             };
@@ -178,25 +178,28 @@ impl InstallEngine {
             }
         }
 
-        // 6. Ensure QualiumQuantumBrowser.exe exists (fallback from QauliumQuantumBrowser.exe if needed)
-        let main_browser_exe = dest.join("QualiumQuantumBrowser.exe");
-        let alt_browser_exe = dest.join("QauliumQuantumBrowser.exe");
+        // 6. Ensure QauliumQuantumBrowser.exe and QualiumQuantumBrowser.exe both exist
+        let main_browser_exe = dest.join("QauliumQuantumBrowser.exe");
+        let alt_browser_exe = dest.join("QualiumQuantumBrowser.exe");
         if !main_browser_exe.exists() && alt_browser_exe.exists() {
             let _ = fs::copy(&alt_browser_exe, &main_browser_exe);
         } else if main_browser_exe.exists() && !alt_browser_exe.exists() {
             let _ = fs::copy(&main_browser_exe, &alt_browser_exe);
         }
 
-        // 7. Ensure QualiumUninstall.exe exists in install_dir and install_dir\uninstall
+        // 7. Ensure QauliumUninstall.exe and QualiumUninstall.exe exist in install_dir and install_dir\uninstall
         let uninstall_dir = dest.join("uninstall");
         fs::create_dir_all(&uninstall_dir)?;
         let root_uninstaller = dest.join("QualiumUninstall.exe");
         let sub_uninstaller = uninstall_dir.join("QualiumUninstall.exe");
+        let root_alt_uninstaller = dest.join("QauliumUninstall.exe");
+        let sub_alt_uninstaller = uninstall_dir.join("QauliumUninstall.exe");
 
         if !root_uninstaller.exists() && !sub_uninstaller.exists() {
             // Check fallback locations
             let candidates = [
                 std::env::current_exe().ok().and_then(|p| p.parent().map(|dir| dir.join("QualiumUninstall.exe"))),
+                std::env::current_exe().ok().and_then(|p| p.parent().map(|dir| dir.join("QauliumUninstall.exe"))),
                 Some(PathBuf::from(r"E:\Qaulium AI\Broswer\dist\QualiumUninstall.exe")),
                 Some(PathBuf::from(r"E:\Qaulium AI\Broswer\target\release\qualium_uninstaller.exe")),
             ];
@@ -204,25 +207,32 @@ impl InstallEngine {
                 if cand.exists() {
                     let _ = fs::copy(&cand, &root_uninstaller);
                     let _ = fs::copy(&cand, &sub_uninstaller);
+                    let _ = fs::copy(&cand, &root_alt_uninstaller);
+                    let _ = fs::copy(&cand, &sub_alt_uninstaller);
                     break;
                 }
             }
-        } else if root_uninstaller.exists() && !sub_uninstaller.exists() {
-            let _ = fs::copy(&root_uninstaller, &sub_uninstaller);
-        } else if sub_uninstaller.exists() && !root_uninstaller.exists() {
-            let _ = fs::copy(&sub_uninstaller, &root_uninstaller);
+        } else {
+            if root_uninstaller.exists() && !root_alt_uninstaller.exists() {
+                let _ = fs::copy(&root_uninstaller, &root_alt_uninstaller);
+            }
+            if sub_uninstaller.exists() && !sub_alt_uninstaller.exists() {
+                let _ = fs::copy(&sub_uninstaller, &sub_alt_uninstaller);
+            }
         }
 
-        // 8. Shortcuts creation (Windows-only: uses WScript.Shell COM / SHGetSpecialFolderPathW)
+        // 8. Shortcuts creation (Option 1: Desktop, Option 2: Start Menu)
+        let primary_exe = if main_browser_exe.exists() { main_browser_exe.clone() } else { alt_browser_exe.clone() };
+
         #[cfg(windows)]
         if options.create_desktop_shortcut {
             let icon_ref = if icon_path.exists() { Some(icon_path.as_path()) } else { None };
             for desktop_lnk in win32::get_desktop_shortcut_paths() {
                 if let Ok(()) = win32::create_shortcut(
-                    &main_browser_exe,
+                    &primary_exe,
                     &desktop_lnk,
                     dest,
-                    "Qualium Quantum Browser — Privacy-First Gecko Desktop Browser",
+                    "Qaulium Quantum Browser — Privacy-First Gecko Desktop Browser",
                     icon_ref,
                 ) {
                     if !manifest.shortcuts.contains(&desktop_lnk) {
@@ -236,15 +246,15 @@ impl InstallEngine {
         if options.create_start_menu_shortcut {
             if let Some(menu_dir) = win32::get_start_menu_shortcut_dir() {
                 let _ = fs::create_dir_all(&menu_dir);
-                let app_lnk = menu_dir.join("Qualium Quantum Browser.lnk");
-                let uninst_lnk = menu_dir.join("Uninstall Qualium Quantum Browser.lnk");
+                let app_lnk = menu_dir.join("Qaulium Quantum Browser.lnk");
+                let uninst_lnk = menu_dir.join("Uninstall Qaulium Quantum Browser.lnk");
                 let icon_ref = if icon_path.exists() { Some(icon_path.as_path()) } else { None };
 
                 if let Ok(()) = win32::create_shortcut(
-                    &main_browser_exe,
+                    &primary_exe,
                     &app_lnk,
                     dest,
-                    "Qualium Quantum Browser",
+                    "Qaulium Quantum Browser",
                     icon_ref,
                 ) {
                     manifest.shortcuts.push(app_lnk);
@@ -254,7 +264,7 @@ impl InstallEngine {
                     &root_uninstaller,
                     &uninst_lnk,
                     dest,
-                    "Uninstall Qualium Quantum Browser",
+                    "Uninstall Qaulium Quantum Browser",
                     icon_ref,
                 ) {
                     manifest.shortcuts.push(uninst_lnk);
@@ -262,15 +272,21 @@ impl InstallEngine {
             }
         }
 
-        // 9. Windows Installed Apps Registry Registration (Windows-only)
+        // 9. Windows Run entry (Option 4: Start with Windows)
+        #[cfg(windows)]
+        if options.start_with_windows {
+            let _ = win32::register_startup(&primary_exe);
+        }
+
+        // 10. Windows Installed Apps Registry Registration
         #[cfg(windows)]
         {
             let total_size_kb = (metrics.total_uncompressed_bytes / 1024).max(1);
-            let reg_icon = if icon_path.exists() { icon_path } else { main_browser_exe.clone() };
+            let reg_icon = if icon_path.exists() { icon_path } else { primary_exe.clone() };
             win32::register_uninstall(dest, &root_uninstaller, &reg_icon, total_size_kb)?;
         }
 
-        // 10. Write authoritative install-manifest.json
+        // 11. Write authoritative install-manifest.json
         manifest.save_to_dir(dest)?;
 
         // 11. Final Verification of Critical Files

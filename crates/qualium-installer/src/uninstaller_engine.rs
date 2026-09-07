@@ -47,29 +47,36 @@ impl UninstallerEngine {
             }
         }
         // Fallback checks for standard shortcut locations
-        if let Some(desktop_lnk) = win32::get_desktop_shortcut_path() {
+        for desktop_lnk in win32::get_desktop_shortcut_paths() {
             if desktop_lnk.exists() {
                 let _ = fs::remove_file(&desktop_lnk);
             }
         }
         if let Some(userprofile) = std::env::var("USERPROFILE").ok() {
-            let alt_desktop = PathBuf::from(userprofile).join("Desktop").join("Qaulium Quantum Browser.lnk");
-            if alt_desktop.exists() {
-                let _ = fs::remove_file(&alt_desktop);
-            }
+            let alt_desktop1 = PathBuf::from(&userprofile).join("Desktop").join("Qaulium Quantum Browser.lnk");
+            let alt_desktop2 = PathBuf::from(&userprofile).join("Desktop").join("Qualium Quantum Browser.lnk");
+            if alt_desktop1.exists() { let _ = fs::remove_file(&alt_desktop1); }
+            if alt_desktop2.exists() { let _ = fs::remove_file(&alt_desktop2); }
         }
         if let Some(start_dir) = win32::get_start_menu_shortcut_dir() {
             if start_dir.exists() {
                 let _ = fs::remove_dir_all(&start_dir);
             }
         }
+        if let Ok(appdata) = std::env::var("APPDATA") {
+            let legacy_start = PathBuf::from(appdata).join("Microsoft").join("Windows").join("Start Menu").join("Programs").join("Qualium");
+            if legacy_start.exists() {
+                let _ = fs::remove_dir_all(&legacy_start);
+            }
+        }
 
-        // 3. Remove Windows Uninstall Registry Registration
+        // 3. Remove Windows Uninstall Registry Registration & Startup Run Key
         on_progress(2, 6, "Cleaning Windows Installed Apps registry entries...", "Registry");
         let _ = win32::unregister_uninstall();
+        let _ = win32::unregister_startup();
 
         // 4. Remove application files listed in manifest or install directory
-        on_progress(3, 6, "Removing Qualium runtime and application components...", "Application Files");
+        on_progress(3, 6, "Removing Qaulium runtime and application components...", "Application Files");
         if let Some(ref m) = manifest {
             for entry in &m.files {
                 let p = self.install_dir.join(&entry.relative_path);

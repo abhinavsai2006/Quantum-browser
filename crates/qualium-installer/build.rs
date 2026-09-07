@@ -108,7 +108,9 @@ fn main() {
     let _ = fs::create_dir_all(&uninstall_sub_dir);
     for uninst_cand in &uninstaller_candidates {
         if uninst_cand.exists() {
+            let _ = fs::copy(uninst_cand, stage_dir.join("QauliumUninstall.exe"));
             let _ = fs::copy(uninst_cand, stage_dir.join("QualiumUninstall.exe"));
+            let _ = fs::copy(uninst_cand, uninstall_sub_dir.join("QauliumUninstall.exe"));
             let _ = fs::copy(uninst_cand, uninstall_sub_dir.join("QualiumUninstall.exe"));
             break;
         }

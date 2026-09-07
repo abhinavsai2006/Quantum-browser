@@ -172,7 +172,7 @@ user_pref("network.proxy.socks", "127.0.0.1");
 user_pref("network.proxy.socks_port", {});
 user_pref("network.proxy.socks_version", 5);
 user_pref("network.proxy.socks_remote_dns", true);
-user_pref("network.proxy.no_proxies_on", "");
+user_pref("network.proxy.no_proxies_on", "localhost, 127.0.0.1");
 user_pref("network.trr.mode", 5);"#,
             port
         )
@@ -190,8 +190,11 @@ user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("toolkit.telemetry.enabled", false);
 user_pref("toolkit.telemetry.unified", false);
 user_pref("browser.startup.page", 1);
-user_pref("browser.startup.homepage", "chrome://qualium/content/newtab.xhtml");
-user_pref("browser.newtabpage.enabled", false);
+user_pref("browser.startup.homepage", "about:newtab");
+user_pref("browser.newtabpage.enabled", true);
+user_pref("browser.newtab.url", "about:newtab");
+user_pref("browser.newtabpage.enhanced", false);
+user_pref("browser.newtabpage.introShown", true);
 user_pref("browser.tabs.firefox-view", false);
 user_pref("browser.theme.toolbar-theme", 0);
 user_pref("extensions.activeThemeID", "firefox-compact-dark@mozilla.org");
@@ -202,16 +205,34 @@ user_pref("browser.uitour.enabled", false);
 user_pref("browser.aboutwelcome.enabled", false);
 user_pref("browser.startup.homepage_override.mstone", "ignore");
 user_pref("trailhead.firstrun.branches", "nofirstrun-empty");
+user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
+user_pref("browser.newtabpage.activity-stream.feeds.topsites", false);
+user_pref("browser.newtabpage.activity-stream.showSponsored", false);
+user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+user_pref("browser.newtabpage.activity-stream.default.sites", "");
+user_pref("browser.startup.homepage.abouthome_cache.enabled", false);
+user_pref("browser.newtabpage.activity-stream.prerender", false);
+user_pref("browser.newtab.preload", false);
 user_pref("browser.sessionstore.resume_session_once", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("privacy.trackingprotection.enabled", true);
 user_pref("privacy.trackingprotection.pbmode.enabled", true);
-user_pref("privacy.resistFingerprinting", true);
+user_pref("privacy.resistFingerprinting", false);
 user_pref("media.peerconnection.ice.default_address_only", true);
 user_pref("media.peerconnection.ice.no_host", true);
-user_pref("gfx.webrender.software", true);
-user_pref("layers.acceleration.disabled", true);
+user_pref("gfx.webrender.all", true);
+user_pref("gfx.webrender.software", false);
+user_pref("layers.gpu-process.enabled", false);
+user_pref("layers.acceleration.disabled", false);
+user_pref("webgl.disabled", false);
+user_pref("browser.urlbar.suggest.searches", true);
+user_pref("browser.urlbar.autoFill", true);
+user_pref("browser.urlbar.speculativeConnect.enabled", true);
+user_pref("network.http.speculative-parallel-limit", 6);
+user_pref("network.dns.disablePrefetch", false);
+user_pref("network.prefetch-next", true);
 "#,
         proxy_config
     );
@@ -612,10 +633,10 @@ fn main() -> anyhow::Result<()> {
         gecko_cmd.arg("-profile");
         gecko_cmd.arg(profile_dir.to_string_lossy().as_ref());
         gecko_cmd.arg("-no-remote");
-        if let Some(ref url) = target_url {
-            gecko_cmd.arg("-url");
-            gecko_cmd.arg(url);
-        }
+        let initial_url = target_url.as_deref().unwrap_or("about:newtab");
+        gecko_cmd.arg("-url");
+        gecko_cmd.arg(initial_url);
+
 
         let mut gecko_child = gecko_cmd.spawn()?;
         append_boot_log("Gecko process spawned successfully. Supervising browser session...");
@@ -637,24 +658,11 @@ fn main() -> anyhow::Result<()> {
     } else {
         // Secondary instance: Browser is ALREADY running!
         append_boot_log("Secondary instance: delegating URL to running Gecko instance");
-        let (gecko_exe, gecko_cwd) = match find_gecko_runtime(&app_dir) {
-            Some(pair) => pair,
-            None => return Ok(()),
-        };
-
         let target_url = get_target_url_from_args();
-
-        let mut gecko_cmd = Command::new(&gecko_exe);
-        gecko_cmd.current_dir(&gecko_cwd);
-        gecko_cmd.arg("-profile");
-        gecko_cmd.arg(profile_dir.to_string_lossy().as_ref());
         if let Some(ref url) = target_url {
-            gecko_cmd.arg("-url");
-            gecko_cmd.arg(url);
+            let temp_dir = env::temp_dir();
+            let _ = fs::write(temp_dir.join("qualium_pending_nav.txt"), url);
         }
-
-        let mut proc = gecko_cmd.spawn()?;
-        let _ = proc.wait();
     }
 
     Ok(())

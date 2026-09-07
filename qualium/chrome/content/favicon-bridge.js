@@ -9,17 +9,6 @@
     try {
       dump("[QUALIUM:FAVICON_BRIDGE] " + msg + "\n");
       console.log("[QUALIUM:FAVICON_BRIDGE] " + msg);
-      if (typeof Services !== "undefined" && Services.dirsvc && typeof Cc !== "undefined") {
-        const profDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-        const logFile = profDir.clone();
-        logFile.append("qualium_bridge.log");
-        const foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-        foStream.init(logFile, 0x02 | 0x08 | 0x10, 0o666, 0);
-        const line = new Date().toISOString() + " " + msg + "\n";
-        foStream.write(line, line.length);
-        foStream.flush();
-        foStream.close();
-      }
     } catch(e) {}
   }
 
@@ -92,10 +81,12 @@
     // Prove Necko Network Stack: nsIChannel and nsIHttpChannel via observer
     try {
       if (typeof Services !== "undefined" && Services.obs) {
+        let neckoProofLogged = false;
         const neckoObserver = {
           observe: function(subject, topic, data) {
             try {
-              if (topic === "http-on-modify-request") {
+              if (topic === "http-on-modify-request" && !neckoProofLogged) {
+                neckoProofLogged = true;
                 const httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
                 const channel = subject.QueryInterface(Ci.nsIChannel);
                 const uri = channel && channel.URI ? channel.URI.spec : "unknown";
@@ -188,6 +179,27 @@
       gBrowser.tabContainer.addEventListener("TabAttrModified", onTabAttrModified, false);
     }
 
+    // Capture dynamic title changes from loaded web pages (e.g. YouTube, Google)
+    window.addEventListener("DOMTitleChanged", (event) => {
+      try {
+        const browser = event.target;
+        if (!browser || !browser.currentURI) return;
+        const pageUrl = browser.currentURI.spec;
+        if (pageUrl.startsWith("about:") || pageUrl.startsWith("chrome://qualium/")) return;
+        const tab = gBrowser.getTabForBrowser(browser);
+        if (tab) {
+          const curLabel = tab.getAttribute("label");
+          if (curLabel === "New Tab" || (curLabel && curLabel.startsWith("Qualium"))) {
+            tab.removeAttribute("label");
+          }
+          if (typeof gBrowser.setTabTitle === "function") {
+            gBrowser.setTabTitle(tab);
+          }
+        }
+      } catch(e) {}
+    }, true);
+
+
     // 2. Attach Tabs Progress Listener for Real-Time onLinkIconAvailable & onLocationChange
     const progressListener = {
       onLinkIconAvailable(aBrowser, aIconURL) {
@@ -200,6 +212,15 @@
 
           logBridge("onLinkIconAvailable for " + pageUrl + ": " + aIconURL.substring(0, 60));
           persistGeckoFavicon(pageUrl, aIconURL);
+
+          // Update tab icon immediately with loaded site's genuine favicon
+          const tab = gBrowser.getTabForBrowser(aBrowser);
+          if (tab) {
+            tab.setAttribute("image", aIconURL);
+            if (typeof gBrowser.setIcon === "function") {
+              try { gBrowser.setIcon(tab, aIconURL); } catch(e) {}
+            }
+          }
         } catch (e) {
           logBridge("onLinkIconAvailable error: " + e);
         }
@@ -216,6 +237,14 @@
             const publicUrl = window.QualiumRouteRegistry.internalToPublic(url);
             const cleanTitle = window.QualiumRouteRegistry.getTitleForRoute(url);
 
+            // CRITICAL: Ensure userTypedValue is null on both browser and gBrowser so Gecko does not treat it as sticky user input
+            if (aBrowser) {
+              aBrowser.userTypedValue = null;
+            }
+            if (window.gBrowser) {
+              window.gBrowser.userTypedValue = null;
+            }
+
             // Sync Omnibox value to clean public URL (e.g. qualium://newtab, qualium://settings)
             if (window.gURLBar && !window.gURLBar.focused) {
               window.gURLBar.value = publicUrl;
@@ -223,15 +252,13 @@
               if (window.gURLBar.inputField) {
                 window.gURLBar.inputField.value = publicUrl;
               }
-              if (aBrowser) {
-                aBrowser.userTypedValue = publicUrl;
-              }
             }
 
-            // Sync Tab Label
+            // Sync Tab Label & Shield Icon for internal routes
             const tab = gBrowser.getTabForBrowser(aBrowser);
             if (tab) {
               tab.setAttribute("label", cleanTitle);
+              tab.setAttribute("image", "chrome://qualium/skin/qualium-shield.svg");
             }
 
             // Record internal route visit (excluding history itself to avoid self-loop noise)
@@ -245,14 +272,66 @@
             return;
           }
 
+          // Case 2: Standard about:blank, about:newtab, about:home internal landing pages
+          if (url === "about:blank" || url === "about:newtab" || url === "about:home") {
+            if (aBrowser) {
+              aBrowser.userTypedValue = null;
+            }
+            if (window.gBrowser) {
+              window.gBrowser.userTypedValue = null;
+            }
+            const tab = gBrowser.getTabForBrowser(aBrowser);
+            if (tab) {
+              tab.setAttribute("label", "New Tab");
+              tab.setAttribute("image", "chrome://qualium/skin/qualium-shield.svg");
+            }
+            return;
+          }
+
           if (url.startsWith("about:") || url.startsWith("chrome://qualium/")) {
             return;
           }
 
-          // Real external website navigation — check icon and record real history
+          // Case 3: External web navigation (e.g. YouTube, Google, news sites):
+          // 1. MUST clear userTypedValue so Omnibox displays the actual loaded website URL, not stale qualium://newtab
+          if (aBrowser) {
+            aBrowser.userTypedValue = null;
+          }
+          if (window.gBrowser) {
+            window.gBrowser.userTypedValue = null;
+          }
+
+          // 2. Clear hardcoded internal label and shield icon so Gecko can set the website title (e.g. YouTube) and real website favicon
           const tab = gBrowser.getTabForBrowser(aBrowser);
+          if (tab) {
+            const curLabel = tab.getAttribute("label");
+            if (curLabel === "New Tab" || (curLabel && curLabel.startsWith("Qualium"))) {
+              tab.removeAttribute("label");
+            }
+            const curImg = tab.getAttribute("image");
+            if (curImg && curImg.includes("qualium-shield")) {
+              tab.removeAttribute("image");
+              if (tab.iconImage) {
+                tab.iconImage.removeAttribute("src");
+              }
+            }
+            try {
+              if (typeof gBrowser.setTabTitle === "function") {
+                gBrowser.setTabTitle(tab);
+              }
+            } catch(e) {}
+          }
+
+          // 3. Update Omnibox to display real URL if this browser is active
+          if (window.gURLBar && !window.gURLBar.focused && aBrowser === gBrowser.selectedBrowser) {
+            try {
+              window.gURLBar.setURI();
+            } catch(e) {}
+          }
+
+          // Real external website navigation — check icon and record real history
           const iconUrl = tab ? (tab.getAttribute("image") || aBrowser.mIconURL) : null;
-          const title = tab ? tab.getAttribute("label") : (aBrowser.contentTitle || url);
+          const title = tab ? (tab.getAttribute("label") || aBrowser.contentTitle) : (aBrowser.contentTitle || url);
 
           if (iconUrl) {
             persistGeckoFavicon(url, iconUrl);
@@ -576,30 +655,92 @@
         }
       }, false);
 
-      // Diagnostic Logging & Close-on-Action for every menu item (Requirement 22 & 6)
-      popup.addEventListener("click", (event) => {
-        const btn = event.target.closest(".subviewbutton");
+      // Authoritative Route Table for Menu Navigation
+      const QUALIUM_MENU_ROUTES = {
+        "appMenu-history-button": "qualium://history",
+        "appMenu-history-button2": "qualium://history",
+        "PanelUI-historyMore": "qualium://history",
+        "appMenu-extensions-themes-button": "qualium://extensions",
+        "appMenu-extensions-button": "qualium://extensions",
+        "appMenu-addons-button": "qualium://extensions",
+        "appMenu-unified-extensions-button": "qualium://extensions",
+        "unified-extensions-manage-extensions": "qualium://extensions",
+        "unified-extensions-context-menu-manage-extension": "qualium://extensions",
+        "appMenu-help-button2": "qualium://about",
+        "appMenu-help-button": "qualium://about",
+        "appMenu-about-button": "qualium://about",
+        "appMenu_aboutName": "qualium://about",
+        "help_about": "qualium://about",
+        "appMenu-bookmarks-button": "qualium://bookmarks",
+        "appMenu-downloads-button": "qualium://downloads",
+        "appMenu-passwords-button": "qualium://passwords",
+        "appMenu-settings-button": "qualium://settings",
+      };
+
+      function handleMenuClickOrCommand(event) {
+        const btn = event.target.closest(".subviewbutton, toolbarbutton, menuitem");
         if (!btn) return;
 
         const id = btn.id || "unknown";
+        const l10nId = btn.getAttribute("data-l10n-id") || "";
         const label = (btn.getAttribute("label") || btn.textContent || "").trim();
         const oncmd = btn.getAttribute("oncommand") || "";
         const cmd = btn.getAttribute("command") || "";
-        let target = "";
-        const m = oncmd.match(/openTrustedLinkIn\(['"]([^'"]+)['"]/);
-        if (m) target = m[1];
-        else if (cmd) target = cmd;
 
-        logBridge(`[QUALIUM_MENU] MENU_CLICK ID=${id} LABEL="${label}" TARGET="${target}"`);
-        logBridge(`[QUALIUM_MENU] MENU_ACTION action=navigate item="${label || id}" target="${target}"`);
-        if (target) {
-          logBridge(`[QUALIUM_MENU] ROUTE_REQUEST target="${target}"`);
-          logBridge(`[QUALIUM_MENU] ROUTE_SUCCESS target="${target}" RESULT=SUCCESS`);
+        let target = QUALIUM_MENU_ROUTES[id];
+        if (!target) {
+          if (l10nId === "appmenuitem-history" || l10nId === "appmenu-manage-history" || (/history/i.test(label) && (id.includes("history") || id.includes("History")))) {
+            target = "qualium://history";
+          } else if (l10nId === "appmenuitem-extensions-and-themes" || l10nId === "unified-extensions-manage-extensions" || /extension/i.test(label) || /addon/i.test(label)) {
+            target = "qualium://extensions";
+          } else if (l10nId === "appmenuitem-help" || l10nId === "help-about" || (/about/i.test(label) && !/print|help/i.test(id))) {
+            target = "qualium://about";
+          } else {
+            const m = oncmd.match(/openTrustedLinkIn\(['"]([^'"]+)['"]/);
+            if (m) target = m[1];
+            else if (cmd) target = cmd;
+          }
         }
 
-        // Auto-close menu on action
-        if (window.PanelUI && typeof window.PanelUI.hide === "function") {
-          window.PanelUI.hide();
+        logBridge(`[QUALIUM_MENU] MENU_CLICK ID=${id} LABEL="${label}" TARGET="${target || ''}"`);
+
+        if (target && target.startsWith("qualium://")) {
+          event.preventDefault();
+          event.stopPropagation();
+          logBridge(`[QUALIUM_MENU] MENU_ACTION action=navigate item="${label || id}" target="${target}"`);
+          logBridge(`[QUALIUM_MENU] ROUTE_REQUEST target="${target}"`);
+
+          try {
+            if (typeof window.openTrustedLinkIn === "function") {
+              window.openTrustedLinkIn(target, "tab");
+            } else if (window.gBrowser) {
+              const secMan = window.Services ? window.Services.scriptSecurityManager : null;
+              const principal = secMan ? secMan.getSystemPrincipal() : null;
+              const reg = window.QualiumRouteRegistry;
+              const realUrl = reg ? reg.publicToInternal(target) : target;
+              window.gBrowser.addTab(realUrl, { triggeringPrincipal: principal });
+            }
+            logBridge(`[QUALIUM_MENU] ROUTE_SUCCESS target="${target}" RESULT=SUCCESS`);
+          } catch(err) {
+            logBridge(`[QUALIUM_MENU] ROUTE_ERROR target="${target}" err=${err}`);
+          }
+
+          if (window.PanelUI && typeof window.PanelUI.hide === "function") {
+            try { window.PanelUI.hide(); } catch(e) {}
+          }
+          const p = btn.closest("panel");
+          if (p && typeof p.hidePopup === "function") {
+            try { p.hidePopup(); } catch(e) {}
+          }
+        }
+      }
+
+      popup.addEventListener("click", handleMenuClickOrCommand, true);
+      popup.addEventListener("command", handleMenuClickOrCommand, true);
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest && e.target.closest(".subviewbutton, toolbarbutton, menuitem");
+        if (btn && (btn.id === "unified-extensions-manage-extensions" || btn.getAttribute("data-l10n-id") === "unified-extensions-manage-extensions")) {
+          handleMenuClickOrCommand(e);
         }
       }, true);
     }
@@ -739,6 +880,35 @@
                 const h = parseInt(parts[1], 10);
                 window.resizeTo(w, h);
                 res = `RESIZED:${w}x${h}`;
+              } else if (cmd.startsWith("NAVIGATE:")) {
+                const targetUrl = cmd.slice(9).trim();
+                logBridge("[TEST_CMD] Navigating to: " + targetUrl);
+                try {
+                  const principal = Services.scriptSecurityManager.getSystemPrincipal();
+                  if (typeof gBrowser.loadURI === "function") {
+                    gBrowser.loadURI(Services.io.newURI(targetUrl), { triggeringPrincipal: principal });
+                  } else if (gBrowser.selectedBrowser && typeof gBrowser.selectedBrowser.loadURI === "function") {
+                    gBrowser.selectedBrowser.loadURI(targetUrl, { triggeringPrincipal: principal });
+                  }
+                  res = "NAVIGATED:" + targetUrl;
+                } catch(e) {
+                  res = "ERROR:" + e;
+                }
+              } else if (cmd === "GET_PAGE_INFO") {
+                const browser = gBrowser.selectedBrowser;
+                const tab = gBrowser.getTabForBrowser(browser);
+                const curUri = browser?.currentURI ? browser.currentURI.spec : "";
+                const curTitle = tab ? (tab.getAttribute("label") || browser.contentTitle) : (browser?.contentTitle || "");
+                const curIcon = tab ? tab.getAttribute("image") : "";
+                const urlbarVal = window.gURLBar ? window.gURLBar.value : "";
+                const userTyped = browser ? browser.userTypedValue : "";
+                res = JSON.stringify({
+                  uri: curUri,
+                  title: curTitle,
+                  icon: curIcon,
+                  urlbar: urlbarVal,
+                  userTyped: userTyped
+                });
               }
 
               // Write result
@@ -752,6 +922,44 @@
               foStream.close();
               logBridge("[TEST_CMD] Result written: " + res);
             }
+
+            // Check pending navigation file periodically
+            const pendingFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            pendingFile.initWithPath(tempDir);
+            pendingFile.append("qualium_pending_nav.txt");
+            if (pendingFile.exists()) {
+              const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+              fstream.init(pendingFile, -1, 0, 0);
+              const cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+              cstream.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+              let str = {};
+              cstream.readString(1024, str);
+              cstream.close();
+              fstream.close();
+              try { pendingFile.remove(false); } catch(e) {}
+              const dest = str.value ? str.value.trim() : "";
+              if (dest) {
+                let resolvedDest = dest;
+                if (typeof window.QualiumRouteRegistry !== "undefined" && window.QualiumRouteRegistry.isQualiumRoute(dest)) {
+                  resolvedDest = window.QualiumRouteRegistry.publicToInternal(dest);
+                } else if (dest.startsWith("qualium://") || dest.startsWith("qaulium://")) {
+                  const file = dest.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
+                  resolvedDest = `chrome://qualium/content/${file}.xhtml`;
+                }
+
+                logBridge("[STARTUP_NAV] Loading pending URL into Gecko: " + resolvedDest);
+                const principal = Services.scriptSecurityManager.getSystemPrincipal();
+                try {
+                  if (typeof gBrowser.loadURI === "function") {
+                    gBrowser.loadURI(Services.io.newURI(resolvedDest), { triggeringPrincipal: principal });
+                  } else if (gBrowser.selectedBrowser && typeof gBrowser.selectedBrowser.loadURI === "function") {
+                    gBrowser.selectedBrowser.loadURI(resolvedDest, { triggeringPrincipal: principal });
+                  }
+                } catch(loadErr) {
+                  logBridge("[STARTUP_NAV] loadURI dispatch error: " + loadErr);
+                }
+              }
+            }
           } catch(e) {}
         }, 250);
       } catch(err) {
@@ -759,62 +967,6 @@
       }
     }
     hookTestCommandListener();
-
-    // 4. Process any pending startup URL (e.g. https://example.com)
-    try {
-      const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-      const tempDir = envService.get("TEMP") || "C:\\Users\\mndab\\AppData\\Local\\Temp";
-      const pendingFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      pendingFile.initWithPath(tempDir);
-      pendingFile.append("qualium_pending_nav.txt");
-      if (pendingFile.exists()) {
-        const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-        fstream.init(pendingFile, -1, 0, 0);
-        const cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
-        cstream.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-        let str = {};
-        cstream.readString(1024, str);
-        cstream.close();
-        fstream.close();
-        try { pendingFile.remove(false); } catch(e) {}
-        const dest = str.value ? str.value.trim() : "";
-        if (dest) {
-          let resolvedDest = dest;
-          if (typeof window.QualiumRouteRegistry !== "undefined" && window.QualiumRouteRegistry.isQualiumRoute(dest)) {
-            resolvedDest = window.QualiumRouteRegistry.publicToInternal(dest);
-          } else if (dest.startsWith("qualium://") || dest.startsWith("qaulium://")) {
-            const file = dest.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
-            resolvedDest = `chrome://qualium/content/${file}.xhtml`;
-          }
-
-          logBridge("[STARTUP_NAV] Loading pending URL into Gecko: " + resolvedDest);
-          const principal = Services.scriptSecurityManager.getSystemPrincipal();
-          setTimeout(() => {
-            try {
-              if (typeof gBrowser.loadURI === "function") {
-                gBrowser.loadURI(Services.io.newURI(resolvedDest), { triggeringPrincipal: principal });
-              } else if (gBrowser.selectedBrowser && typeof gBrowser.selectedBrowser.loadURI === "function") {
-                gBrowser.selectedBrowser.loadURI(resolvedDest, { triggeringPrincipal: principal });
-              }
-
-              if (dest.startsWith("http")) {
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET", dest, true);
-                xhr.onload = function() {
-                  logBridge("[STARTUP_NAV] Necko XHR success from " + dest + " status=" + xhr.status);
-                };
-                xhr.onerror = function() {};
-                xhr.send();
-              }
-            } catch(loadErr) {
-              logBridge("[STARTUP_NAV] loadURI dispatch error: " + loadErr);
-            }
-          }, 300);
-        }
-      }
-    } catch(err) {
-      logBridge("[STARTUP_NAV] Pending nav error: " + err);
-    }
 
     console.log("[QUALIUM:FAVICON_BRIDGE] Native Gecko favicon bridge attached successfully ✓");
   }

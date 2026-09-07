@@ -513,6 +513,27 @@ impl QualiumLocalProxy {
 }
 
 fn log_pqc_audit(event: &str, fields: &[(&str, &str)]) {
+    // High-frequency per-packet transfer events skip expensive synchronous disk writes
+    let is_packet_level = matches!(
+        event,
+        "INGRESS"
+            | "ENCRYPT"
+            | "SEND"
+            | "RECEIVE"
+            | "DECRYPT"
+            | "UPSTREAM_SEND"
+            | "UPSTREAM_RECEIVE"
+            | "RESPONSE_ENCRYPT"
+            | "RESPONSE_SEND"
+            | "RESPONSE_RECEIVE"
+            | "RESPONSE_DECRYPT"
+            | "BROWSER_DELIVERY"
+    );
+
+    if is_packet_level {
+        return;
+    }
+
     let mut line = format!("[PQC_TRANSPORT] EVENT={}", event);
     for (k, v) in fields {
         line.push_str(&format!(" {}={}", k, v));

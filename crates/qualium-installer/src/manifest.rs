@@ -30,16 +30,16 @@ pub struct InstallManifest {
 impl InstallManifest {
     pub fn new(install_dir: PathBuf, user_data_dir: PathBuf) -> Self {
         Self {
-            product_name: "Qualium Quantum Browser".to_string(),
+            product_name: "Qaulium Quantum Browser".to_string(),
             version: "1.0.0".to_string(),
-            publisher: "Qualium AI".to_string(),
+            publisher: "Qaulium AI".to_string(),
             install_dir,
             installed_at_utc: chrono_stub_timestamp(),
             total_installed_bytes: 0,
             total_file_count: 0,
             files: Vec::new(),
             shortcuts: Vec::new(),
-            registry_key: r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QualiumQuantumBrowser".to_string(),
+            registry_key: r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QauliumQuantumBrowser".to_string(),
             user_data_dir,
         }
     }

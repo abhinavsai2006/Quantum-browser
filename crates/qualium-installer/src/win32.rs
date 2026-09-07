@@ -8,6 +8,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::mem::size_of;
 use std::os::windows::ffi::OsStrExt;
+use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -77,6 +78,14 @@ pub mod sys {
             lpData: *const u8,
             cbData: DWORD,
         ) -> LSTATUS;
+        pub fn RegOpenKeyExW(
+            hKey: HKEY,
+            lpSubKey: LPCWSTR,
+            ulOptions: DWORD,
+            samDesired: DWORD,
+            phkResult: *mut HKEY,
+        ) -> LSTATUS;
+        pub fn RegDeleteValueW(hKey: HKEY, lpValueName: LPCWSTR) -> LSTATUS;
         pub fn RegDeleteKeyW(hKey: HKEY, lpSubKey: LPCWSTR) -> LSTATUS;
         pub fn RegDeleteTreeW(hKey: HKEY, lpSubKey: LPCWSTR) -> LSTATUS;
         pub fn RegCloseKey(hKey: HKEY) -> LSTATUS;
@@ -205,6 +214,7 @@ pub fn create_shortcut(
 
     let status = Command::new("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", &ps_script])
+        .creation_flags(sys::CREATE_NO_WINDOW)
         .status()?;
 
     if !status.success() {
@@ -214,14 +224,9 @@ pub fn create_shortcut(
     Ok(())
 }
 
-/// Register Windows Installed Apps entry in HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\QualiumQuantumBrowser
-pub fn register_uninstall(
-    install_dir: &Path,
-    uninstaller_exe: &Path,
-    icon_path: &Path,
-    total_size_kb: u64,
-) -> anyhow::Result<()> {
-    let subkey_str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QualiumQuantumBrowser";
+/// Register Windows Run entry for Start with Windows (Option 4)
+pub fn register_startup(exe_path: &Path) -> anyhow::Result<()> {
+    let subkey_str = r"Software\Microsoft\Windows\CurrentVersion\Run";
     let subkey_wide = to_wide_null(subkey_str);
 
     let mut hkey: sys::HKEY = std::ptr::null_mut();
@@ -234,7 +239,7 @@ pub fn register_uninstall(
             0,
             std::ptr::null_mut(),
             0,
-            sys::KEY_ALL_ACCESS,
+            sys::KEY_WRITE,
             std::ptr::null_mut(),
             &mut hkey,
             &mut disp,
@@ -242,36 +247,111 @@ pub fn register_uninstall(
     };
 
     if res != 0 {
-        anyhow::bail!("Failed to create Windows registry key: error code {}", res);
+        anyhow::bail!("Failed to create Windows Run key: error code {}", res);
     }
 
-    let set_str = |key: &str, val: &str| unsafe {
-        let k_wide = to_wide_null(key);
-        let val_bytes: Vec<u8> = to_wide_null(val).iter().flat_map(|w| w.to_le_bytes()).collect();
-        sys::RegSetValueExW(hkey, k_wide.as_ptr(), 0, sys::REG_SZ, val_bytes.as_ptr(), val_bytes.len() as u32);
-    };
-
-    let set_dword = |key: &str, val: u32| unsafe {
-        let k_wide = to_wide_null(key);
-        let val_bytes = val.to_le_bytes();
-        sys::RegSetValueExW(hkey, k_wide.as_ptr(), 0, sys::REG_DWORD, val_bytes.as_ptr(), 4);
-    };
-
-    set_str("DisplayName", "Qualium Quantum Browser");
-    set_str("DisplayVersion", "1.0.0");
-    set_str("Publisher", "Qualium AI");
-    set_str("InstallLocation", &install_dir.to_string_lossy());
-    set_str("DisplayIcon", &format!("{},0", icon_path.display()));
-    set_str("UninstallString", &format!("\"{}\"", uninstaller_exe.display()));
-    set_str("QuietUninstallString", &format!("\"{}\" /silent", uninstaller_exe.display()));
-    set_str("HelpLink", "https://qualium.ai/support");
-    set_str("URLInfoAbout", "https://qualium.ai");
-    set_dword("EstimatedSize", total_size_kb as u32);
-    set_dword("NoModify", 1);
-    set_dword("NoRepair", 1);
+    let val_str = format!("\"{}\"", exe_path.display());
+    let k_wide = to_wide_null("Qaulium Quantum Browser");
+    let val_bytes: Vec<u8> = to_wide_null(&val_str).iter().flat_map(|w| w.to_le_bytes()).collect();
 
     unsafe {
+        sys::RegSetValueExW(hkey, k_wide.as_ptr(), 0, sys::REG_SZ, val_bytes.as_ptr(), val_bytes.len() as u32);
         sys::RegCloseKey(hkey);
+    }
+
+    Ok(())
+}
+
+/// Unregister Windows Run entry
+pub fn unregister_startup() -> anyhow::Result<()> {
+    let subkey_str = r"Software\Microsoft\Windows\CurrentVersion\Run";
+    let subkey_wide = to_wide_null(subkey_str);
+
+    let mut hkey: sys::HKEY = std::ptr::null_mut();
+    let res = unsafe {
+        sys::RegOpenKeyExW(
+            sys::HKEY_CURRENT_USER,
+            subkey_wide.as_ptr(),
+            0,
+            sys::KEY_WRITE,
+            &mut hkey,
+        )
+    };
+
+    if res == 0 {
+        let k_wide = to_wide_null("Qaulium Quantum Browser");
+        let alt_wide = to_wide_null("Qualium Quantum Browser");
+        unsafe {
+            sys::RegDeleteValueW(hkey, k_wide.as_ptr());
+            sys::RegDeleteValueW(hkey, alt_wide.as_ptr());
+            sys::RegCloseKey(hkey);
+        }
+    }
+
+    Ok(())
+}
+
+/// Register Windows Installed Apps entry in HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\QauliumQuantumBrowser
+pub fn register_uninstall(
+    install_dir: &Path,
+    uninstaller_exe: &Path,
+    icon_path: &Path,
+    total_size_kb: u64,
+) -> anyhow::Result<()> {
+    let subkeys = [
+        r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QauliumQuantumBrowser",
+        r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QualiumQuantumBrowser",
+    ];
+
+    for subkey_str in &subkeys {
+        let subkey_wide = to_wide_null(subkey_str);
+        let mut hkey: sys::HKEY = std::ptr::null_mut();
+        let mut disp: sys::DWORD = 0;
+
+        let res = unsafe {
+            sys::RegCreateKeyExW(
+                sys::HKEY_CURRENT_USER,
+                subkey_wide.as_ptr(),
+                0,
+                std::ptr::null_mut(),
+                0,
+                sys::KEY_ALL_ACCESS,
+                std::ptr::null_mut(),
+                &mut hkey,
+                &mut disp,
+            )
+        };
+
+        if res == 0 {
+            let set_str = |key: &str, val: &str| unsafe {
+                let k_wide = to_wide_null(key);
+                let val_bytes: Vec<u8> = to_wide_null(val).iter().flat_map(|w| w.to_le_bytes()).collect();
+                sys::RegSetValueExW(hkey, k_wide.as_ptr(), 0, sys::REG_SZ, val_bytes.as_ptr(), val_bytes.len() as u32);
+            };
+
+            let set_dword = |key: &str, val: u32| unsafe {
+                let k_wide = to_wide_null(key);
+                let val_bytes = val.to_le_bytes();
+                sys::RegSetValueExW(hkey, k_wide.as_ptr(), 0, sys::REG_DWORD, val_bytes.as_ptr(), 4);
+            };
+
+            set_str("DisplayName", "Qaulium Quantum Browser");
+            set_str("DisplayVersion", "1.0.0");
+            set_str("Publisher", "Qaulium AI");
+            set_str("InstallLocation", &install_dir.to_string_lossy());
+            set_str("DisplayIcon", &format!("{},0", icon_path.display()));
+            set_str("UninstallString", &format!("\"{}\"", uninstaller_exe.display()));
+            set_str("QuietUninstallString", &format!("\"{}\" /silent", uninstaller_exe.display()));
+            set_str("HelpLink", "https://qaulium.ai/support");
+            set_str("URLInfoAbout", "https://qaulium.ai");
+            set_dword("EstimatedSize", total_size_kb as u32);
+            set_dword("NoModify", 1);
+            set_dword("NoRepair", 1);
+
+            unsafe {
+                sys::RegCloseKey(hkey);
+            }
+        }
     }
 
     Ok(())
@@ -279,12 +359,17 @@ pub fn register_uninstall(
 
 /// Unregister Windows Installed Apps entry
 pub fn unregister_uninstall() -> anyhow::Result<()> {
-    let subkey_str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QualiumQuantumBrowser";
-    let subkey_wide = to_wide_null(subkey_str);
+    let subkeys = [
+        r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QauliumQuantumBrowser",
+        r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QualiumQuantumBrowser",
+    ];
 
-    unsafe {
-        let _ = sys::RegDeleteTreeW(sys::HKEY_CURRENT_USER, subkey_wide.as_ptr());
-        let _ = sys::RegDeleteKeyW(sys::HKEY_CURRENT_USER, subkey_wide.as_ptr());
+    for subkey_str in &subkeys {
+        let subkey_wide = to_wide_null(subkey_str);
+        unsafe {
+            let _ = sys::RegDeleteTreeW(sys::HKEY_CURRENT_USER, subkey_wide.as_ptr());
+            let _ = sys::RegDeleteKeyW(sys::HKEY_CURRENT_USER, subkey_wide.as_ptr());
+        }
     }
 
     Ok(())
@@ -293,17 +378,25 @@ pub fn unregister_uninstall() -> anyhow::Result<()> {
 /// Standard paths helper
 pub fn get_default_install_dir() -> PathBuf {
     if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-        PathBuf::from(local_appdata).join("Programs").join("Qualium")
+        PathBuf::from(local_appdata).join("Programs").join("Qaulium")
     } else {
-        PathBuf::from(r"C:\Program Files\Qualium")
+        PathBuf::from(r"C:\Program Files\Qaulium")
     }
 }
 
 pub fn get_user_data_dir() -> PathBuf {
     if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-        PathBuf::from(local_appdata).join("Qualium")
+        let p_qau = PathBuf::from(&local_appdata).join("Qaulium");
+        let p_qua = PathBuf::from(&local_appdata).join("Qualium");
+        if p_qau.exists() {
+            p_qau
+        } else if p_qua.exists() {
+            p_qua
+        } else {
+            p_qau
+        }
     } else {
-        PathBuf::from(r"C:\QualiumProfile")
+        PathBuf::from(r"C:\QauliumProfile")
     }
 }
 
@@ -311,22 +404,40 @@ pub fn get_desktop_shortcut_paths() -> Vec<PathBuf> {
     let mut paths = Vec::new();
     let mut buf = [0u16; 260];
     unsafe {
+        // CSIDL_DESKTOPDIRECTORY = 0x0010
         if sys::SHGetSpecialFolderPathW(std::ptr::null_mut(), buf.as_mut_ptr(), 0x0010, 0) != 0 {
             let len = buf.iter().position(|&c| c == 0).unwrap_or(260);
             let dir = PathBuf::from(String::from_utf16_lossy(&buf[..len]));
             if dir.exists() {
-                paths.push(dir.join("Qualium Quantum Browser.lnk"));
+                paths.push(dir.join("Qaulium Quantum Browser.lnk"));
+            }
+        }
+        // CSIDL_COMMON_DESKTOPDIRECTORY = 0x0019 (Public Desktop)
+        if sys::SHGetSpecialFolderPathW(std::ptr::null_mut(), buf.as_mut_ptr(), 0x0019, 0) != 0 {
+            let len = buf.iter().position(|&c| c == 0).unwrap_or(260);
+            let dir = PathBuf::from(String::from_utf16_lossy(&buf[..len]));
+            if dir.exists() {
+                let p = dir.join("Qaulium Quantum Browser.lnk");
+                if !paths.contains(&p) {
+                    paths.push(p);
+                }
             }
         }
     }
     if let Ok(userprofile) = std::env::var("USERPROFILE") {
-        let p1 = PathBuf::from(&userprofile).join("Desktop").join("Qualium Quantum Browser.lnk");
-        let p2 = PathBuf::from(&userprofile).join("OneDrive").join("Desktop").join("Qualium Quantum Browser.lnk");
+        let p1 = PathBuf::from(&userprofile).join("Desktop").join("Qaulium Quantum Browser.lnk");
+        let p2 = PathBuf::from(&userprofile).join("OneDrive").join("Desktop").join("Qaulium Quantum Browser.lnk");
         if !paths.contains(&p1) && p1.parent().map(|d| d.exists()).unwrap_or(false) {
             paths.push(p1);
         }
         if !paths.contains(&p2) && p2.parent().map(|d| d.exists()).unwrap_or(false) {
             paths.push(p2);
+        }
+    }
+    if let Ok(public_dir) = std::env::var("PUBLIC") {
+        let p_pub = PathBuf::from(&public_dir).join("Desktop").join("Qaulium Quantum Browser.lnk");
+        if !paths.contains(&p_pub) && p_pub.parent().map(|d| d.exists()).unwrap_or(false) {
+            paths.push(p_pub);
         }
     }
     paths
@@ -338,7 +449,7 @@ pub fn get_desktop_shortcut_path() -> Option<PathBuf> {
 
 pub fn get_start_menu_shortcut_dir() -> Option<PathBuf> {
     if let Ok(appdata) = std::env::var("APPDATA") {
-        Some(PathBuf::from(appdata).join("Microsoft").join("Windows").join("Start Menu").join("Programs").join("Qualium"))
+        Some(PathBuf::from(appdata).join("Microsoft").join("Windows").join("Start Menu").join("Programs").join("Qaulium"))
     } else {
         None
     }

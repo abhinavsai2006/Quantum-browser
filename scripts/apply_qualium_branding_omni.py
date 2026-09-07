@@ -124,6 +124,8 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     orig_xhtml = re.sub(r'id="urlbar-search-button"(\s+hidden="true")*', 'id="urlbar-search-button"', orig_xhtml)
     orig_xhtml = re.sub(r'id="private-browsing-indicator-with-label"(\s+hidden="true")*', 'id="private-browsing-indicator-with-label"', orig_xhtml)
     orig_xhtml = re.sub(r'id="appMenu-unified-extensions-button"(\s+style="display:none!important;")*', 'id="appMenu-unified-extensions-button"', orig_xhtml)
+    # Strip duplicate qualium script injections from previous runs
+    orig_xhtml = re.sub(r'(\s*<script src="chrome://qualium/content/(?:qualium-routes|favicon-service|favicon-bridge)\.js"></script>)+', '', orig_xhtml)
     while 'hidden="true" hidden="true"' in orig_xhtml:
         orig_xhtml = orig_xhtml.replace('hidden="true" hidden="true"', 'hidden="true"')
 
@@ -152,17 +154,21 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
             tag = re.sub(r'\s+closemenu="[^"]*"', '', tag)
             tag = re.sub(r'\s+command="[^"]*"', '', tag)
             tag = re.sub(r'\s+key="[^"]*"', '', tag)
+            tag = re.sub(r'\s+data-l10n-id="[^"]*"', '', tag)
+            tag = re.sub(r'\s+class="[^"]*"', '', tag)
             tag = re.sub(r'\s*/>$', '', tag.strip())
-            return f'{tag}\n                     {new_attrs}/>'
+            return f'{tag}\n                     class="subviewbutton"\n                     {new_attrs}/>'
         return pattern.sub(_repl, xhtml_content)
 
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-bookmarks-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://bookmarks', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-history-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://history', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-downloads-button", "key=\"key_openDownloads\"\n                     oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://downloads', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-passwords-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://passwords', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-extensions-themes-button", "key=\"key_openAddons\"\n                     oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://extensions', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-settings-button", "oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://settings', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-help-button2", "label=\"About Qualium\"\n                     oncommand=\"PanelUI.hide(); openTrustedLinkIn('qualium://about', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-bookmarks-button", "label=\"Bookmarks\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://bookmarks', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-history-button", "label=\"History\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://history', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-downloads-button", "label=\"Downloads\"\n                     key=\"key_openDownloads\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://downloads', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-passwords-button", "label=\"Passwords\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://passwords', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-extensions-themes-button", "label=\"Manage Extensions\"\n                     key=\"key_openAddons\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://extensions', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-settings-button", "label=\"Settings\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://settings', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-help-button2", "label=\"About Qaulium\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://about', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "PanelUI-historyMore", "label=\"Manage History\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://history', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "unified-extensions-manage-extensions", "label=\"Manage Extensions\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); if(this.closest('panel')) this.closest('panel').hidePopup(); openTrustedLinkIn('qualium://extensions', 'tab');\"")
 
     mod_xhtml = mod_xhtml.replace(
         'oncommand="openPreferences()"',
@@ -173,10 +179,12 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     ).replace(
         'id="urlbar-search-button"',
         'id="urlbar-search-button" hidden="true"'
-    ).replace(
-        '<script src="chrome://browser/content/browser-main.js"></script>',
-        '<script src="chrome://browser/content/browser-main.js"></script>\n  <script src="chrome://qualium/content/qualium-routes.js"></script>\n  <script src="chrome://qualium/content/favicon-service.js"></script>\n  <script src="chrome://qualium/content/favicon-bridge.js"></script>'
     )
+    if '<script src="chrome://qualium/content/qualium-routes.js"></script>' not in mod_xhtml:
+        mod_xhtml = mod_xhtml.replace(
+            '<script src="chrome://browser/content/browser-main.js"></script>',
+            '<script src="chrome://browser/content/browser-main.js"></script>\n  <script src="chrome://qualium/content/qualium-routes.js"></script>\n  <script src="chrome://qualium/content/favicon-service.js"></script>\n  <script src="chrome://qualium/content/favicon-bridge.js"></script>'
+        )
     if 'chrome://qualium/content/qualium-tabs.css' not in mod_xhtml:
         mod_xhtml = mod_xhtml.replace(
             '<link rel="stylesheet" href="chrome://browser/skin/" />',
@@ -241,16 +249,93 @@ override chrome://global/skin/icons/defaultFavicon.svg chrome://qualium/skin/qua
 override chrome://browser/skin/tabbrowser/loading.svg chrome://qualium/skin/qualium-spinner.svg
 override chrome://browser/skin/tabbrowser/loading-burst.svg chrome://qualium/skin/loading-burst.svg
 override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-spinner.svg
+override chrome://browser/content/blanktab.html chrome://qualium/content/newtab.xhtml
 """
     clean_lines = []
     for line in orig_manifest.splitlines():
-        if any(token in line for token in ["qualium", "qaulium", "loading.svg", "loading-burst.svg", "defaultFavicon.svg", "icon32.png", "icon16.png"]):
+        if any(token in line for token in ["qualium", "qaulium", "loading.svg", "loading-burst.svg", "defaultFavicon.svg", "icon32.png", "icon16.png", "blanktab.html"]):
             continue
         clean_lines.append(line)
     mod_manifest = "\n".join(clean_lines).rstrip() + "\n" + qualium_manifest_entries.strip() + "\n"
 
-    # 7. Patch modules/UrlbarInput.sys.mjs for clean qualium:// omnibox display and routing
+    # 7. Patch modules/AboutNewTabRedirector.sys.mjs for authoritative new tab redirection
+    orig_redir = src_zf.read("modules/AboutNewTabRedirector.sys.mjs").decode("utf-8", "ignore")
+    mod_redir = re.sub(
+        r'get defaultURL\(\)\s*\{[\s\S]*?return\s*\[[\s\S]*?\]\.join\(""\);\s*\}',
+        'get defaultURL() { return "chrome://qualium/content/newtab.xhtml"; }',
+        orig_redir
+    )
+    mod_redir = mod_redir.replace(
+        'return Services.io.newURI("chrome://browser/content/blanktab.html");',
+        'return Services.io.newURI("chrome://qualium/content/newtab.xhtml");'
+    )
+    parent_target = """    if (
+      uri.spec.startsWith("about:home") ||
+      (uri.spec.startsWith("about:newtab") && lazy.BUILTIN_NEWTAB_ENABLED)
+    ) {
+      chromeURI = Services.io.newURI(this.defaultURL);
+    }"""
+    if parent_target in mod_redir:
+        mod_redir = mod_redir.replace(parent_target, '    chromeURI = Services.io.newURI("chrome://qualium/content/newtab.xhtml");')
+
+    child_target = """    if (uri.spec.startsWith("about:home")) {
+      let cacheChannel = AboutHomeStartupCacheChild.maybeGetCachedPageChannel(
+        uri,
+        loadInfo
+      );
+      if (cacheChannel) {
+        return cacheChannel;
+      }
+      pageURI = Services.io.newURI(this.defaultURL);
+    } else {
+      // The only other possibility is about:newtab.
+      //
+      // If about:newtab is being requested, then any subsequent request for
+      // about:home should _never_ request the cache (which might be woefully
+      // out of date compared to about:newtab), so we disqualify the cache if
+      // it still happens to be around.
+      AboutHomeStartupCacheChild.disqualifyCache();
+
+      if (lazy.BUILTIN_NEWTAB_ENABLED) {
+        pageURI = Services.io.newURI(this.defaultURL);
+      } else {
+        pageURI = this.getChromeURI(uri);
+      }
+    }"""
+    if child_target in mod_redir:
+        mod_redir = mod_redir.replace(child_target, '    pageURI = Services.io.newURI("chrome://qualium/content/newtab.xhtml");')
+
+    suspend_target = """    if (AppConstants.BROWSER_NEWTAB_AS_ADDON && !this.#addonInitialized) {
+      return this.#getSuspendedChannel(resultChannel);
+    }"""
+    if suspend_target in mod_redir:
+        mod_redir = mod_redir.replace(suspend_target, '    // Qualium: Unconditionally serve newtab without suspending\n    return resultChannel;')
+
+    # 8. Patch modules/UrlbarInput.sys.mjs for clean qualium:// omnibox display and routing
     orig_urlbar = src_zf.read("modules/UrlbarInput.sys.mjs").decode("utf-8", "ignore")
+
+    # Idempotent cleanup of any prior injections
+    setval_start_marker = "let originalUrl = lazy.ReaderMode.getOriginalUrlObjectForDisplay(val);\n    if (originalUrl) {\n      val = originalUrl.displaySpec;\n    }"
+    setval_end_marker = "this._untrimmedValue = untrimmedValue ?? val;"
+    idx_s = orig_urlbar.find(setval_start_marker)
+    idx_e = orig_urlbar.find(setval_end_marker, idx_s)
+    if idx_s != -1 and idx_e != -1:
+        orig_urlbar = orig_urlbar[:idx_s] + setval_start_marker + "\n    " + orig_urlbar[idx_e:]
+
+    load_start_marker = """  _loadURL(
+    url,
+    event,
+    openUILinkWhere,
+    params,
+    resultDetails = null,
+    browser = this.window.gBrowser.selectedBrowser
+  ) {"""
+    load_end_marker = "// No point in setting these because we'll handleRevert() a few rows below."
+    idx_ls = orig_urlbar.find(load_start_marker)
+    idx_le = orig_urlbar.find(load_end_marker, idx_ls)
+    if idx_ls != -1 and idx_le != -1:
+        orig_urlbar = orig_urlbar[:idx_ls] + load_start_marker + "\n    " + orig_urlbar[idx_le:]
+
     urlbar_setval_target = "let originalUrl = lazy.ReaderMode.getOriginalUrlObjectForDisplay(val);\n    if (originalUrl) {\n      val = originalUrl.displaySpec;\n    }"
     urlbar_setval_replacement = """let originalUrl = lazy.ReaderMode.getOriginalUrlObjectForDisplay(val);
     if (originalUrl) {
@@ -262,7 +347,7 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
         val = this.window.QualiumRouteRegistry.internalToPublic(val);
       } else {
         let v = val.trim();
-        if (v.startsWith("chrome://qualium/content/newtab.xhtml") || v === "about:newtab" || v === "about:home" || v === "about:privatebrowsing" || v === "chrome://browser/content/blanktab.html") {
+        if (v.startsWith("chrome://qualium/content/newtab.xhtml") || v === "about:newtab" || v === "about:home" || v === "about:blank" || v === "about:privatebrowsing" || v === "chrome://browser/content/blanktab.html") {
           val = "qualium://newtab";
         } else if (v.startsWith("chrome://qualium/content/about.xhtml") || v.startsWith("chrome://qualium/content/settings.xhtml#about")) {
           val = "qualium://about";
@@ -293,6 +378,8 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
     if (untrimmedValue && typeof untrimmedValue === "string") {
       if (this.window?.QualiumRouteRegistry) {
         untrimmedValue = this.window.QualiumRouteRegistry.internalToPublic(untrimmedValue);
+      } else if (untrimmedValue === "about:blank") {
+        untrimmedValue = "qualium://newtab";
       } else if (untrimmedValue.includes("chrome://qualium/content/")) {
         if (untrimmedValue.includes("newtab.xhtml")) untrimmedValue = "qualium://newtab";
         else if (untrimmedValue.includes("about.xhtml")) untrimmedValue = "qualium://about";
@@ -311,7 +398,7 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
         }
       }
     }"""
-    mod_urlbar = orig_urlbar.replace(urlbar_setval_target, urlbar_setval_replacement)
+    mod_urlbar = orig_urlbar.replace(urlbar_setval_target, urlbar_setval_replacement, 1)
 
     urlbar_load_target = """  _loadURL(
     url,
@@ -362,10 +449,40 @@ override chrome://global/skin/icons/loading.svg chrome://qualium/skin/qualium-sp
       if (openUILinkWhere == "current") {
         this.value = origQualiumUrl;
         this._untrimmedValue = origQualiumUrl;
-        browser.userTypedValue = origQualiumUrl;
+        browser.userTypedValue = null;
+        if (this.window?.gBrowser) {
+          this.window.gBrowser.userTypedValue = null;
+        }
       }
     }"""
-    mod_urlbar = mod_urlbar.replace(urlbar_load_target, urlbar_load_replacement)
+    mod_urlbar = mod_urlbar.replace(urlbar_load_target, urlbar_load_replacement, 1)
+
+    # Ensure browser.userTypedValue is never set for internal qualium URLs so subsequent navigations update URL bar normally
+    user_typed_target = "browser.userTypedValue = this.value;"
+    user_typed_replacement = """browser.userTypedValue = (url && (url.startsWith("qualium://") || url.startsWith("chrome://qualium/"))) ? null : this.value;
+      if (url && (url.startsWith("qualium://") || url.startsWith("chrome://qualium/")) && this.window?.gBrowser) {
+        this.window.gBrowser.userTypedValue = null;
+      }"""
+    if user_typed_target in mod_urlbar:
+        mod_urlbar = mod_urlbar.replace(user_typed_target, user_typed_replacement, 1)
+
+    # Patch setURI in UrlbarInput.sys.mjs to clear stale qualium:// userTypedValue on external navigation
+    seturi_target = """    let value = this.window.gBrowser.userTypedValue;
+    let valid = false;
+    let isReverting = !uri;"""
+    seturi_replacement = """    let value = this.window.gBrowser.userTypedValue;
+    if (value && (value.startsWith("qualium://") || value.startsWith("chrome://qualium/")) && uri && !uri.spec.startsWith("chrome://qualium/") && !uri.spec.startsWith("about:newtab") && !uri.spec.startsWith("about:home") && !uri.spec.startsWith("about:blank")) {
+      value = null;
+      this.window.gBrowser.userTypedValue = null;
+      if (this.window.gBrowser.selectedBrowser) {
+        this.window.gBrowser.selectedBrowser.userTypedValue = null;
+      }
+    }
+    let valid = false;
+    let isReverting = !uri;"""
+    if seturi_target in mod_urlbar:
+        mod_urlbar = mod_urlbar.replace(seturi_target, seturi_replacement, 1)
+
 
     # 8. Patch modules/URILoadingHelper.sys.mjs for universal internal routing
     orig_helper = src_zf.read("modules/URILoadingHelper.sys.mjs").decode("utf-8", "ignore")
@@ -551,6 +668,16 @@ function resolveURIInternal(aCmdLine, aArgument) {
     else:
         mod_bch = orig_bch
 
+    # 13. Patch customizableui/panelUI.js to navigate directly on History and About button clicks
+    orig_panelui = src_zf.read("chrome/browser/content/browser/customizableui/panelUI.js").decode("utf-8", "ignore")
+    mod_panelui = orig_panelui.replace(
+        'case "appMenu-history-button":\n        this.showSubView("PanelUI-history", target);\n        break;',
+        'case "appMenu-history-button":\n        this.hide();\n        openTrustedLinkIn("qualium://history", "tab");\n        break;'
+    ).replace(
+        'case "appMenu-help-button2":\n        this.showSubView("PanelUI-helpView", target);\n        break;',
+        'case "appMenu-help-button2":\n        this.hide();\n        openTrustedLinkIn("qualium://about", "tab");\n        break;'
+    )
+
     # Pre-read replacement content
     repo_root = r"e:\Qaulium AI\Broswer"
     with open(os.path.join(repo_root, "qualium", "chrome", "content", "newtab.xhtml"), "rb") as f:
@@ -607,8 +734,17 @@ graph-week-summary-private-window = All trackers blocked this week
             dst_zf.writestr(name, new_private_ftl.encode("utf-8"))
         elif name == "localization/en-US/browser/protections.ftl":
             dst_zf.writestr(name, new_protections_ftl.encode("utf-8"))
-        elif name in ["chrome/browser/content/browser/aboutPrivateBrowsing.html", "chrome/browser/content/browser/aboutPrivateBrowsing.xhtml"]:
+        elif name in [
+            "chrome/browser/content/browser/aboutPrivateBrowsing.html",
+            "chrome/browser/content/browser/aboutPrivateBrowsing.xhtml",
+            "chrome/browser/builtin-addons/newtab/prerendered/activity-stream.html",
+            "chrome/browser/builtin-addons/newtab/prerendered/activity-stream-noscripts.html",
+            "chrome/browser/content/blanktab.html",
+            "chrome/browser/content/browser/blanktab.html",
+        ]:
             dst_zf.writestr(name, newtab_bytes)
+        elif name == "modules/AboutNewTabRedirector.sys.mjs":
+            dst_zf.writestr(name, mod_redir.encode("utf-8"))
         elif name in ["chrome/browser/content/browser/protections.html", "chrome/browser/content/browser/protections.xhtml"]:
             dst_zf.writestr(name, dashboard_bytes)
         elif name in ["chrome/browser/content/browser/preferences/preferences.xhtml", "chrome/browser/content/browser/preferences/preferences.html", "chrome/browser/content/preferences/preferences.xhtml"]:
@@ -627,6 +763,8 @@ graph-week-summary-private-window = All trackers blocked this week
             dst_zf.writestr(name, extensions_bytes)
         elif name == "chrome/browser/content/browser/browser.xhtml":
             dst_zf.writestr(name, mod_xhtml.encode("utf-8"))
+        elif name == "chrome/browser/content/browser/customizableui/panelUI.js":
+            dst_zf.writestr(name, mod_panelui.encode("utf-8"))
         elif name == "modules/UrlbarInput.sys.mjs":
             dst_zf.writestr(name, mod_urlbar.encode("utf-8"))
         elif name == "modules/URILoadingHelper.sys.mjs":
