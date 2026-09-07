@@ -184,11 +184,84 @@ def main():
         # Content sandboxes
         (os.path.join(repo_root, "runtime", "plugin-container.exe"), sandbox_strings),
         (os.path.join(local_app, "runtime", "plugin-container.exe"), sandbox_strings),
+        (os.path.join(local_app_qaulium, "runtime", "plugin-container.exe"), sandbox_strings),
 
         # Security Daemons
         (os.path.join(local_app, "qualium-daemon.exe"), daemon_strings),
         (os.path.join(local_app_qaulium, "qualium-daemon.exe"), daemon_strings),
+        (os.path.join(repo_root, "qualium-daemon.exe"), daemon_strings),
     ]
+
+    installer_strings = {
+        'Comments': 'Qaulium Quantum Browser Setup and Installation Wizard',
+        'CompanyName': 'Qaulium AI',
+        'FileDescription': 'Qaulium Quantum Browser Setup',
+        'FileVersion': '5.0.0.0',
+        'InternalName': 'Qaulium-Quantum-Browser-Setup',
+        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
+        'OriginalFilename': 'Qaulium-Quantum-Browser-Setup.exe',
+        'ProductName': 'Qaulium Quantum Browser',
+        'ProductVersion': '5.0.0.0'
+    }
+
+    uninstaller_strings = {
+        'Comments': 'Qaulium Quantum Browser Uninstaller',
+        'CompanyName': 'Qaulium AI',
+        'FileDescription': 'Qaulium Quantum Browser Uninstaller',
+        'FileVersion': '5.0.0.0',
+        'InternalName': 'QauliumUninstall',
+        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
+        'OriginalFilename': 'QauliumUninstall.exe',
+        'ProductName': 'Qaulium Quantum Browser',
+        'ProductVersion': '5.0.0.0'
+    }
+
+    # Add installer and uninstaller EXEs
+    for inst in [
+        os.path.join(repo_root, "dist", "Qaulium-Quantum-Browser-Setup.exe"),
+        os.path.join(repo_root, "dist", "Qualium-Quantum-Browser-v1.0.0-Setup.exe"),
+        os.path.join(repo_root, "dist", "Qualium-Quantum-Browser-v1.0.0-win-x64-Setup.exe"),
+        os.path.join(repo_root, "target", "release", "qualium_installer.exe"),
+    ]:
+        if os.path.exists(inst):
+            targets.append((inst, installer_strings))
+
+    for uninst in [
+        os.path.join(repo_root, "dist", "QualiumUninstall.exe"),
+        os.path.join(repo_root, "dist", "QauliumUninstall.exe"),
+        os.path.join(repo_root, "target", "release", "qualium_uninstaller.exe"),
+        os.path.join(local_app, "QualiumUninstall.exe"),
+        os.path.join(local_app, "QauliumUninstall.exe"),
+        os.path.join(local_app_qaulium, "QualiumUninstall.exe"),
+        os.path.join(local_app_qaulium, "QauliumUninstall.exe"),
+    ]:
+        if os.path.exists(uninst):
+            targets.append((uninst, uninstaller_strings))
+
+    # Also dist binaries
+    for dist_exe, dist_strings in [
+        (os.path.join(repo_root, "dist", "QualiumQuantumBrowser.exe"), launcher_strings),
+        (os.path.join(repo_root, "dist", "QauliumQuantumBrowser.exe"), launcher_strings),
+        (os.path.join(repo_root, "dist", "qualium-daemon.exe"), daemon_strings),
+    ]:
+        if os.path.exists(dist_exe):
+            targets.append((dist_exe, dist_strings))
+
+    # Also inject into other helper EXEs in runtime folders
+    helper_names = [
+        "crashreporter.exe", "default-browser-agent.exe", "pingsender.exe",
+        "minidump-analyzer.exe", "updater.exe", "maintenanceservice.exe"
+    ]
+    for base in [repo_root, local_app, local_app_qaulium]:
+        rt = os.path.join(base, "runtime")
+        for h in helper_names:
+            h_path = os.path.join(rt, h)
+            if os.path.exists(h_path):
+                h_strings = dict(launcher_strings)
+                h_strings['FileDescription'] = 'Qaulium Quantum Service'
+                h_strings['InternalName'] = os.path.splitext(h)[0]
+                h_strings['OriginalFilename'] = h
+                targets.append((h_path, h_strings))
 
     for exe, strings in targets:
         inject_version_info(exe, strings)

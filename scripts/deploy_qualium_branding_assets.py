@@ -43,6 +43,8 @@ def deploy_ico_files():
         ico_destinations.extend([
             os.path.join(LOCAL_QAULIUM, "qualium.ico"),
             os.path.join(LOCAL_QAULIUM, "resources", "qualium.ico"),
+            os.path.join(LOCAL_QAULIUM, "chrome", "content", "assets", "icons", "qualium.ico"),
+            os.path.join(LOCAL_QAULIUM, "runtime", "chrome", "content", "assets", "icons", "qualium.ico"),
         ])
 
     for dst in ico_destinations:
@@ -85,6 +87,13 @@ def deploy_visual_elements():
             os.path.join(LOCAL_QUALIUM, "runtime", "firefox.VisualElementsManifest.xml"),
             os.path.join(LOCAL_QUALIUM, "QualiumQuantumBrowser.VisualElementsManifest.xml"),
         ])
+    if os.path.exists(LOCAL_QAULIUM):
+        manifest_paths.extend([
+            os.path.join(LOCAL_QAULIUM, "runtime", "qualium-core.VisualElementsManifest.xml"),
+            os.path.join(LOCAL_QAULIUM, "runtime", "firefox.VisualElementsManifest.xml"),
+            os.path.join(LOCAL_QAULIUM, "QualiumQuantumBrowser.VisualElementsManifest.xml"),
+            os.path.join(LOCAL_QAULIUM, "QauliumQuantumBrowser.VisualElementsManifest.xml"),
+        ])
     for mp in manifest_paths:
         with open(mp, "w", encoding="utf-8") as f:
             f.write(manifest_content)
@@ -103,15 +112,16 @@ def deploy_browser_logos():
         (logo_128, os.path.join(REPO_ROOT, "runtime", "chrome", "content", "qaulium_logo_128.png")),
         (logo_512, os.path.join(REPO_ROOT, "runtime", "chrome", "skin", "qaulium_logo.png")),
     ]
-    if os.path.exists(LOCAL_QUALIUM):
-        pairs.extend([
-            (logo_512, os.path.join(LOCAL_QUALIUM, "chrome", "content", "qaulium_logo.png")),
-            (logo_128, os.path.join(LOCAL_QUALIUM, "chrome", "content", "qaulium_logo_128.png")),
-            (logo_512, os.path.join(LOCAL_QUALIUM, "chrome", "skin", "qaulium_logo.png")),
-            (logo_512, os.path.join(LOCAL_QUALIUM, "runtime", "chrome", "content", "qaulium_logo.png")),
-            (logo_128, os.path.join(LOCAL_QUALIUM, "runtime", "chrome", "content", "qaulium_logo_128.png")),
-            (logo_512, os.path.join(LOCAL_QUALIUM, "runtime", "chrome", "skin", "qaulium_logo.png")),
-        ])
+    for loc in [LOCAL_QUALIUM, LOCAL_QAULIUM]:
+        if os.path.exists(loc):
+            pairs.extend([
+                (logo_512, os.path.join(loc, "chrome", "content", "qaulium_logo.png")),
+                (logo_128, os.path.join(loc, "chrome", "content", "qaulium_logo_128.png")),
+                (logo_512, os.path.join(loc, "chrome", "skin", "qaulium_logo.png")),
+                (logo_512, os.path.join(loc, "runtime", "chrome", "content", "qaulium_logo.png")),
+                (logo_128, os.path.join(loc, "runtime", "chrome", "content", "qaulium_logo_128.png")),
+                (logo_512, os.path.join(loc, "runtime", "chrome", "skin", "qaulium_logo.png")),
+            ])
 
     for s, d in pairs:
         safe_copy(s, d)
@@ -120,11 +130,26 @@ def inject_pe_icons():
     print("--- Injecting PE Executable Icons ---")
     exe_targets = [
         os.path.join(REPO_ROOT, "runtime", "qualium-core.exe"),
+        os.path.join(REPO_ROOT, "QualiumQuantumBrowser.exe"),
+        os.path.join(REPO_ROOT, "qualium-daemon.exe"),
+        os.path.join(REPO_ROOT, "dist", "Qaulium-Quantum-Browser-Setup.exe"),
+        os.path.join(REPO_ROOT, "dist", "Qualium-Quantum-Browser-v1.0.0-Setup.exe"),
+        os.path.join(REPO_ROOT, "dist", "Qualium-Quantum-Browser-v1.0.0-win-x64-Setup.exe"),
+        os.path.join(REPO_ROOT, "dist", "QualiumUninstall.exe"),
+        os.path.join(REPO_ROOT, "dist", "QauliumUninstall.exe"),
+        os.path.join(REPO_ROOT, "dist", "QualiumQuantumBrowser.exe"),
+        os.path.join(REPO_ROOT, "dist", "QauliumQuantumBrowser.exe"),
     ]
-    if os.path.exists(LOCAL_QUALIUM):
-        exe_targets.append(os.path.join(LOCAL_QUALIUM, "runtime", "qualium-core.exe"))
-    if os.path.exists(LOCAL_QAULIUM):
-        exe_targets.append(os.path.join(LOCAL_QAULIUM, "runtime", "qualium-core.exe"))
+    for loc in [LOCAL_QUALIUM, LOCAL_QAULIUM]:
+        if os.path.exists(loc):
+            exe_targets.extend([
+                os.path.join(loc, "runtime", "qualium-core.exe"),
+                os.path.join(loc, "QualiumQuantumBrowser.exe"),
+                os.path.join(loc, "QauliumQuantumBrowser.exe"),
+                os.path.join(loc, "qualium-daemon.exe"),
+                os.path.join(loc, "QualiumUninstall.exe"),
+                os.path.join(loc, "QauliumUninstall.exe"),
+            ])
 
     for exe in exe_targets:
         if os.path.exists(exe):
@@ -136,35 +161,44 @@ def inject_pe_icons():
 def update_shortcuts():
     print("--- Updating Shortcuts ---")
     wscript = win32com.client.Dispatch("WScript.Shell")
-    desktop = os.path.expanduser("~/Desktop")
+    
+    desktop_dirs = [
+        os.path.expanduser("~/Desktop"),
+        os.path.expandvars(r"%USERPROFILE%\OneDrive\Desktop"),
+        os.path.expandvars(r"%PUBLIC%\Desktop"),
+    ]
     start_menu = os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs")
 
-    target_ico = os.path.join(LOCAL_QUALIUM, "resources", "qualium.ico") if os.path.exists(LOCAL_QUALIUM) else os.path.join(REPO_ROOT, "resources", "qualium.ico")
+    target_ico = os.path.join(LOCAL_QAULIUM, "resources", "qualium.ico") if os.path.exists(LOCAL_QAULIUM) else os.path.join(REPO_ROOT, "resources", "qualium.ico")
 
-    # Check Desktop
-    for f in os.listdir(desktop):
-        if f.endswith(".lnk") and ("qualium" in f.lower() or "browser" in f.lower()):
-            lnk_path = os.path.join(desktop, f)
-            try:
-                sc = wscript.CreateShortcut(lnk_path)
-                sc.IconLocation = f"{target_ico},0"
-                sc.Save()
-                print(f"Updated shortcut {lnk_path} -> Icon: {sc.IconLocation}")
-            except Exception as e:
-                print(f"Failed to update shortcut {lnk_path}: {e}")
-
-    # Check Start Menu
-    for root, dirs, files in os.walk(start_menu):
-        for f in files:
-            if f.endswith(".lnk") and ("qualium" in f.lower() or "browser" in f.lower()):
-                lnk_path = os.path.join(root, f)
+    # Check all Desktop locations
+    for desktop in desktop_dirs:
+        if not os.path.exists(desktop):
+            continue
+        for f in os.listdir(desktop):
+            if f.endswith(".lnk") and any(k in f.lower() for k in ["qualium", "qaulium", "browser"]):
+                lnk_path = os.path.join(desktop, f)
                 try:
                     sc = wscript.CreateShortcut(lnk_path)
                     sc.IconLocation = f"{target_ico},0"
                     sc.Save()
-                    print(f"Updated start menu shortcut {lnk_path} -> Icon: {sc.IconLocation}")
+                    print(f"Updated shortcut {lnk_path} -> Icon: {sc.IconLocation}")
                 except Exception as e:
-                    print(f"Failed to update start menu shortcut {lnk_path}: {e}")
+                    print(f"Failed to update shortcut {lnk_path}: {e}")
+
+    # Check Start Menu
+    if os.path.exists(start_menu):
+        for root, dirs, files in os.walk(start_menu):
+            for f in files:
+                if f.endswith(".lnk") and any(k in f.lower() for k in ["qualium", "qaulium", "browser"]):
+                    lnk_path = os.path.join(root, f)
+                    try:
+                        sc = wscript.CreateShortcut(lnk_path)
+                        sc.IconLocation = f"{target_ico},0"
+                        sc.Save()
+                        print(f"Updated start menu shortcut {lnk_path} -> Icon: {sc.IconLocation}")
+                    except Exception as e:
+                        print(f"Failed to update start menu shortcut {lnk_path}: {e}")
 
 def refresh_shell_icon_cache():
     print("--- Refreshing Windows Shell Icon Cache ---")

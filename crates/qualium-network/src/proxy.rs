@@ -521,8 +521,8 @@ impl QualiumLocalProxy {
 }
 
 fn log_pqc_audit(event: &str, fields: &[(&str, &str)]) {
-    // High-frequency per-packet transfer events skip expensive synchronous disk writes
-    let is_packet_level = matches!(
+    // High-frequency per-packet and per-request transfer events skip expensive synchronous disk writes
+    let is_high_frequency = matches!(
         event,
         "INGRESS"
             | "ENCRYPT"
@@ -540,7 +540,7 @@ fn log_pqc_audit(event: &str, fields: &[(&str, &str)]) {
             | "FORWARD_DELIVERY"
     );
 
-    if is_packet_level {
+    if is_high_frequency {
         return;
     }
 
@@ -550,27 +550,6 @@ fn log_pqc_audit(event: &str, fields: &[(&str, &str)]) {
     }
 
     info!("{}", line);
-
-    let temp_log = std::env::temp_dir().join("qualium_pqc_traffic.log");
-    append_to_file(&temp_log, &line);
-
-    if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-        let p1 = std::path::PathBuf::from(&local_appdata).join("Qaulium").join("Profile").join("qualium_pqc_traffic.log");
-        append_to_file(&p1, &line);
-        let p2 = std::path::PathBuf::from(&local_appdata).join("Qualium").join("Profile").join("qualium_pqc_traffic.log");
-        append_to_file(&p2, &line);
-    }
-}
-
-fn append_to_file(path: &std::path::Path, line: &str) {
-    use std::io::Write;
-    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
-        let ts = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis();
-        let _ = writeln!(f, "[ts={}] {}", ts, line);
-    }
 }
 
 #[cfg(test)]

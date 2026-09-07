@@ -149,7 +149,9 @@
     }
 
     // 1. Capture genuine favicon changes from Gecko Tab Attributes (never flood history)
+    let _isProcessingTabAttr = false;
     function onTabAttrModified(event) {
+      if (_isProcessingTabAttr) return;
       try {
         const tab = event.target;
         if (!tab || !tab.linkedBrowser) return;
@@ -164,10 +166,16 @@
 
           const iconUrl = tab.getAttribute("image") || (browser.mIconURL ? browser.mIconURL : null);
           if (iconUrl && !iconUrl.includes("qualium-shield")) {
-            persistGeckoFavicon(currentUrl, iconUrl);
+            _isProcessingTabAttr = true;
+            try {
+              persistGeckoFavicon(currentUrl, iconUrl);
+            } finally {
+              _isProcessingTabAttr = false;
+            }
           }
         }
       } catch (e) {
+        _isProcessingTabAttr = false;
         logBridge("TabAttrModified handler error: " + e);
       }
     }
@@ -361,11 +369,16 @@
       onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
         try {
           if (!aBrowser) return;
+          // Filter strictly to top-level window/document events so subresources do not thrash tab loading state
+          const isTopLevel = aWebProgress && aWebProgress.isTopLevel;
+          const isDocOrWin = !!(aStateFlags & (Ci.nsIWebProgressListener.STATE_IS_WINDOW | Ci.nsIWebProgressListener.STATE_IS_DOCUMENT));
+          if (!isTopLevel || !isDocOrWin) return;
+
           const tab = gBrowser.getTabForBrowser(aBrowser);
           if (!tab) return;
 
-          const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK);
-          const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK);
+          const isStart = !!(aStateFlags & Ci.nsIWebProgressListener.STATE_START);
+          const isStop = !!(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP);
 
           if (isStart) {
             tab.setAttribute("qualium-loading", "true");
