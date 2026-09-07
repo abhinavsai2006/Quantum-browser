@@ -36,11 +36,17 @@ def replace_icon(exe_path, ico_path):
         # Update each RT_ICON (Type 3)
         for i, img in enumerate(icon_images):
             win32api.UpdateResource(h_update, win32con.RT_ICON, i + 1, img, 1033)
+            win32api.UpdateResource(h_update, win32con.RT_ICON, i + 1, img, 0)
 
-        # Update RT_GROUP_ICON (Type 14, ID 1 or 32512)
-        # 1 is standard primary application icon resource ID
-        win32api.UpdateResource(h_update, win32con.RT_GROUP_ICON, 1, grp_dir, 1033)
-        win32api.UpdateResource(h_update, win32con.RT_GROUP_ICON, 32512, grp_dir, 1033)
+        # Update RT_GROUP_ICON (Type 14, IDs 1..6 and 32512)
+        # ID 1 is standard primary app icon, 32512 is IDI_APPLICATION
+        for grp_id in [1, 2, 3, 4, 5, 6, 32512]:
+            try:
+                win32api.UpdateResource(h_update, win32con.RT_GROUP_ICON, grp_id, grp_dir, 1033)
+                win32api.UpdateResource(h_update, win32con.RT_GROUP_ICON, grp_id, grp_dir, 0)
+            except Exception:
+                pass
+
         win32api.EndUpdateResource(h_update, False)
         print(f"Successfully injected qualium icon into {exe_path}")
     except Exception as e:

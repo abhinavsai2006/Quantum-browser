@@ -800,6 +800,23 @@ graph-week-summary-private-window = All trackers blocked this week
                 orig_b_css = orig_b_css.replace('@import url("chrome://qualium/content/qualium-tabs.css");\n', '').replace('@import url("chrome://qualium/content/qualium-tabs.css");', '')
             mod_b_css = "@import url(\"chrome://qualium/content/qualium-tabs.css\");\n" + orig_b_css
             dst_zf.writestr(name, mod_b_css.encode("utf-8"))
+        elif name.startswith("chrome/browser/content/branding/") and os.path.basename(name) in [
+            "icon16.png", "icon32.png", "icon48.png", "icon64.png", "icon128.png",
+            "about-logo.png", "about-logo@2x.png", "about-logo-private.png", "about-logo-private@2x.png"
+        ]:
+            b_file = os.path.join(r"e:\Qaulium AI\Broswer\scratch\generated_icons", os.path.basename(name))
+            if os.path.exists(b_file):
+                with open(b_file, "rb") as bf:
+                    dst_zf.writestr(name, bf.read())
+            else:
+                dst_zf.writestr(name, src_zf.read(name))
+        elif name == "chrome/browser/content/branding/document.ico":
+            ico_file = r"e:\Qaulium AI\Broswer\scratch\generated_icons\qualium.ico"
+            if os.path.exists(ico_file):
+                with open(ico_file, "rb") as bf:
+                    dst_zf.writestr(name, bf.read())
+            else:
+                dst_zf.writestr(name, src_zf.read(name))
         else:
             dst_zf.writestr(name, src_zf.read(name))
 
