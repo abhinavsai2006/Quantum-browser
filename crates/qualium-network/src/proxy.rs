@@ -209,14 +209,15 @@ impl QualiumLocalProxy {
             ("EXIT", &circuit_session.topology.exit.nickname),
         ]);
 
-        // 5. Connect to upstream destination via Exit relay
+        // 5. Connect to upstream destination via Exit relay with 10s timeout
         let target_addr = if destination_host.starts_with('[') {
             format!("{}:{}", destination_host, port)
         } else {
             format!("{}:{}", destination_host, port)
         };
-        match tokio::net::TcpStream::connect(&target_addr).await {
-            Ok(upstream) => {
+        let connect_fut = tokio::net::TcpStream::connect(&target_addr);
+        match tokio::time::timeout(std::time::Duration::from_secs(10), connect_fut).await {
+            Ok(Ok(upstream)) => {
                 // SOCKS5 success reply: VER=5, REP=0 (success), RSV=0, ATYP=1 (IPv4)
                 let port_hi = (port >> 8) as u8;
                 let port_lo = (port & 0xFF) as u8;
@@ -233,8 +234,15 @@ impl QualiumLocalProxy {
                     destination_host,
                 ).await;
             }
-            Err(e) => {
+            Ok(Err(e)) => {
                 error!("Failed to connect to upstream {}: {}", target_addr, e);
+                // REP=0x04 Host unreachable
+                let _ = socket
+                    .write_all(&[0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
+                    .await;
+            }
+            Err(_) => {
+                error!("Connection to upstream {} timed out after 10s", target_addr);
                 // REP=0x04 Host unreachable
                 let _ = socket
                     .write_all(&[0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
@@ -523,11 +531,13 @@ fn log_pqc_audit(event: &str, fields: &[(&str, &str)]) {
             | "DECRYPT"
             | "UPSTREAM_SEND"
             | "UPSTREAM_RECEIVE"
+            | "RESPONSE"
             | "RESPONSE_ENCRYPT"
             | "RESPONSE_SEND"
             | "RESPONSE_RECEIVE"
             | "RESPONSE_DECRYPT"
             | "BROWSER_DELIVERY"
+            | "FORWARD_DELIVERY"
     );
 
     if is_packet_level {

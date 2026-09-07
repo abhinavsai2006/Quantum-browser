@@ -103,7 +103,8 @@
       logBridge("[GECKO_RUNTIME_PROOF] NeckoObserver attach error: " + e);
     }
 
-    // Helper: Safely convert icon URL to base64 Data URI via Gecko Necko stack
+    // Helper: Safely convert icon URL to base64 Data URI via Gecko Necko stack with deduplication
+    const _processedFaviconUrls = new Set();
     function persistGeckoFavicon(pageUrl, rawIconUrl) {
       if (!pageUrl || !rawIconUrl) return;
       if (rawIconUrl.startsWith("data:image/")) {
@@ -112,12 +113,20 @@
         }
         return;
       }
+      if (rawIconUrl.includes("qualium-shield")) return;
+
+      const dedupKey = pageUrl + "::" + rawIconUrl;
+      if (_processedFaviconUrls.has(dedupKey)) return;
+      _processedFaviconUrls.add(dedupKey);
+      if (_processedFaviconUrls.size > 500) {
+        _processedFaviconUrls.clear();
+      }
 
       try {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", rawIconUrl, true);
         xhr.responseType = "blob";
-        xhr.timeout = 6000;
+        xhr.timeout = 4000;
         xhr.onload = function() {
           if (xhr.status === 200 && xhr.response) {
             const reader = new FileReader();
@@ -139,14 +148,14 @@
       }
     }
 
-    // 1. Capture Favicon changes from Gecko Tab Attributes
+    // 1. Capture genuine favicon changes from Gecko Tab Attributes (never flood history)
     function onTabAttrModified(event) {
       try {
         const tab = event.target;
         if (!tab || !tab.linkedBrowser) return;
 
         const changedAttrs = event.detail ? event.detail.changed : [];
-        if (changedAttrs && (changedAttrs.includes("image") || changedAttrs.includes("label"))) {
+        if (changedAttrs && changedAttrs.includes("image")) {
           const browser = tab.linkedBrowser;
           const currentUrl = browser.currentURI ? browser.currentURI.spec : "";
           if (!currentUrl || currentUrl.startsWith("about:") || currentUrl.startsWith("chrome://qualium/")) {
@@ -154,20 +163,8 @@
           }
 
           const iconUrl = tab.getAttribute("image") || (browser.mIconURL ? browser.mIconURL : null);
-          const title = tab.getAttribute("label") || browser.contentTitle;
-
-          if (iconUrl) {
-            logBridge("TabAttrModified icon for " + currentUrl + ": " + iconUrl.substring(0, 60));
+          if (iconUrl && !iconUrl.includes("qualium-shield")) {
             persistGeckoFavicon(currentUrl, iconUrl);
-          }
-
-          // Update real browsing history with latest title and icon
-          if (typeof window.QualiumHistoryStore !== "undefined" && !currentUrl.startsWith("about:") && !currentUrl.includes("error.xhtml") && !currentUrl.includes("history.xhtml")) {
-            window.QualiumHistoryStore.recordVisit({
-              url: currentUrl,
-              title: title || currentUrl,
-              iconDataUrl: iconUrl
-            });
           }
         }
       } catch (e) {
@@ -201,6 +198,8 @@
 
 
     // 2. Attach Tabs Progress Listener for Real-Time onLinkIconAvailable & onLocationChange
+    let _lastRecordedUrl = "";
+    let _lastRecordedTime = 0;
     const progressListener = {
       onLinkIconAvailable(aBrowser, aIconURL) {
         try {
@@ -263,11 +262,16 @@
 
             // Record internal route visit (excluding history itself to avoid self-loop noise)
             if (publicUrl !== "qualium://history" && !publicUrl.includes("error") && typeof window.QualiumHistoryStore !== "undefined") {
-              window.QualiumHistoryStore.recordVisit({
-                url: publicUrl,
-                title: cleanTitle,
-                iconDataUrl: null
-              });
+              const now = Date.now();
+              if (publicUrl !== _lastRecordedUrl || (now - _lastRecordedTime > 3000)) {
+                _lastRecordedUrl = publicUrl;
+                _lastRecordedTime = now;
+                window.QualiumHistoryStore.recordVisit({
+                  url: publicUrl,
+                  title: cleanTitle,
+                  iconDataUrl: null
+                });
+              }
             }
             return;
           }
@@ -329,20 +333,27 @@
             } catch(e) {}
           }
 
-          // Real external website navigation — check icon and record real history
+          // Real external website navigation — check icon and record real history with deduplication
           const iconUrl = tab ? (tab.getAttribute("image") || aBrowser.mIconURL) : null;
           const title = tab ? (tab.getAttribute("label") || aBrowser.contentTitle) : (aBrowser.contentTitle || url);
 
-          if (iconUrl) {
+          if (iconUrl && !iconUrl.includes("qualium-shield")) {
             persistGeckoFavicon(url, iconUrl);
           }
 
           if (typeof window.QualiumHistoryStore !== "undefined") {
-            window.QualiumHistoryStore.recordVisit({
-              url: url,
-              title: title || url,
-              iconDataUrl: iconUrl
-            });
+            const isTop = !aWebProgress || aWebProgress.isTopLevel;
+            const notSameDoc = !aFlags || !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
+            const now = Date.now();
+            if (isTop && notSameDoc && (url !== _lastRecordedUrl || (now - _lastRecordedTime > 3000))) {
+              _lastRecordedUrl = url;
+              _lastRecordedTime = now;
+              window.QualiumHistoryStore.recordVisit({
+                url: url,
+                title: title || url,
+                iconDataUrl: iconUrl
+              });
+            }
           }
         } catch (e) {}
       },
@@ -746,10 +757,13 @@
     }
     hookAppMenu();
 
-    // 7. Test Automation Command Listener
+    // 7. Test Automation Command Listener (Only active when QUALIUM_AUTOMATION_TEST=1 is set)
     function hookTestCommandListener() {
       try {
         const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+        if (!envService.exists("QUALIUM_AUTOMATION_TEST") || envService.get("QUALIUM_AUTOMATION_TEST") !== "1") {
+          return;
+        }
         const tempDir = envService.get("TEMP") || "C:\\Users\\mndab\\AppData\\Local\\Temp";
         
         setInterval(() => {

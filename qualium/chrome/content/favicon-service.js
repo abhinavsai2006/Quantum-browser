@@ -172,6 +172,7 @@
       this._l1History = new Map(); // id -> HistoryEntry
       this._isReady = false;
       this._isChrome = typeof Services !== "undefined" && !!Services.dirsvc && typeof Cc !== "undefined";
+      this._persistTimer = null;
     }
 
     _getProfDir() {
@@ -204,14 +205,20 @@
       }
     }
 
-    _writeNativeJson(filename, obj) {
+    async _writeNativeJsonAsync(filename, obj) {
       try {
+        const jsonStr = JSON.stringify(obj, null, 2);
+        // Preferred: Non-blocking off-main-thread IOUtils (official Mozilla API)
+        if (typeof IOUtils !== "undefined" && typeof PathUtils !== "undefined") {
+          const path = PathUtils.join(PathUtils.profileDir, filename);
+          await IOUtils.writeUTF8(path, jsonStr, { tmpPath: path + ".tmp" });
+          return true;
+        }
+        // Fallback: Synchronous XPCOM streams only if IOUtils is missing
         const profDir = this._getProfDir();
         if (!profDir) return false;
         const file = profDir.clone();
         file.append(filename);
-
-        const jsonStr = JSON.stringify(obj, null, 2);
         const foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
         foStream.init(file, 0x02 | 0x08 | 0x20, 0o666, 0);
         foStream.write(jsonStr, jsonStr.length);
@@ -223,19 +230,31 @@
       }
     }
 
-    _persistAllToNative() {
-      if (!this._isChrome) return;
-      try {
-        const favArray = Array.from(this._l1Favicons.values());
-        const bmArray = Array.from(this._l1Bookmarks.values());
-        const histArray = Array.from(this._l1History.values());
-        this._writeNativeJson("qualium_favicons.json", favArray);
-        this._writeNativeJson("qualium_bookmarks.json", bmArray);
-        this._writeNativeJson("qualium_history.json", histArray);
-      } catch(e) {}
+    _schedulePersist() {
+      if (this._persistTimer) return;
+      this._persistTimer = setTimeout(async () => {
+        this._persistTimer = null;
+        if (this._isChrome) {
+          try {
+            const favArray = Array.from(this._l1Favicons.values());
+            const bmArray = Array.from(this._l1Bookmarks.values());
+            const histArray = Array.from(this._l1History.values());
+            await Promise.allSettled([
+              this._writeNativeJsonAsync("qualium_favicons.json", favArray),
+              this._writeNativeJsonAsync("qualium_bookmarks.json", bmArray),
+              this._writeNativeJsonAsync("qualium_history.json", histArray),
+            ]);
+          } catch(e) {}
+        }
+        this._persistToLocalStorageDirect();
+      }, 1500);
     }
 
-    _persistToLocalStorage() {
+    _persistAllToNative() {
+      this._schedulePersist();
+    }
+
+    _persistToLocalStorageDirect() {
       try {
         if (typeof localStorage !== "undefined") {
           const favArray = Array.from(this._l1Favicons.values());
@@ -246,6 +265,10 @@
           localStorage.setItem("qualium_history_v5", JSON.stringify(histArray));
         }
       } catch(e) {}
+    }
+
+    _persistToLocalStorage() {
+      this._schedulePersist();
     }
 
     _loadFromLocalStorage() {
