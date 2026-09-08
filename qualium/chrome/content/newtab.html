@@ -92,28 +92,6 @@
         </div>
       </div>
     </main>
-
-    <!-- 5. Add Shortcut Modal Dialog -->
-    <div id="add-shortcut-modal" class="modal-backdrop" onclick="if (event.target === this) closeAddShortcutModal();">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <h3 class="modal-title">Add Shortcut</h3>
-          <button type="button" class="modal-close-btn" onclick="closeAddShortcutModal();" title="Close">&#10005;</button>
-        </div>
-        <div class="modal-field">
-          <label for="shortcut-name-input">Name</label>
-          <input type="text" id="shortcut-name-input" class="modal-input" placeholder="e.g. YouTube, GitHub, DuckDuckGo" autocomplete="off"/>
-        </div>
-        <div class="modal-field">
-          <label for="shortcut-url-input">URL</label>
-          <input type="text" id="shortcut-url-input" class="modal-input" placeholder="https://example.com" autocomplete="off"/>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="modal-btn-cancel" onclick="closeAddShortcutModal();">Cancel</button>
-          <button type="button" class="modal-btn-save" onclick="saveCustomShortcut();">Add</button>
-        </div>
-      </div>
-    </div>
   </div>
 </body>
 </html>

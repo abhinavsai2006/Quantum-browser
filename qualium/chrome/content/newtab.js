@@ -102,19 +102,6 @@
       tile.appendChild(iconBox);
       tile.appendChild(titleSpan);
 
-      // Edit Button
-      const editBtn = document.createElement("button");
-      editBtn.className = "shortcut-edit-btn";
-      editBtn.title = "Edit shortcut";
-      editBtn.setAttribute("type", "button");
-      editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
-      editBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openEditShortcutModal(item);
-      });
-      tile.appendChild(editBtn);
-
       // Delete Button
       const delBtn = document.createElement("button");
       delBtn.className = "shortcut-del-btn";
@@ -136,10 +123,10 @@
       container.appendChild(tile);
     }
 
-    // Always append the "+ Add shortcut" tile
+    // Always append the "+" New Tab tile (Direct single-click tab creation, NO modal, NO URL prompt)
     const addTile = document.createElement("div");
     addTile.className = "shortcut-item";
-    addTile.title = "Add shortcut";
+    addTile.title = "New Tab";
 
     const addBox = document.createElement("div");
     addBox.className = "shortcut-icon-box shortcut-add-box";
@@ -147,80 +134,28 @@
 
     const addTitle = document.createElement("span");
     addTitle.className = "shortcut-title";
-    addTitle.textContent = "Add shortcut";
+    addTitle.textContent = "New Tab";
 
     addTile.appendChild(addBox);
     addTile.appendChild(addTitle);
-    addTile.addEventListener("click", () => openAddShortcutModal());
+    addTile.addEventListener("click", () => {
+      // Immediately create a new browser tab; zero modals, zero URL prompts!
+      if (window.parent && typeof window.parent.createNewTab === "function") {
+        window.parent.createNewTab();
+      } else if (typeof window.BrowserOpenTab === "function") {
+        window.BrowserOpenTab();
+      } else if (typeof window.openTrustedLinkIn === "function") {
+        window.openTrustedLinkIn("about:newtab", "tab");
+      } else {
+        window.postMessage({ type: "QUALIUM_OPEN_NEW_TAB" }, "*");
+      }
+    });
 
     container.appendChild(addTile);
   }
 
-  function openAddShortcutModal() {
-    editingShortcutId = null;
-    const modal = document.getElementById("shortcut-modal");
-    if (!modal) return;
-
-    const titleEl = modal.querySelector(".modal-title");
-    if (titleEl) titleEl.textContent = "Add shortcut";
-
-    const nameInput = document.getElementById("sc-name");
-    const urlInput = document.getElementById("sc-url");
-    if (nameInput) { nameInput.value = ""; nameInput.focus(); }
-    if (urlInput) urlInput.value = "";
-
-    modal.classList.add("open");
-  }
-
-  function openEditShortcutModal(item) {
-    editingShortcutId = item.id;
-    const modal = document.getElementById("shortcut-modal");
-    if (!modal) return;
-
-    const titleEl = modal.querySelector(".modal-title");
-    if (titleEl) titleEl.textContent = "Edit shortcut";
-
-    const nameInput = document.getElementById("sc-name");
-    const urlInput = document.getElementById("sc-url");
-    if (nameInput) { nameInput.value = item.title; nameInput.focus(); }
-    if (urlInput) urlInput.value = item.url;
-
-    modal.classList.add("open");
-  }
-
   function closeShortcutModal() {
-    editingShortcutId = null;
-    const modal = document.getElementById("shortcut-modal");
-    if (modal) modal.classList.remove("open");
-  }
-
-  async function saveShortcut() {
-    const nameInput = document.getElementById("sc-name");
-    const urlInput = document.getElementById("sc-url");
-    if (!nameInput || !urlInput) return;
-
-    const name = nameInput.value.trim();
-    let url = urlInput.value.trim();
-    if (!name || !url) return;
-
-    if (!/^https?:\/\//i.test(url) && !url.startsWith("qualium://") && !url.startsWith("qaulium://")) {
-      url = "https://" + url;
-    }
-
-    if (editingShortcutId) {
-      await QualiumBookmarkStore.updateBookmark(editingShortcutId, {
-        title: name,
-        url: url
-      });
-    } else {
-      await QualiumBookmarkStore.addBookmark({
-        title: name,
-        url: url,
-        pinned: true
-      });
-    }
-
-    closeShortcutModal();
+    // No-op: Modal removed
   }
 
   function handleSearch(e) {

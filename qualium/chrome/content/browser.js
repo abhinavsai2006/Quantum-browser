@@ -204,24 +204,44 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
-  // AUTHORITATIVE TAB ACTIONS
+  // AUTHORITATIVE ARCHITECTURE: TAB CREATION, SELECTION, NAVIGATION, CLOSING & CONTENT
   // ==========================================
+
+  /**
+   * NewTabPage: Renders the default Qaulium New Tab content inside a tab's viewport.
+   * Does NOT require or ask for a URL.
+   */
+  function NewTabPage(tab) {
+    if (!tab) return;
+    tab.pageType = "newTab";
+    tab.url = "";
+    tab.title = "New Tab";
+    tab.canonical = "qualium://newtab";
+    tab.iconType = "tab";
+    if (tab.controller) {
+      tab.controller.navigateURL("newtab.xhtml", "New Tab", "qualium://newtab", "tab");
+    }
+  }
+
+  /**
+   * createNewTab: Creates a new tab in the central tab state with default New Tab state.
+   * Can be called with NO arguments: createNewTab()
+   * Creating a tab NEVER requires a URL or shows any prompt.
+   */
   function createNewTab(opts = {}) {
     const tabId = opts.id || `tab-${tabCounter++}`;
-    const url = opts.url || "newtab.xhtml";
-    const title = opts.title || "New Tab";
-    const canonical = opts.canonical || (url.includes("newtab") ? "qualium://newtab" : url);
-    const iconType = opts.iconType || "tab";
-    const activate = opts.activate !== false;
+    const isExplicitNav = !!opts.url && !opts.url.includes("newtab");
 
     const viewport = createViewportElement(tabId);
 
+    // TabState data model
     const tab = {
       id: tabId,
-      url,
-      title,
-      canonical,
-      iconType,
+      title: "New Tab",
+      url: isExplicitNav ? opts.url : "",
+      canonical: isExplicitNav ? (opts.canonical || opts.url) : "qualium://newtab",
+      pageType: isExplicitNav ? "web" : "newTab",
+      iconType: isExplicitNav ? (opts.iconType || "web") : "tab",
       favicon: null,
       isLoading: false,
       viewport: viewport,
@@ -234,14 +254,14 @@ document.addEventListener("DOMContentLoaded", () => {
       (newUrl, newTitle, newCanonical, newIconType) => {
         tab.url = newUrl;
         tab.canonical = newCanonical || newUrl;
-        tab.title = newTitle || "Web Page";
-        tab.iconType = newIconType || "web";
+        tab.title = newTitle || (tab.pageType === "newTab" ? "New Tab" : "Web Page");
+        tab.iconType = newIconType || (tab.pageType === "newTab" ? "tab" : "web");
 
         const tabEl = document.getElementById(tab.id);
         if (tabEl) {
           const titleEl = tabEl.querySelector(".tab-title");
           if (titleEl) titleEl.textContent = tab.title;
-          tabEl.setAttribute("data-url", tab.url);
+          tabEl.setAttribute("data-url", tab.url || "newtab.xhtml");
           tabEl.title = `${tab.title}\n${tab.canonical}`;
           updateTabFaviconElement(tabEl, tab.canonical || tab.url, tab.iconType);
         }
@@ -260,22 +280,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
 
+    // 1. Add new tab to central tab state
     tabs.push(tab);
 
-    // Build Tab DOM Element
+    // 2. Build Tab DOM Element
     let tabEl = document.getElementById(tabId);
     if (!tabEl) {
       tabEl = document.createElement("div");
       tabEl.className = "tab";
       tabEl.id = tabId;
       tabEl.setAttribute("role", "tab");
-      tabEl.setAttribute("data-url", url);
-      tabEl.title = `${title}\n${canonical}`;
+      tabEl.setAttribute("data-url", tab.url || "newtab.xhtml");
+      tabEl.title = `${tab.title}\n${tab.canonical}`;
       tabEl.innerHTML = `
         <span class="tab-favicon">
           <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2" fill="#38bdf8"/></svg>
         </span>
-        <span class="tab-title">${escapeHTML(title)}</span>
+        <span class="tab-title">${escapeHTML(tab.title)}</span>
         <button type="button" class="tab-close-btn" aria-label="Close tab" title="Close tab (Ctrl+W)">
           <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -290,17 +311,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     bindTabEvents(tabEl, tab);
 
-    // Load initial URL
-    tab.controller.navigateURL(url, title, canonical, iconType);
+    // 3. Render default content or separate navigation
+    if (isExplicitNav) {
+      navigateTab(tab.id, opts.url);
+    } else {
+      NewTabPage(tab);
+    }
 
-    if (activate) {
-      switchTab(tabId);
+    // 4. Immediately select/focus the newly created tab
+    if (opts.activate !== false) {
+      selectTab(tabId);
     }
 
     return tab;
   }
 
-  function switchTab(tabId) {
+  /**
+   * selectTab: Selects/activates a tab by ID.
+   */
+  function selectTab(tabId) {
     const targetTab = tabs.find(t => t.id === tabId);
     if (!targetTab) return;
 
@@ -328,7 +357,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Update Address bar & Security UI
-    updateAddressBar(targetTab.url, targetTab.canonical);
+    if (targetTab.pageType === "newTab" || !targetTab.url) {
+      updateAddressBar("", "qualium://newtab");
+    } else {
+      updateAddressBar(targetTab.url, targetTab.canonical);
+    }
     updateReloadButton(targetTab.isLoading);
 
     // Update global controller hook for active tab
@@ -342,6 +375,31 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch(e) {}
   }
 
+  // Alias switchTab to selectTab for backward compatibility
+  function switchTab(tabId) {
+    selectTab(tabId);
+  }
+
+  /**
+   * navigateTab: Navigates a specific tab to a destination.
+   * Completely decoupled from tab creation.
+   */
+  function navigateTab(tabId, destination) {
+    if (!destination) return;
+    const targetTab = tabs.find(t => t.id === tabId) || getActiveTab();
+    if (!targetTab || !targetTab.controller) return;
+
+    if (destination === "qualium://newtab" || destination === "newtab.xhtml" || destination === "about:newtab") {
+      NewTabPage(targetTab);
+    } else {
+      targetTab.pageType = "web";
+      targetTab.controller.navigate(destination);
+    }
+  }
+
+  /**
+   * closeTab: Closes a tab and manages neighboring tab activation or fallback New Tab.
+   */
   function closeTab(tabId, event) {
     if (event) {
       event.preventDefault();
@@ -374,13 +432,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeTabId === tabId) {
       if (tabs.length > 0) {
         const nextIndex = Math.min(tabIndex, tabs.length - 1);
-        switchTab(tabs[nextIndex].id);
+        selectTab(tabs[nextIndex].id);
       } else {
         // If all tabs are closed, automatically create a fresh New Tab!
-        createNewTab({ activate: true });
+        createNewTab();
       }
     } else if (tabs.length === 0) {
-      createNewTab({ activate: true });
+      createNewTab();
     }
   }
 
@@ -431,7 +489,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (tabStrip) {
     tabStrip.addEventListener("dblclick", (e) => {
       if (!e.target.closest(".tab") && !e.target.closest("#btn-add-tab") && !e.target.closest(".window-controls")) {
-        createNewTab({ activate: true });
+        createNewTab();
       }
     });
   }
@@ -440,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnAddTab) {
     btnAddTab.addEventListener("click", (e) => {
       e.preventDefault();
-      createNewTab({ activate: true });
+      createNewTab();
     });
   }
 
@@ -454,7 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (rawValue) {
           const activeTab = getActiveTab();
           if (activeTab) {
-            activeTab.controller.navigate(rawValue);
+            navigateTab(activeTab.id, rawValue);
           }
           urlInput.blur();
         }
@@ -539,7 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!nav) return;
 
         switch (action) {
-          case "new-tab": createNewTab({ activate: true }); break;
+          case "new-tab": createNewTab(); break;
           case "new-identity": if (btnPopoverIdentity) btnPopoverIdentity.click(); break;
           case "bookmarks": nav.navigateInternal("qualium://bookmarks"); break;
           case "downloads": nav.navigateInternal("qualium://downloads"); break;
@@ -588,9 +646,9 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         reopenLastClosedTab();
       } else if (e.key === "t" || e.key === "T") {
-        // Ctrl+T: New tab
+        // Ctrl+T: New tab (No modal, no URL prompt)
         e.preventDefault();
-        createNewTab({ activate: true });
+        createNewTab();
       } else if (e.key === "w" || e.key === "W") {
         // Ctrl+W: Close active tab
         e.preventDefault();
@@ -602,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const curIdx = tabs.findIndex(t => t.id === activeTabId);
           const delta = e.shiftKey ? -1 : 1;
           const nextIdx = (curIdx + delta + tabs.length) % tabs.length;
-          switchTab(tabs[nextIdx].id);
+          selectTab(tabs[nextIdx].id);
         }
       } else if (e.key === "l" || e.key === "L") {
         e.preventDefault();
@@ -638,7 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         const targetIndex = e.key === "9" ? tabs.length - 1 : parseInt(e.key, 10) - 1;
         if (targetIndex >= 0 && targetIndex < tabs.length) {
-          switchTab(tabs[targetIndex].id);
+          selectTab(tabs[targetIndex].id);
         }
       }
     }
@@ -651,11 +709,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (event.data.type === "QUALIUM_NAVIGATE_CURRENT") {
         const activeTab = getActiveTab();
         if (activeTab && event.data.url) {
-          activeTab.controller.navigate(event.data.url);
+          navigateTab(activeTab.id, event.data.url);
         }
       } else if (event.data.type === "QUALIUM_OPEN_NEW_TAB") {
+        const newTab = createNewTab();
         if (event.data.url) {
-          createNewTab({ url: event.data.url, activate: event.data.activate !== false });
+          navigateTab(newTab.id, event.data.url);
         }
       }
     } catch(e) {}
@@ -665,25 +724,22 @@ document.addEventListener("DOMContentLoaded", () => {
   window.navigateTo = (input) => {
     const activeTab = getActiveTab();
     if (activeTab) {
-      activeTab.controller.navigate(input);
+      navigateTab(activeTab.id, input);
     }
   };
-  window.createNewTab = (opts) => createNewTab(opts);
+  window.createNewTab = () => createNewTab();
+  window.selectTab = (id) => selectTab(id);
+  window.switchTab = (id) => selectTab(id);
+  window.navigateTab = (id, dest) => navigateTab(id, dest);
   window.closeTab = (id) => closeTab(id);
-  window.switchTab = (id) => switchTab(id);
-  window.getTabs = () => tabs.map(t => ({ id: t.id, url: t.url, title: t.title, canonical: t.canonical }));
+  window.getTabs = () => tabs.map(t => ({ id: t.id, url: t.url, title: t.title, canonical: t.canonical, pageType: t.pageType }));
   window.getActiveTabId = () => activeTabId;
 
   // ==========================================
   // INITIALIZATION: EXACTLY 1 TAB (NEW TAB)
   // ==========================================
   const initialTab = createNewTab({
-    id: "tab-1",
-    url: "newtab.xhtml",
-    title: "New Tab",
-    canonical: "qualium://newtab",
-    iconType: "tab",
-    activate: true
+    id: "tab-1"
   });
 
   // Startup Target Argument Inspection

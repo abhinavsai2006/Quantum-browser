@@ -107,6 +107,13 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const btnAddTab = document.getElementById("btn-add-tab");
+  if (btnAddTab) {
+    btnAddTab.addEventListener("click", () => {
+      navigateTo("qualium://newtab");
+    });
+  }
+
   // Auto navigate to newtab
   setTimeout(() => {
     navigateTo("qualium://newtab");

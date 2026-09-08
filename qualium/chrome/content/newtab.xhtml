@@ -103,34 +103,7 @@
 
 </div>
 
-<!-- Add Shortcut Modal Dialog -->
-<div id="shortcut-modal" class="modal-overlay" onclick="if(event.target === this) closeShortcutModal();">
-  <div class="modal-dialog">
-    <div class="modal-header">
-      <h3 class="modal-title">Add shortcut</h3>
-      <button type="button" class="modal-close-btn" onclick="closeShortcutModal();" title="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label for="sc-name">Name</label>
-        <input type="text" id="sc-name" class="modal-input" placeholder="e.g. GitHub" autocomplete="off"/>
-      </div>
-      <div class="form-group">
-        <label for="sc-url">URL</label>
-        <input type="text" id="sc-url" class="modal-input" placeholder="https://example.com" autocomplete="off"/>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn-cancel" onclick="closeShortcutModal();">Cancel</button>
-      <button type="button" class="btn-save" onclick="saveShortcut();">Done</button>
-    </div>
-  </div>
-</div>
+
 
 </body>
 </html>

@@ -1108,7 +1108,10 @@
                 }
               } else if (cmd === "NEW_TAB") {
                 try {
-                  if (window.qualiumNav) {
+                  if (typeof window.createNewTab === "function") {
+                    window.createNewTab();
+                    res = "NEW_TAB_CREATED";
+                  } else if (window.qualiumNav && typeof window.qualiumNav.createNewTab === "function") {
                     window.qualiumNav.createNewTab();
                     res = "NEW_TAB_CREATED";
                   } else if (typeof window.BrowserOpenTab === "function") {
@@ -1128,7 +1131,10 @@
                 }
               } else if (cmd === "CLOSE_TAB") {
                 try {
-                  if (window.qualiumNav) {
+                  if (typeof window.closeTab === "function" && typeof window.getActiveTabId === "function") {
+                    window.closeTab(window.getActiveTabId());
+                    res = "TAB_CLOSED";
+                  } else if (window.qualiumNav && typeof window.qualiumNav.closeTab === "function") {
                     window.qualiumNav.closeTab();
                     res = "TAB_CLOSED";
                   } else if (typeof window.BrowserCloseTabOrWindow === "function") {
