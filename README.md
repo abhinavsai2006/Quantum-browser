@@ -38,10 +38,9 @@ Unlike conventional browsers that rely on marketing slogans like *"we don't sell
                            USER
                             │
                             ▼
-              ┌──────────────────────────┐
-              │   QUANTUM QUANTUM        │
-              │        BROWSER           │
-              └────────────┬─────────────┘
+               ┌──────────────────────────┐
+               │     QUANTUM BROWSER      │
+               └────────────┬─────────────┘
                            │
         ┌──────────────────┼───────────────────┐
         │                  │                   │
@@ -142,6 +141,7 @@ The complete engineering specification suite is available in the [`docs/`](docs/
 | 🔌 **[API Specification](docs/API_SPECIFICATION_v5.md)** | Browser-Daemon IPC protocol, 512-byte relay onion cell format, and `CryptoProvider` traits. |
 | 🗺️ **[Module Implementation Plan](docs/MODULE_IMPLEMENTATION_PLAN_v5.md)** | Section 42 repository layout mapping, Rust workspace crates, and release verification gates. |
 | 🔬 **[Cryptographic Proofs & Verification](docs/CRYPTOGRAPHIC_PROOF_AND_VERIFICATION.md)** | M-LWE lattice hardness, IND-CCA2 security reduction, hybrid dual-oracle proofs, and benchmarks. |
+| 🛡️ **[Verification & Delivery Report](docs/VERIFICATION_AND_DELIVERY_REPORT_v5.md)** | Full functional verification covering browser lifecycle, cryptographic flows, SOCKS5 remote DNS, and Method A onion routing. |
 
 ---
 
@@ -247,6 +247,14 @@ py scripts/verify_newtab_button_behavior.py
 - Validates that the browser launches with **exactly 1 clean New Tab** (`qualium://newtab`).
 - Validates that clicking `+` immediately creates a new tab with **zero URL/Name modal prompts**.
 - Validates rapid multi-tab creation (6 tabs), independent navigation, and clean tab closure.
+
+### 4. Run Method A Live IP Masking & SOCKS5 Verifier
+```bash
+py scripts/verify_ip_hiding_live.py
+```
+- Validates automatic background onion-router startup on `127.0.0.1:9050`.
+- Verifies remote SOCKS5 DNS resolution (`network.proxy.socks_remote_dns = true`).
+- Proves exit node IP substitution with zero direct ISP IP leakage.
 
 ---
 
