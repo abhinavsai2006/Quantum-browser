@@ -61,15 +61,15 @@ def main():
     xul_dll = os.path.join(runtime_dir, "xul.dll")
     omni_ja = os.path.join(runtime_dir, "browser", "omni.ja")
     
-    installer_exe = r"e:\Qaulium AI\Broswer\dist\Qaulium-Quantum-Browser-v5.0.0-Setup.exe"
+    installer_exe = r"e:\Quantum Browser Project\Broswer\dist\Qaulium-Quantum-Browser-v5.0.0-Setup.exe"
     if not os.path.exists(installer_exe):
-        installer_exe = r"e:\Qaulium AI\Broswer\dist\Qualium-Quantum-Browser-v5.0.0-Setup.exe"
+        installer_exe = r"e:\Quantum Browser Project\Broswer\dist\Qualium-Quantum-Browser-v5.0.0-Setup.exe"
 
     # 1. Executables & Binaries Check
     print("\n[CHECK 1] Executables & Core Engine Libraries...")
     checks = [
-        ("Qaulium Browser Shell", browser_exe),
-        ("Qaulium Network Daemon", daemon_exe),
+        ("Quantum Browser Shell", browser_exe),
+        ("Quantum Network Daemon", daemon_exe),
         ("Gecko Core Executable", core_exe),
         ("Gecko Runtime DLL (xul.dll)", xul_dll),
         ("Gecko Archive (omni.ja)", omni_ja),
@@ -128,8 +128,8 @@ def main():
     # 3. No Mock Data / Zero Hardcoded Runtime State
     print("\n[CHECK 3] No Mock Data / Runtime State Verification...")
     hardcoded_checks = [
-        (r"e:\Qaulium AI\Broswer\qualium\chrome\content\newtab.xhtml", ["Quantum-Shield-01", "US-East (Kyber-1024)"]),
-        (r"e:\Qaulium AI\Broswer\qualium\chrome\content\qualium-panel.xhtml", ['val-bold">24', 'val-bold">13'])
+        (r"e:\Quantum Browser Project\Broswer\qualium\chrome\content\newtab.xhtml", ["Quantum-Shield-01", "US-East (Kyber-1024)"]),
+        (r"e:\Quantum Browser Project\Broswer\qualium\chrome\content\qualium-panel.xhtml", ['val-bold">24', 'val-bold">13'])
     ]
     for file_path, bad_strings in hardcoded_checks:
         if os.path.exists(file_path):
@@ -145,7 +145,7 @@ def main():
 
     # 4. Zero Localhost Dependency Audit
     print("\n[CHECK 4] Zero Localhost Dependency Audit...")
-    source_content_dir = r"e:\Qaulium AI\Broswer\qualium\chrome\content"
+    source_content_dir = r"e:\Quantum Browser Project\Broswer\qualium\chrome\content"
     localhost_found = False
     for root, _, files in os.walk(source_content_dir):
         for f in files:

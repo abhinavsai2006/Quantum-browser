@@ -87,9 +87,9 @@ StartupWMClass=QualiumQuantumBrowser
     icons_dir = linux_stage / "icons" / "128x128"
     icons_dir.mkdir(parents=True, exist_ok=True)
     
-    if (REPO_ROOT / "qualium" / "chrome" / "content" / "qaulium_logo_128.png").exists():
-        shutil.copy(REPO_ROOT / "qualium" / "chrome" / "content" / "qaulium_logo_128.png", icons_dir / "qualium.png")
-        shutil.copy(REPO_ROOT / "qualium" / "chrome" / "content" / "qaulium_logo_128.png", linux_stage / "qualium.png")
+    if (REPO_ROOT / "qualium" / "chrome" / "content" / "quantum_logo_128.png").exists():
+        shutil.copy(REPO_ROOT / "qualium" / "chrome" / "content" / "quantum_logo_128.png", icons_dir / "qualium.png")
+        shutil.copy(REPO_ROOT / "qualium" / "chrome" / "content" / "quantum_logo_128.png", linux_stage / "qualium.png")
 
     if (DIST_DIR / "application.ini").exists():
         shutil.copy(DIST_DIR / "application.ini", linux_stage / "application.ini")
@@ -315,8 +315,8 @@ fi
     if (REPO_ROOT / "qualium.ico").exists():
         shutil.copy(REPO_ROOT / "qualium.ico", res_dir / "qualium.ico")
 
-    if (REPO_ROOT / "qualium" / "chrome" / "content" / "qaulium_logo_128.png").exists():
-        shutil.copy(REPO_ROOT / "qualium" / "chrome" / "content" / "qaulium_logo_128.png", res_dir / "qualium.png")
+    if (REPO_ROOT / "qualium" / "chrome" / "content" / "quantum_logo_128.png").exists():
+        shutil.copy(REPO_ROOT / "qualium" / "chrome" / "content" / "quantum_logo_128.png", res_dir / "qualium.png")
 
     if (DIST_DIR / "application.ini").exists():
         shutil.copy(DIST_DIR / "application.ini", res_dir / "application.ini")

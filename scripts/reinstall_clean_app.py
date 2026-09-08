@@ -7,7 +7,7 @@ import winreg
 import win32com.client
 from ctypes import windll
 
-REPO_ROOT = r"e:\Qaulium AI\Broswer"
+REPO_ROOT = r"e:\Quantum Browser Project\Broswer"
 LOCAL_QUALIUM = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qualium")
 LOCAL_QAULIUM = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qaulium")
 
@@ -28,7 +28,7 @@ def kill_running_processes():
 def remove_shortcuts():
     print("[2/6] Removing existing desktop and start menu shortcuts...")
     # Desktop
-    for name in ["Qaulium Quantum Browser.lnk", "Qualium Quantum Browser.lnk"]:
+    for name in ["Quantum Browser.lnk", "Qualium Quantum Browser.lnk"]:
         p = os.path.join(DESKTOP_DIR, name)
         if os.path.exists(p):
             try:
@@ -142,7 +142,7 @@ def perform_fresh_installation():
             shutil.copy2(src_f, os.path.join(dest, f))
 
     # Manifests
-    manifest_content = """<!-- Qaulium Quantum Browser Visual Elements -->
+    manifest_content = """<!-- Quantum Browser Visual Elements -->
 <Application xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
   <VisualElements
       ShowNameOnSquare150x150Logo='on'
@@ -182,34 +182,34 @@ def create_shortcuts_and_register():
     ico_target = os.path.join(dest, "resources", "qualium.ico")
 
     # Desktop shortcut
-    desktop_lnk = os.path.join(DESKTOP_DIR, "Qaulium Quantum Browser.lnk")
+    desktop_lnk = os.path.join(DESKTOP_DIR, "Quantum Browser.lnk")
     sc = wscript.CreateShortcut(desktop_lnk)
     sc.TargetPath = exe_target
     sc.WorkingDirectory = dest
     sc.IconLocation = f"{ico_target},0"
-    sc.Description = "Qaulium Quantum Browser — Next-Gen Post-Quantum Privacy Web Browser"
+    sc.Description = "Quantum Browser — Next-Gen Post-Quantum Privacy Web Browser"
     sc.Save()
     print(f"  Created Desktop shortcut: {desktop_lnk}")
 
     # Start Menu shortcuts
     sm_qaulium = os.path.join(START_MENU_DIR, "Qaulium")
     os.makedirs(sm_qaulium, exist_ok=True)
-    sm_lnk = os.path.join(sm_qaulium, "Qaulium Quantum Browser.lnk")
+    sm_lnk = os.path.join(sm_qaulium, "Quantum Browser.lnk")
     sc_sm = wscript.CreateShortcut(sm_lnk)
     sc_sm.TargetPath = exe_target
     sc_sm.WorkingDirectory = dest
     sc_sm.IconLocation = f"{ico_target},0"
-    sc_sm.Description = "Qaulium Quantum Browser"
+    sc_sm.Description = "Quantum Browser"
     sc_sm.Save()
     print(f"  Created Start Menu shortcut: {sm_lnk}")
 
     # Uninstall shortcut
-    uninst_lnk = os.path.join(sm_qaulium, "Uninstall Qaulium Quantum Browser.lnk")
+    uninst_lnk = os.path.join(sm_qaulium, "Uninstall Quantum Browser.lnk")
     sc_un = wscript.CreateShortcut(uninst_lnk)
     sc_un.TargetPath = os.path.join(dest, "QualiumUninstall.exe")
     sc_un.WorkingDirectory = dest
     sc_un.IconLocation = f"{ico_target},0"
-    sc_un.Description = "Uninstall Qaulium Quantum Browser"
+    sc_un.Description = "Uninstall Quantum Browser"
     sc_un.Save()
     print(f"  Created Uninstall shortcut: {uninst_lnk}")
 
@@ -217,15 +217,15 @@ def create_shortcuts_and_register():
     reg_path = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\QauliumQuantumBrowser"
     try:
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, reg_path) as k:
-            winreg.SetValueEx(k, "DisplayName", 0, winreg.REG_SZ, "Qaulium Quantum Browser")
+            winreg.SetValueEx(k, "DisplayName", 0, winreg.REG_SZ, "Quantum Browser")
             winreg.SetValueEx(k, "DisplayVersion", 0, winreg.REG_SZ, "5.0.0")
-            winreg.SetValueEx(k, "Publisher", 0, winreg.REG_SZ, "Qaulium AI")
+            winreg.SetValueEx(k, "Publisher", 0, winreg.REG_SZ, "Quantum Browser Project")
             winreg.SetValueEx(k, "DisplayIcon", 0, winreg.REG_SZ, ico_target)
             winreg.SetValueEx(k, "InstallLocation", 0, winreg.REG_SZ, dest)
             winreg.SetValueEx(k, "UninstallString", 0, winreg.REG_SZ, f'"{os.path.join(dest, "QualiumUninstall.exe")}"')
             winreg.SetValueEx(k, "QuietUninstallString", 0, winreg.REG_SZ, f'"{os.path.join(dest, "QualiumUninstall.exe")}" /S')
-            winreg.SetValueEx(k, "URLInfoAbout", 0, winreg.REG_SZ, "https://qauliumai.com")
-        print("  Registered Qaulium Quantum Browser in Windows Installed Apps registry.")
+            winreg.SetValueEx(k, "URLInfoAbout", 0, winreg.REG_SZ, "https://quantumbrowser.org")
+        print("  Registered Quantum Browser in Windows Installed Apps registry.")
     except Exception as e:
         print(f"  Registry registration note: {e}")
 
@@ -235,7 +235,7 @@ def create_shortcuts_and_register():
 
 def main():
     print("=" * 70)
-    print("QAULIUM QUANTUM BROWSER — COMPLETE RE-INSTALLATION PIPELINE")
+    print("QUANTUM BROWSER — COMPLETE RE-INSTALLATION PIPELINE")
     print("=" * 70)
     kill_running_processes()
     remove_shortcuts()
@@ -243,7 +243,7 @@ def main():
     delete_installed_directories()
     perform_fresh_installation()
     create_shortcuts_and_register()
-    print("\n[SUCCESS] Qaulium Quantum Browser removed and cleanly reinstalled on your system!")
+    print("\n[SUCCESS] Quantum Browser removed and cleanly reinstalled on your system!")
 
 if __name__ == "__main__":
     main()

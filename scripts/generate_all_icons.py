@@ -3,7 +3,7 @@ import struct
 from PIL import Image
 
 def create_transparent_master(source_logo_path):
-    print(f"Loading authoritative Qaulium Shield logo from {source_logo_path}...")
+    print(f"Loading authoritative Quantum Shield logo from {source_logo_path}...")
     img = Image.open(source_logo_path).convert("RGBA")
     
     # Crop to the exact non-transparent bounding box of the shield
@@ -61,7 +61,7 @@ def save_ico_custom(img_1024, ico_path, sizes=(256, 128, 64, 48, 32, 24, 16)):
     print(f"Saved ICO ({len(sizes)} resolutions, {len(ico_bytes)} bytes) to {ico_path}")
 
 def main():
-    repo_root = r"e:\Qaulium AI\Broswer"
+    repo_root = r"e:\Quantum Browser Project\Broswer"
     src_logo = os.path.join(repo_root, "qualium", "chrome", "content", "qaulium_logo.png")
     master = create_transparent_master(src_logo)
     

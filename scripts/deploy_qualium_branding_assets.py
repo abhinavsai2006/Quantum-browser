@@ -9,7 +9,7 @@ import ctypes
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from replace_icon import replace_icon
 
-REPO_ROOT = r"e:\Qaulium AI\Broswer"
+REPO_ROOT = r"e:\Quantum Browser Project\Broswer"
 GEN_DIR = os.path.join(REPO_ROOT, "scratch", "generated_icons")
 NEW_ICO = os.path.join(GEN_DIR, "qualium.ico")
 
@@ -132,11 +132,11 @@ def inject_pe_icons():
         os.path.join(REPO_ROOT, "runtime", "qualium-core.exe"),
         os.path.join(REPO_ROOT, "QualiumQuantumBrowser.exe"),
         os.path.join(REPO_ROOT, "qualium-daemon.exe"),
-        os.path.join(REPO_ROOT, "dist", "Qaulium-Quantum-Browser-Setup.exe"),
+        os.path.join(REPO_ROOT, "dist", "Quantum-Browser-Setup.exe"),
         os.path.join(REPO_ROOT, "dist", "Qualium-Quantum-Browser-v1.0.0-Setup.exe"),
         os.path.join(REPO_ROOT, "dist", "Qualium-Quantum-Browser-v1.0.0-win-x64-Setup.exe"),
         os.path.join(REPO_ROOT, "dist", "QualiumUninstall.exe"),
-        os.path.join(REPO_ROOT, "dist", "QauliumUninstall.exe"),
+        os.path.join(REPO_ROOT, "dist", "QuantumUninstall.exe"),
         os.path.join(REPO_ROOT, "dist", "QualiumQuantumBrowser.exe"),
         os.path.join(REPO_ROOT, "dist", "QauliumQuantumBrowser.exe"),
     ]
@@ -148,7 +148,7 @@ def inject_pe_icons():
                 os.path.join(loc, "QauliumQuantumBrowser.exe"),
                 os.path.join(loc, "qualium-daemon.exe"),
                 os.path.join(loc, "QualiumUninstall.exe"),
-                os.path.join(loc, "QauliumUninstall.exe"),
+                os.path.join(loc, "QuantumUninstall.exe"),
             ])
 
     for exe in exe_targets:

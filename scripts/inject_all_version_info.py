@@ -116,53 +116,53 @@ def inject_version_info(exe_path, strings_dict, version=(5, 0, 0, 0)):
         return False
 
 def main():
-    repo_root = r"e:\Qaulium AI\Broswer"
+    repo_root = r"e:\Quantum Browser Project\Broswer"
     local_app = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qualium")
     local_app_qaulium = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qaulium")
 
     core_strings = {
-        'Comments': 'Qaulium Quantum Browser with Post-Quantum Security',
-        'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qaulium Quantum Browser',
+        'Comments': 'Quantum Browser with Post-Quantum Security',
+        'CompanyName': 'Quantum Browser Project',
+        'FileDescription': 'Quantum Browser',
         'FileVersion': '5.0.0.0',
         'InternalName': 'qualium-core',
-        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
+        'LegalCopyright': 'Copyright © 2026 Quantum Browser Project. All rights reserved.',
         'OriginalFilename': 'qualium-core.exe',
-        'ProductName': 'Qaulium Quantum Browser',
+        'ProductName': 'Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     launcher_strings = {
-        'Comments': 'Qaulium Quantum Browser Launcher',
-        'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qaulium Quantum Browser',
+        'Comments': 'Quantum Browser Launcher',
+        'CompanyName': 'Quantum Browser Project',
+        'FileDescription': 'Quantum Browser',
         'FileVersion': '5.0.0.0',
         'InternalName': 'QualiumQuantumBrowser',
-        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
+        'LegalCopyright': 'Copyright © 2026 Quantum Browser Project. All rights reserved.',
         'OriginalFilename': 'QualiumQuantumBrowser.exe',
-        'ProductName': 'Qaulium Quantum Browser',
+        'ProductName': 'Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     sandbox_strings = {
-        'Comments': 'Qaulium Quantum Content Sandbox Process',
-        'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qaulium Quantum Tab Sandbox',
+        'Comments': 'Quantum Content Sandbox Process',
+        'CompanyName': 'Quantum Browser Project',
+        'FileDescription': 'Quantum Tab Sandbox',
         'FileVersion': '5.0.0.0',
         'InternalName': 'plugin-container',
-        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
+        'LegalCopyright': 'Copyright © 2026 Quantum Browser Project. All rights reserved.',
         'OriginalFilename': 'plugin-container.exe',
-        'ProductName': 'Qaulium Quantum Browser',
+        'ProductName': 'Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     daemon_strings = {
-        'Comments': 'Qaulium Quantum Security & Onion Routing Daemon',
-        'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qaulium Security Engine',
+        'Comments': 'Quantum Security & Onion Routing Daemon',
+        'CompanyName': 'Quantum Browser Project',
+        'FileDescription': 'Quantum Security Engine',
         'FileVersion': '5.0.0.0',
         'InternalName': 'qualium-daemon',
-        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
+        'LegalCopyright': 'Copyright © 2026 Quantum Browser Project. All rights reserved.',
         'OriginalFilename': 'qualium-daemon.exe',
         'ProductName': 'Qualium Quantum Browser',
         'ProductVersion': '5.0.0.0'
@@ -193,32 +193,32 @@ def main():
     ]
 
     installer_strings = {
-        'Comments': 'Qaulium Quantum Browser Setup and Installation Wizard',
-        'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qaulium Quantum Browser Setup',
+        'Comments': 'Quantum Browser Setup and Installation Wizard',
+        'CompanyName': 'Quantum Browser Project',
+        'FileDescription': 'Quantum Browser Setup',
         'FileVersion': '5.0.0.0',
-        'InternalName': 'Qaulium-Quantum-Browser-Setup',
-        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
-        'OriginalFilename': 'Qaulium-Quantum-Browser-Setup.exe',
-        'ProductName': 'Qaulium Quantum Browser',
+        'InternalName': 'Quantum-Browser-Setup',
+        'LegalCopyright': 'Copyright © 2026 Quantum Browser Project. All rights reserved.',
+        'OriginalFilename': 'Quantum-Browser-Setup.exe',
+        'ProductName': 'Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     uninstaller_strings = {
-        'Comments': 'Qaulium Quantum Browser Uninstaller',
-        'CompanyName': 'Qaulium AI',
-        'FileDescription': 'Qaulium Quantum Browser Uninstaller',
+        'Comments': 'Quantum Browser Uninstaller',
+        'CompanyName': 'Quantum Browser Project',
+        'FileDescription': 'Quantum Browser Uninstaller',
         'FileVersion': '5.0.0.0',
-        'InternalName': 'QauliumUninstall',
-        'LegalCopyright': 'Copyright © 2026 Qaulium AI. All rights reserved.',
-        'OriginalFilename': 'QauliumUninstall.exe',
-        'ProductName': 'Qaulium Quantum Browser',
+        'InternalName': 'QuantumUninstall',
+        'LegalCopyright': 'Copyright © 2026 Quantum Browser Project. All rights reserved.',
+        'OriginalFilename': 'QuantumUninstall.exe',
+        'ProductName': 'Quantum Browser',
         'ProductVersion': '5.0.0.0'
     }
 
     # Add installer and uninstaller EXEs
     for inst in [
-        os.path.join(repo_root, "dist", "Qaulium-Quantum-Browser-Setup.exe"),
+        os.path.join(repo_root, "dist", "Quantum-Browser-Setup.exe"),
         os.path.join(repo_root, "dist", "Qualium-Quantum-Browser-v1.0.0-Setup.exe"),
         os.path.join(repo_root, "dist", "Qualium-Quantum-Browser-v1.0.0-win-x64-Setup.exe"),
         os.path.join(repo_root, "target", "release", "qualium_installer.exe"),
@@ -228,12 +228,12 @@ def main():
 
     for uninst in [
         os.path.join(repo_root, "dist", "QualiumUninstall.exe"),
-        os.path.join(repo_root, "dist", "QauliumUninstall.exe"),
+        os.path.join(repo_root, "dist", "QuantumUninstall.exe"),
         os.path.join(repo_root, "target", "release", "qualium_uninstaller.exe"),
         os.path.join(local_app, "QualiumUninstall.exe"),
-        os.path.join(local_app, "QauliumUninstall.exe"),
+        os.path.join(local_app, "QuantumUninstall.exe"),
         os.path.join(local_app_qaulium, "QualiumUninstall.exe"),
-        os.path.join(local_app_qaulium, "QauliumUninstall.exe"),
+        os.path.join(local_app_qaulium, "QuantumUninstall.exe"),
     ]:
         if os.path.exists(uninst):
             targets.append((uninst, uninstaller_strings))
@@ -258,7 +258,7 @@ def main():
             h_path = os.path.join(rt, h)
             if os.path.exists(h_path):
                 h_strings = dict(launcher_strings)
-                h_strings['FileDescription'] = 'Qaulium Quantum Service'
+                h_strings['FileDescription'] = 'Quantum Service'
                 h_strings['InternalName'] = os.path.splitext(h)[0]
                 h_strings['OriginalFilename'] = h
                 targets.append((h_path, h_strings))
