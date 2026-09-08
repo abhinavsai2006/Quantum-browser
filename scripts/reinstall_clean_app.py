@@ -76,15 +76,25 @@ def delete_installed_directories():
                 except Exception:
                     pass
 
-    # Clean profile lock files
-    for p in [r"%LOCALAPPDATA%\Qaulium\Profile\parent.lock", r"%LOCALAPPDATA%\Qualium\Profile\parent.lock"]:
-        path = os.path.expandvars(p)
-        if os.path.exists(path):
-            try:
-                os.remove(path)
-                print(f"  Removed profile lock: {path}")
-            except Exception:
-                pass
+    # Clean profile lock files, stale sessions and startup cache so installation opens completely fresh
+    for prof in [r"%LOCALAPPDATA%\Qaulium\Profile", r"%LOCALAPPDATA%\Qualium\Profile"]:
+        pdir = os.path.expandvars(prof)
+        for item in ["parent.lock", ".parentlock", "sessionstore.jsonlz4", "sessionstore.js"]:
+            p = os.path.join(pdir, item)
+            if os.path.exists(p):
+                try:
+                    os.remove(p)
+                    print(f"  Removed profile lock/session: {p}")
+                except Exception:
+                    pass
+        for sdir in ["sessionstore-backups", "startupCache"]:
+            p = os.path.join(pdir, sdir)
+            if os.path.exists(p):
+                try:
+                    shutil.rmtree(p, ignore_errors=True)
+                    print(f"  Purged cache directory: {p}")
+                except Exception:
+                    pass
 
 def perform_fresh_installation():
     print("[5/6] Performing fresh installation into system...")
