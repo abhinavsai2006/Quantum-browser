@@ -1,7 +1,7 @@
-# Qaulium Quantum Browser v5
+# Quantum Browser v5
 
 <p align="center">
-  <img src="qaulium_icon_1024.png" width="140" alt="Qaulium Quantum Browser Logo"/>
+  <img src="quantum_icon_1024.png" width="140" alt="Quantum Browser Logo"/>
 </p>
 
 <p align="center">
@@ -22,9 +22,9 @@
 
 ## 🧭 Executive Overview
 
-**Qaulium Quantum Browser v5** is an open-source, privacy-first web browser combining modern web compatibility with rigorous post-quantum cryptographic security. 
+**Quantum Browser v5** is an open-source, privacy-first web browser combining modern web compatibility with rigorous post-quantum cryptographic security. 
 
-Unlike conventional browsers that rely on marketing slogans like *"we don't sell your data,"* Qaulium is engineered so that **Qaulium does not need to possess a user's browsing history or search history to provide the service.**
+Unlike conventional browsers that rely on marketing slogans like *"we don't sell your data,"* Quantum is engineered so that **Quantum does not need to possess a user's browsing history or search history to provide the service.**
 
 ### The Core Invariant
 > **The most important database is the one we refuse to build.**  
@@ -39,7 +39,7 @@ Unlike conventional browsers that rely on marketing slogans like *"we don't sell
                             │
                             ▼
               ┌──────────────────────────┐
-              │   QAULIUM QUANTUM        │
+              │   QUANTUM QUANTUM        │
               │        BROWSER           │
               └────────────┬─────────────┘
                            │
@@ -70,7 +70,7 @@ Unlike conventional browsers that rely on marketing slogans like *"we don't sell
                    └──────┼──────┘
                           │
                           ▼
-                 QAULIUM SEARCH
+                 QUANTUM SEARCH
                           │
                           ▼
                        INTERNET
@@ -81,7 +81,7 @@ Unlike conventional browsers that rely on marketing slogans like *"we don't sell
 ## ⚡ The 5 Core Principles
 
 - **P1 — Privacy by Design:** Do not collect information unnecessarily.
-- **P2 — Minimize Trust:** The client should not need to trust Qaulium with browsing history.
+- **P2 — Minimize Trust:** The client should not need to trust Quantum with browsing history.
 - **P3 — Cryptographic Agility:** Do not hard-code one cryptographic algorithm forever; support hot-swappable KEMs, signatures, and AEAD ciphers.
 - **P4 — Open Verification:** Security-critical components are open source and mathematically provable.
 - **P5 — Usability:** Privacy should not require users to understand cryptography.
@@ -136,7 +136,7 @@ The complete engineering specification suite is available in the [`docs/`](docs/
 
 | Document | Description |
 | :--- | :--- |
-| 📋 **[SRS v5.0](docs/SRS_v5.md)** | Authoritative 54-section Software Requirements Specification with Consolas ASCII diagrams. |
+| 📋 **[SRS v5.0](docs/SRS.md)** | Authoritative 54-section Software Requirements Specification with Consolas ASCII diagrams. |
 | 🏗️ **[System Architecture](docs/SYSTEM_ARCHITECTURE_v5.md)** | In-depth engineering models for Browser, Privacy, Security engines and daemon. |
 | 🔒 **[Data-Flow & Non-Retention](docs/DATA_FLOW_AND_NON_RETENTION.md)** | Mathematical non-retention model, ephemeral session lifecycle, and local vault design. |
 | 🔌 **[API Specification](docs/API_SPECIFICATION_v5.md)** | Browser-Daemon IPC protocol, 512-byte relay onion cell format, and `CryptoProvider` traits. |
@@ -152,7 +152,7 @@ The complete engineering specification suite is available in the [`docs/`](docs/
 | **Windows x64** | Installer (`.exe`) | [`dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe`](dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe) | Run installer wizard or execute [`QualiumQuantumBrowser.exe`](QualiumQuantumBrowser.exe) directly |
 | **Linux x86_64** | Tarball (`.tar.gz`) | [`dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz) | Extract and run `./AppRun` or run `sudo ./install.sh` |
 | **Linux (Debian/Ubuntu)** | Package (`.deb`) | `dist/linux/qualium-deb/` | Run `bash scripts/build-linux.sh` to produce `.deb` |
-| **macOS Universal** | App Bundle (`.app`) | [`dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz) | Drag `Qaulium Quantum Browser.app` to `/Applications` |
+| **macOS Universal** | App Bundle (`.app`) | [`dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz) | Drag `Quantum Browser.app` to `/Applications` |
 | **macOS Disk Image** | DMG (`.dmg`) | `dist/macos/create-dmg.sh` | Run `bash scripts/build-macos.sh` on macOS |
 
 ---
@@ -195,7 +195,7 @@ bash scripts/build-macos.sh
 
 ## 🧪 Comprehensive Verification & Benchmarks
 
-Qaulium includes an automated, rigorous verification suite testing all cryptographic primitives, privacy acceptance criteria, network circuits, and live UI flows.
+Quantum includes an automated, rigorous verification suite testing all cryptographic primitives, privacy acceptance criteria, network circuits, and live UI flows.
 
 ### 1. Run Complete Workspace Test Suite (42/42 Tests)
 ```bash
@@ -252,19 +252,19 @@ py scripts/verify_newtab_button_behavior.py
 
 ## 🔒 Security & Responsible Disclosure
 
-Qaulium AI treats security vulnerabilities with the highest priority. If you discover a security or cryptographic vulnerability, please do not file a public issue. 
+Quantum Browser Project treats security vulnerabilities with the highest priority. If you discover a security or cryptographic vulnerability, please do not file a public issue.
 
-GPG Key Fingerprint: `4A9F B3C1 88E2 D077 5612  F9B4 3C10 77E9 QAUL IUM5`
+GPG Key Fingerprint: `4A9F B3C1 88E2 D077 5612  F9B4 3C10 77E9 QUANTUM5`
 
 ---
 
 ## 📄 License
 
-Qaulium Quantum Browser is open-source software licensed under the **Mozilla Public License 2.0 (MPL-2.0)**.  
+Quantum Browser is open-source software licensed under the **Mozilla Public License 2.0 (MPL-2.0)**.  
 See the [`LICENSE`](LICENSE) file for details.
 
 ---
 
 <p align="center">
-  <strong>Qaulium AI</strong> • Built for the Quantum Era.
+  <strong>Quantum Browser Project</strong> • Built for the Quantum Era.
 </p>

@@ -62,61 +62,61 @@ def process_omni(omni_path):
     dst_zf = zipfile.ZipFile(out_buf, "w", compression=zipfile.ZIP_DEFLATED)
     
     # 1. New brand.ftl
-    new_brand_ftl = """-brand-shorter-name = Qaulium
--brand-short-name = Qaulium
--brand-shortcut-name = Qaulium
--brand-full-name = Qaulium Quantum Browser
--brand-product-name = Qaulium Quantum Browser
--vendor-short-name = Qaulium
-trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
+    new_brand_ftl = """-brand-shorter-name = Quantum
+-brand-short-name = Quantum
+-brand-shortcut-name = Quantum
+-brand-full-name = Quantum Browser
+-brand-product-name = Quantum Browser
+-vendor-short-name = Quantum
+trademarkInfo = Quantum Browser. Real Gecko Web Engine.
 """
 
     # 2. Modified protectionsPanel.ftl
     orig_prot = src_zf.read("localization/en-US/browser/protectionsPanel.ftl").decode("utf-8", "ignore")
     mod_prot = orig_prot.replace(
         "Enhanced Tracking Protection is ON for this site",
-        "Qaulium Privacy Shield is ACTIVE for this site"
+        "Quantum Privacy Shield is ACTIVE for this site"
     ).replace(
         "Enhanced Tracking Protection is OFF for this site",
-        "Qaulium Privacy Shield is PAUSED for this site"
+        "Quantum Privacy Shield is PAUSED for this site"
     ).replace(
         "Enhanced Tracking Protection",
-        "Qaulium Privacy Shield"
+        "Quantum Privacy Shield"
     ).replace(
         "Protection settings",
-        "Qaulium Privacy Settings"
+        "Quantum Privacy Settings"
     ).replace(
         "Protections dashboard",
-        "Qaulium Security Dashboard"
+        "Quantum Security Dashboard"
     ).replace(
         "No trackers known to { -brand-short-name } were detected on this page.",
-        "No tracking attempts detected on this page by Qaulium."
+        "No tracking attempts detected on this page by Quantum Browser."
     ).replace(
         "Manage protection settings",
-        "Open Qaulium Privacy Center"
+        "Open Quantum Privacy Center"
     )
 
     # 3. Modified siteProtections.ftl
     orig_site = src_zf.read("localization/en-US/browser/siteProtections.ftl").decode("utf-8", "ignore")
     mod_site = orig_site.replace(
         "Protections for { $host }",
-        "Qaulium Privacy Shield: { $host }"
+        "Quantum Privacy Shield: { $host }"
     ).replace(
         "No trackers known to { -brand-short-name } were detected on this page.",
-        "No tracking attempts detected on this page by Qaulium."
+        "No tracking attempts detected on this page by Quantum Browser."
     )
 
     # 4. Modified appmenu.ftl
     orig_appmenu = src_zf.read("localization/en-US/browser/appmenu.ftl").decode("utf-8", "ignore")
-    mod_appmenu = orig_appmenu.replace("Qualium", "Qaulium").replace("Firefox", "Qaulium")
-    mod_appmenu = mod_appmenu.replace("About { -brand-shorter-name }", "About Qaulium")
-    mod_appmenu = mod_appmenu.replace("Quit { -brand-shorter-name }", "Quit Qaulium")
-    mod_appmenu = mod_appmenu.replace(".label = Help", ".label = About Qaulium")
-    mod_appmenu = mod_appmenu.replace(".title = Help", ".title = About Qaulium")
-    mod_appmenu = mod_appmenu.replace("Exit", "Quit Qaulium")
+    mod_appmenu = orig_appmenu.replace("Qualium", "Quantum").replace("Firefox", "Quantum")
+    mod_appmenu = mod_appmenu.replace("About { -brand-shorter-name }", "About Quantum Browser")
+    mod_appmenu = mod_appmenu.replace("Quit { -brand-shorter-name }", "Quit Quantum Browser")
+    mod_appmenu = mod_appmenu.replace(".label = Help", ".label = About Quantum Browser")
+    mod_appmenu = mod_appmenu.replace(".title = Help", ".title = About Quantum Browser")
+    mod_appmenu = mod_appmenu.replace("Exit", "Quit Quantum Browser")
     mod_appmenu = mod_appmenu.replace("Report broken site", "Site Diagnostics")
 
-    # 5. Modified browser.xhtml: wire settings and dashboard buttons to Qaulium Settings and hide search selector
+    # 5. Modified browser.xhtml: wire settings and dashboard buttons to Quantum Settings and hide search selector
     orig_xhtml = src_zf.read("chrome/browser/content/browser/browser.xhtml").decode("utf-8", "ignore")
     
     # Strip any existing or duplicate hidden="true" on urlbar-search-button and private-browsing-indicator
@@ -166,7 +166,7 @@ trademarkInfo = Qaulium Quantum Browser. Real Gecko Web Engine.
     mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-passwords-button", "label=\"Passwords\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://passwords', 'tab');\"")
     mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-extensions-themes-button", "label=\"Manage Extensions\"\n                     key=\"key_openAddons\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://extensions', 'tab');\"")
     mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-settings-button", "label=\"Settings\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://settings', 'tab');\"")
-    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-help-button2", "label=\"About Qaulium\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://about', 'tab');\"")
+    mod_xhtml = replace_toolbarbutton(mod_xhtml, "appMenu-help-button2", "label=\"About Quantum Browser\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://about', 'tab');\"")
     mod_xhtml = replace_toolbarbutton(mod_xhtml, "PanelUI-historyMore", "label=\"Manage History\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); openTrustedLinkIn('qualium://history', 'tab');\"")
     mod_xhtml = replace_toolbarbutton(mod_xhtml, "unified-extensions-manage-extensions", "label=\"Manage Extensions\"\n                     oncommand=\"if(window.PanelUI) PanelUI.hide(); if(this.closest('panel')) this.closest('panel').hidePopup(); openTrustedLinkIn('qualium://extensions', 'tab');\"")
 
@@ -709,21 +709,21 @@ function resolveURIInternal(aCmdLine, aArgument) {
     with open(os.path.join(repo_root, "qualium", "chrome", "content", "about.xhtml"), "rb") as f:
         about_bytes = f.read()
 
-    new_private_ftl = """privatebrowsing-page-title = Qaulium Private Browsing
+    new_private_ftl = """privatebrowsing-page-title = Quantum Private Browsing
 about-private-browsing-search-placeholder = Search privately or enter address
-about-private-browsing-info-title = Qaulium Post-Quantum Protected Browsing
+about-private-browsing-info-title = Quantum Post-Quantum Protected Browsing
 about-private-browsing-info-description = Your connection is routed through multi-hop encrypted circuits with zero history retention.
 about-private-browsing-search-btn = Search
 about-private-browsing-handshake = Post-Quantum ML-KEM-768
 about-private-browsing-circuit = Multi-Hop Guard / Relay / Exit Active
 """
 
-    new_protections_ftl = """protection-report-webpage-title = Qaulium Privacy Center
-protection-report-page-content-title = Qaulium Privacy Center
-protection-report-page-summary = Qaulium Quantum Browser actively blocks all tracking attempts, fingerprinting, and intrusive advertisements.
-graph-week-summary = Qaulium blocked all tracker attempts over the past week
-graph-total-tracker-summary = All trackers blocked since Qaulium initial installation
-graph-private-window = Qaulium blocks trackers in all windows with zero data retention.
+    new_protections_ftl = """protection-report-webpage-title = Quantum Privacy Center
+protection-report-page-content-title = Quantum Privacy Center
+protection-report-page-summary = Quantum Browser actively blocks all tracking attempts, fingerprinting, and intrusive advertisements.
+graph-week-summary = Quantum blocked all tracker attempts over the past week
+graph-total-tracker-summary = All trackers blocked since Quantum initial installation
+graph-private-window = Quantum blocks trackers in all windows with zero data retention.
 graph-week-summary-private-window = All trackers blocked this week
 """
 

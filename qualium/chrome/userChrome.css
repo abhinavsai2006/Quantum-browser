@@ -288,7 +288,7 @@
   overflow: hidden !important;
 }
 
-/* 9. Qaulium Neutral Fallback Favicon */
+/* 9. Quantum Neutral Fallback Favicon */
 .tabbrowser-tab .tab-icon-image:not([src]),
 .tabbrowser-tab .tab-icon-image[src="chrome://branding/content/icon32.png"],
 .tabbrowser-tab .tab-icon-image[src="chrome://global/skin/icons/defaultFavicon.svg"] {

@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Authoritative Favicon & Bookmark Subsystem
+// Quantum Browser v1 — Authoritative Favicon & Bookmark Subsystem
 // Pure Vector Architecture · Zero Mock Data · Real Gecko Integration
 
 (function(global) {
@@ -102,7 +102,7 @@
         return QualiumRouteRegistry.internalToPublic(trimmed);
       }
     } else {
-      if (trimmed.startsWith("qaulium://") || trimmed.startsWith("qualium://")) {
+      if (trimmed.startsWith("quantum://") || trimmed.startsWith("qualium://")) {
         const route = trimmed.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
         return `qualium://${route}`;
       }
@@ -1213,7 +1213,7 @@
   };
 
   /**
-   * Authoritative Single Qaulium Navigation Controller
+   * Authoritative Single Quantum Navigation Controller
    * Ensures all bookmark and shortcut navigations stay inside Qualium tabs.
    * NEVER opens external browsers (Chrome, Edge, Firefox).
    */
@@ -1227,7 +1227,7 @@
       let dest = url;
       if (typeof QualiumRouteRegistry !== "undefined") {
         dest = QualiumRouteRegistry.publicToInternal(dest);
-      } else if (dest.startsWith("qaulium://") || dest.startsWith("qualium://")) {
+      } else if (dest.startsWith("quantum://") || dest.startsWith("qualium://")) {
         const file = dest.replace(/^qa?ulium:\/\//, "").replace(/\.xhtml$/, "");
         dest = `chrome://qualium/content/${file}.xhtml`;
       }
@@ -1334,7 +1334,7 @@
   };
 
   /**
-   * Authoritative Qaulium History Store
+   * Authoritative Quantum History Store
    */
   const QualiumHistoryStore = {
     _subscribers: new Set(),

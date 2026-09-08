@@ -1,16 +1,16 @@
-# Qaulium Quantum Browser v5 — Cryptographic Proofs & Verification Specification
+# Quantum Browser v5 — Cryptographic Proofs & Verification Specification
 
 **Document Version:** 5.0.0  
 **Classification:** Cryptographic Theory, Proofs & Empirical Verification  
-**Author:** Qaulium AI Cryptography & Security Engineering Team  
+**Author:** Quantum Browser Project Cryptography & Security Engineering Team  
 
 ---
 
 ## 1. Executive Summary
 
-This document provides the formal mathematical proofs, security reductions, and empirical verification theorems for the cryptographic architecture of **Qaulium Quantum Browser v5**. 
+This document provides the formal mathematical proofs, security reductions, and empirical verification theorems for the cryptographic architecture of **Quantum Browser v5**. 
 
-Qaulium implements **NIST FIPS 203 ML-KEM** (Module-Lattice-Based Key-Encapsulation Mechanism) combined in a dual-oracle hybrid construction with **X25519** (RFC 7748), authenticated symmetric transport via **ChaCha20-Poly1305** (RFC 8439), and post-quantum digital signature interfaces via **ML-DSA** (NIST FIPS 204).
+Quantum implements **NIST FIPS 203 ML-KEM** (Module-Lattice-Based Key-Encapsulation Mechanism) combined in a dual-oracle hybrid construction with **X25519** (RFC 7748), authenticated symmetric transport via **ChaCha20-Poly1305** (RFC 8439), and post-quantum digital signature interfaces via **ML-DSA** (NIST FIPS 204).
 
 ---
 
@@ -24,7 +24,7 @@ For a module rank $k \in \{2, 3, 4\}$, the $\text{M-LWE}_{k, q, \eta}$ problem r
 2. Uniformly random pairs $(A, b) \leftarrow R_q^{k \times k} \times R_q^k$.
 
 ```text
-Parameters across Qaulium Security Categories:
+Parameters across Quantum Security Categories:
 ┌─────────────┬───────┬──────┬─────────┬──────────────┬─────────────────────────────┐
 │ Algorithm   │ Rank k│ n    │ Modulus │ Secret Dist  │ Classical / Quantum Security│
 ├─────────────┼───────┼──────┼─────────┼──────────────┼─────────────────────────────┤
@@ -65,7 +65,7 @@ $$\Pr[\mathcal{A} \text{ distinguishes tampered secret from random}] \le \text{n
 
 ## 4. Hybrid Key Exchange Dual-Oracle Security Proof
 
-Qaulium combines classical X25519 with post-quantum ML-KEM-768:
+Quantum combines classical X25519 with post-quantum ML-KEM-768:
 
 ```text
 Client (Initiator)                                   Relay (Responder)
@@ -104,15 +104,15 @@ $$\mathbf{Adv}_{\text{Hybrid}}^{\text{IND-CCA2}}(\mathcal{A}) \le \min\left(\mat
 
 ## 5. Transcript Binding & Active Downgrade Resistance Proof
 
-To prevent Man-in-the-Middle (MitM) attackers from modifying the algorithm negotiation list or stripping post-quantum offers, Qaulium incorporates a cryptographically bound transcript context:
+To prevent Man-in-the-Middle (MitM) attackers from modifying the algorithm negotiation list or stripping post-quantum offers, Quantum incorporates a cryptographically bound transcript context:
 
-$$\text{Context} = \text{"Qaulium-PQ-v5.0::HybridKEM"} \parallel \text{SHA-384}\left(\text{pk}_{\text{client}}^{\text{X25519}} \parallel \text{pk}_{\text{client}}^{\text{ML-KEM}} \parallel \text{pk}_{\text{server}}^{\text{X25519}} \parallel \text{ct}_{\text{server}}^{\text{ML-KEM}} \parallel \text{OfferVersions}\right)$$
+$$\text{Context} = \text{"Quantum-PQ-v5.0::HybridKEM"} \parallel \text{SHA-384}\left(\text{pk}_{\text{client}}^{\text{X25519}} \parallel \text{pk}_{\text{client}}^{\text{ML-KEM}} \parallel \text{pk}_{\text{server}}^{\text{X25519}} \parallel \text{ct}_{\text{server}}^{\text{ML-KEM}} \parallel \text{OfferVersions}\right)$$
 
 $$K_{\text{tx}}, K_{\text{rx}}, \text{SessionID} = \text{HKDF-Expand}(K_{\text{hybrid}}, \text{Context}, 96)$$
 
 ### Downgrade Resistance Invariant
 If an adversary intercepts the client offer and replaces $\text{OfferVersions}$ with `["Insecure-Classical-v1.0"]`:
-1. The server strictly enforces $\text{OfferVersions} \cap \{\text{"Qaulium-PQ-v5.0"}\} \ne \emptyset$. If the set intersection is empty, execution terminates with `CryptoError::DowngradeDetected` and the connection drops immediately.
+1. The server strictly enforces $\text{OfferVersions} \cap \{\text{"Quantum-PQ-v5.0"}\} \ne \emptyset$. If the set intersection is empty, execution terminates with `CryptoError::DowngradeDetected` and the connection drops immediately.
 2. If the adversary alters any byte of the client public keys or supported list, the transcript context computed by the server $\text{Context}_{\text{server}}$ diverges from $\text{Context}_{\text{client}}$ with probability $1 - 2^{-384}$.
 3. Subsequent AEAD authentication tags fail to verify, ensuring forward-secure abort.
 
@@ -145,7 +145,7 @@ Assuming at least one non-colluding relay exists along the circuit path, an obse
 
 ## 7. Performance & Bandwidth Overhead Formulas (SRS Section 47)
 
-Adhering to Section 47 of the SRS, Qaulium measures:
+Adhering to Section 47 of the SRS, Quantum measures:
 - $T_{\text{classical}}$: Handshake execution time using classical X25519.
 - $T_{\text{PQC}}$: Handshake execution time using pure ML-KEM-768.
 - $T_{\text{hybrid}}$: Handshake execution time using hybrid X25519 + ML-KEM-768.

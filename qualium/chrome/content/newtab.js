@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Dynamic New Tab Controller
+// Quantum Browser v1 — Dynamic New Tab Controller
 // Authoritative Favicon & Bookmark Integration · Zero Mock Data · Zero Hardcoded Brand Artwork
 
 (function() {

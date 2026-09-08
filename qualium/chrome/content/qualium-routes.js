@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Central Authoritative Internal Route Registry
+// Quantum Browser v1 — Central Authoritative Internal Route Registry
 // Single source of truth for all qualium:// public protocols and internal chrome resources
 
 (function(global) {
@@ -58,26 +58,26 @@
   // User-Facing Tab / Page Titles
   const TITLES = {
     "qualium://newtab": "New Tab",
-    "qualium://privacy": "Qaulium Privacy",
-    "qualium://security": "Qaulium Security",
-    "qualium://settings": "Qaulium Settings",
-    "qualium://downloads": "Qaulium Downloads",
-    "qualium://bookmarks": "Qaulium Bookmarks",
-    "qualium://history": "Qaulium History",
-    "qualium://passwords": "Qaulium Passwords",
-    "qualium://extensions": "Qaulium Extensions",
-    "qualium://welcome": "Welcome to Qaulium",
+    "qualium://privacy": "Quantum Privacy",
+    "qualium://security": "Quantum Security",
+    "qualium://settings": "Quantum Settings",
+    "qualium://downloads": "Quantum Downloads",
+    "qualium://bookmarks": "Quantum Bookmarks",
+    "qualium://history": "Quantum History",
+    "qualium://passwords": "Quantum Passwords",
+    "qualium://extensions": "Quantum Extensions",
+    "qualium://welcome": "Welcome to Quantum",
     "qualium://about": "Qualium About",
     "qualium://diagnostics": "Qualium Diagnostics",
     "qualium://error": "Qualium Error"
   };
 
   const QualiumRouteRegistry = {
-    // Normalizes input string (lowercases scheme, maps qaulium:// to qualium://, strips trailing slash)
+    // Normalizes input string (lowercases scheme, maps quantum:// to qualium://, strips trailing slash)
     normalize(url) {
       if (!url) return "";
       let s = url.trim();
-      if (s.toLowerCase().startsWith("qaulium://")) {
+      if (s.toLowerCase().startsWith("quantum://")) {
         s = "qualium://" + s.slice(10);
       }
       if (s.toLowerCase().startsWith("qualium://")) {
@@ -115,7 +115,7 @@
       if (!url) return false;
       const s = url.trim();
       if (s === "about:blank" || s.startsWith("about:blank")) return false;
-      return s.startsWith("chrome://qualium/") || s.startsWith("about:") || s.startsWith("qualium://") || s.startsWith("qaulium://");
+      return s.startsWith("chrome://qualium/") || s.startsWith("about:") || s.startsWith("qualium://") || s.startsWith("quantum://");
     },
 
     // Maps public qualium:// URL -> internal Gecko chrome:// resource
@@ -162,8 +162,8 @@
         }
       }
 
-      // If it's already qualium:// or qaulium://
-      if (trimmed.toLowerCase().startsWith("qualium://") || trimmed.toLowerCase().startsWith("qaulium://")) {
+      // If it's already qualium:// or quantum://
+      if (trimmed.toLowerCase().startsWith("qualium://") || trimmed.toLowerCase().startsWith("quantum://")) {
         return this.normalize(trimmed);
       }
 
@@ -174,7 +174,7 @@
     // Returns user-facing title for any internal route or resource
     getTitleForRoute(routeOrInternal) {
       const pub = this.internalToPublic(routeOrInternal);
-      return TITLES[pub] || "Qaulium Quantum Browser";
+      return TITLES[pub] || "Quantum Browser";
     },
 
     // Classifies user input from omnibox

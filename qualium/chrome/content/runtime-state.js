@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Unified Authoritative Native Security & Runtime State Pipeline
+// Quantum Browser v1 — Unified Authoritative Native Security & Runtime State Pipeline
 // Zero Fake Status · Cryptographic Handshake Driven
 
 (function(global) {
@@ -30,7 +30,7 @@
       daemonPid: null,
       browserPid: null,
       negotiatedAtEpochMs: 0,
-      websiteTlsNote: "Website TLS is negotiated directly with origin host; Qaulium transport tunnel is protected by ML-KEM-768 hybrid encryption.",
+      websiteTlsNote: "Website TLS is negotiated directly with origin host; Quantum transport tunnel is protected by ML-KEM-768 hybrid encryption.",
       pqNegotiated: null, // ONLY non-null if pqcState === 'Negotiated'
       adsBlockedCount: 0,
       trackersBlockedCount: 0

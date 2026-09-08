@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Real Native Gecko Navigation & Internal Route Engine
+// Quantum Browser v1 — Real Native Gecko Navigation & Internal Route Engine
 
 const SEARCH_ENGINES = {
   google: {
@@ -20,20 +20,20 @@ const SEARCH_ENGINES = {
 };
 
 const INTERNAL_ROUTES = {
-  "qaulium://newtab": { file: "newtab.xhtml", title: "New Tab", icon: "tab" },
-  "qaulium://privacy": { file: "dashboard.xhtml", title: "Privacy Center", icon: "shield" },
-  "qaulium://security": { file: "dashboard.xhtml", title: "Privacy Center", icon: "shield" },
-  "qaulium://settings": { file: "settings.xhtml", title: "Settings", icon: "settings" },
-  "qaulium://downloads": { file: "downloads.xhtml", title: "Downloads", icon: "download" },
-  "qaulium://bookmarks": { file: "bookmarks.xhtml", title: "Bookmarks", icon: "bookmark" },
-  "qaulium://history": { file: "history.xhtml", title: "History", icon: "history" },
-  "qaulium://passwords": { file: "passwords.xhtml", title: "Encrypted Vault", icon: "lock" },
-  "qaulium://extensions": { file: "extensions.xhtml", title: "Extensions", icon: "extensions" },
-  "qaulium://onboarding": { file: "onboarding.xhtml", title: "Welcome to Qaulium", icon: "shield" },
-  "qaulium://about": { file: "about.xhtml", title: "About Qaulium", icon: "info" },
-  "qaulium://help": { file: "about.xhtml", title: "Help & Documentation", icon: "info" },
-  "qaulium://diagnostics": { file: "diagnostics.xhtml", title: "System Diagnostics", icon: "settings" },
-  "qaulium://icon-test": { file: "icon-test.xhtml", title: "Icon System Test", icon: "settings" },
+  "quantum://newtab": { file: "newtab.xhtml", title: "New Tab", icon: "tab" },
+  "quantum://privacy": { file: "dashboard.xhtml", title: "Privacy Center", icon: "shield" },
+  "quantum://security": { file: "dashboard.xhtml", title: "Privacy Center", icon: "shield" },
+  "quantum://settings": { file: "settings.xhtml", title: "Settings", icon: "settings" },
+  "quantum://downloads": { file: "downloads.xhtml", title: "Downloads", icon: "download" },
+  "quantum://bookmarks": { file: "bookmarks.xhtml", title: "Bookmarks", icon: "bookmark" },
+  "quantum://history": { file: "history.xhtml", title: "History", icon: "history" },
+  "quantum://passwords": { file: "passwords.xhtml", title: "Encrypted Vault", icon: "lock" },
+  "quantum://extensions": { file: "extensions.xhtml", title: "Extensions", icon: "extensions" },
+  "quantum://onboarding": { file: "onboarding.xhtml", title: "Welcome to Quantum", icon: "shield" },
+  "quantum://about": { file: "about.xhtml", title: "About Quantum Browser", icon: "info" },
+  "quantum://help": { file: "about.xhtml", title: "Help & Documentation", icon: "info" },
+  "quantum://diagnostics": { file: "diagnostics.xhtml", title: "System Diagnostics", icon: "settings" },
+  "quantum://icon-test": { file: "icon-test.xhtml", title: "Icon System Test", icon: "settings" },
 
   "qualium://newtab": { file: "newtab.xhtml", title: "New Tab", icon: "tab" },
   "qualium://privacy": { file: "dashboard.xhtml", title: "Privacy Center", icon: "shield" },
@@ -44,8 +44,8 @@ const INTERNAL_ROUTES = {
   "qualium://history": { file: "history.xhtml", title: "History", icon: "history" },
   "qualium://passwords": { file: "passwords.xhtml", title: "Encrypted Vault", icon: "lock" },
   "qualium://extensions": { file: "extensions.xhtml", title: "Extensions", icon: "extensions" },
-  "qualium://onboarding": { file: "onboarding.xhtml", title: "Welcome to Qaulium", icon: "shield" },
-  "qualium://about": { file: "about.xhtml", title: "About Qaulium", icon: "info" },
+  "qualium://onboarding": { file: "onboarding.xhtml", title: "Welcome to Quantum", icon: "shield" },
+  "qualium://about": { file: "about.xhtml", title: "About Quantum Browser", icon: "info" },
   "qualium://help": { file: "about.xhtml", title: "Help & Documentation", icon: "info" },
   "qualium://diagnostics": { file: "diagnostics.xhtml", title: "System Diagnostics", icon: "settings" },
   "qualium://icon-test": { file: "icon-test.xhtml", title: "Icon System Test", icon: "settings" }
@@ -53,7 +53,7 @@ const INTERNAL_ROUTES = {
 
 function getActiveSearchEngine() {
   try {
-    const saved = localStorage.getItem("qualium_search_engine") || localStorage.getItem("qaulium_search_engine");
+    const saved = localStorage.getItem("qualium_search_engine") || localStorage.getItem("quantum_search_engine");
     if (saved && SEARCH_ENGINES[saved]) {
       return SEARCH_ENGINES[saved];
     }
@@ -64,7 +64,7 @@ function getActiveSearchEngine() {
 function setActiveSearchEngine(engineKey) {
   if (SEARCH_ENGINES[engineKey]) {
     try {
-      localStorage.setItem("qaulium_search_engine", engineKey);
+      localStorage.setItem("quantum_search_engine", engineKey);
       localStorage.setItem("qualium_search_engine", engineKey);
     } catch (e) {}
   }
@@ -72,7 +72,7 @@ function setActiveSearchEngine(engineKey) {
 
 /**
  * Authoritative input classification:
- * 1. INTERNAL -> qaulium:// or qualium:// routes
+ * 1. INTERNAL -> quantum:// or qualium:// routes
  * 2. URL -> full http:// or https:// (Real destination)
  * 3. DOMAIN -> domain-like string (e.g. youtube.com -> https://youtube.com)
  * 4. SEARCH -> free-form query routed to search engine (Real remote engine)
@@ -83,16 +83,16 @@ function classifyInput(input) {
   const trimmed = input.trim();
   if (!trimmed) return { type: "EMPTY", url: "", title: "" };
 
-  // 1. Internal Qaulium Route
-  if (trimmed.startsWith("qaulium://") || trimmed.startsWith("qualium://") || (trimmed.endsWith(".xhtml") && !trimmed.includes("/"))) {
+  // 1. Internal Quantum Route
+  if (trimmed.startsWith("quantum://") || trimmed.startsWith("qualium://") || (trimmed.endsWith(".xhtml") && !trimmed.includes("/"))) {
     let canonical = trimmed;
-    if (!trimmed.startsWith("qaulium://") && !trimmed.startsWith("qualium://")) {
-      canonical = "qaulium://" + trimmed.replace(".xhtml", "");
+    if (!trimmed.startsWith("quantum://") && !trimmed.startsWith("qualium://")) {
+      canonical = "quantum://" + trimmed.replace(".xhtml", "");
     }
     if (canonical.endsWith(".xhtml")) {
       canonical = canonical.replace(".xhtml", "");
     }
-    const route = INTERNAL_ROUTES[canonical] || INTERNAL_ROUTES["qaulium://newtab"];
+    const route = INTERNAL_ROUTES[canonical] || INTERNAL_ROUTES["quantum://newtab"];
     const targetFile = route.file || "newtab.xhtml";
     const resolvedChromeUrl = targetFile.startsWith("chrome://") ? targetFile : "chrome://qualium/content/" + targetFile;
     return {

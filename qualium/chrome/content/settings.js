@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Interactive Settings & Preferences Controller
+// Quantum Browser v1 — Interactive Settings & Preferences Controller
 // Full State Persistence · Real Interactive Controls · Zero Mock Data
 
 (function() {
@@ -275,7 +275,7 @@
     if (btnCopyDiag) {
       btnCopyDiag.addEventListener("click", () => {
         const report = [
-          "Qaulium Quantum Browser v5.0.0 (Production Release)",
+          "Quantum Browser v5.0.0 (Production Release)",
           "Platform: Windows x86_64",
           "Engine: Gecko 140 ESR Quantum Core",
           "PQC KEM: NIST FIPS 203 ML-KEM-768 + X25519 Hybrid",

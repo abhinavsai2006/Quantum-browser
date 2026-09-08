@@ -154,7 +154,7 @@ def kill_qualium():
 
 def main():
     print("========================================================================")
-    print("  QUALIUM QUANTUM BROWSER — '+' BUTTON & NEW TAB ARCHITECTURE TEST     ")
+    print("  QUANTUM BROWSER — '+' BUTTON & NEW TAB ARCHITECTURE TEST     ")
     print("========================================================================")
     kill_qualium()
 
@@ -162,13 +162,13 @@ def main():
     if not os.path.exists(exe):
         exe = r"e:\Qaulium AI\Broswer\QualiumQuantumBrowser.exe"
 
-    print(f"\n[Phase 1] Launching clean Qualium browser instance from:\n  {exe}")
+    print(f"\n[Phase 1] Launching clean Quantum browser instance from:\n  {exe}")
     proc = subprocess.Popen([exe])
     time.sleep(5.0)
 
     hwnd = find_qualium_window(15.0)
     if not hwnd:
-        print("[-] ERROR: Qualium window could not be located!")
+        print("[-] ERROR: Quantum browser window could not be located!")
         kill_qualium()
         return False
 

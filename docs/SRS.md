@@ -1,8 +1,8 @@
-# QAULIUM QUANTUM BROWSER v5
+# QUANTUM BROWSER v5
 ## Complete Software Requirements Specification (SRS)
 
-**Project:** Qaulium Quantum Browser  
-**Organization:** Qaulium AI  
+**Project:** Quantum Browser  
+**Organization:** Quantum Browser Project  
 **Version:** 5.0  
 **Type:** Privacy-first, post-quantum-secure web browser  
 **Primary Target:** Desktop  
@@ -14,9 +14,9 @@
 ## 1. Product Definition
 
 ### Product Statement
-Qaulium Quantum Browser is a privacy-by-design web browser providing modern web compatibility, integrated advertisement/tracker blocking, anti-fingerprinting, anonymous multi-hop networking, private search, and post-quantum/hybrid cryptographic protection.
+Quantum Browser is a privacy-by-design web browser providing modern web compatibility, integrated advertisement/tracker blocking, anti-fingerprinting, anonymous multi-hop networking, private search, and post-quantum/hybrid cryptographic protection.
 
-The browser shall be designed so that Qaulium does not need to possess a user's browsing history or search history to provide the service.
+The browser shall be designed so that Quantum does not need to possess a user's browsing history or search history to provide the service.
 
 This is stronger than merely saying *"we don't sell your data."*
 
@@ -27,7 +27,7 @@ This is stronger than merely saying *"we don't sell your data."*
 The complete v5 product consists of:
 
 ```text
-                         QAULIUM QUANTUM BROWSER
+                         QUANTUM BROWSER
                                   │
         ┌─────────────────────────┼─────────────────────────┐
         │                         │                         │
@@ -63,10 +63,10 @@ The complete v5 product consists of:
 
 ## 3. Design Philosophy
 
-Qaulium v5 shall follow five core principles:
+Quantum v5 shall follow five core principles:
 
 - **P1 — Privacy by design:** Do not collect information unnecessarily.
-- **P2 — Minimize trust:** The client should not need to trust Qaulium with browsing history.
+- **P2 — Minimize trust:** The client should not need to trust Quantum with browsing history.
 - **P3 — Cryptographic agility:** Do not hard-code one cryptographic algorithm forever.
 - **P4 — Open verification:** Security-critical components should be independently auditable.
 - **P5 — Usability:** Privacy should not require users to understand cryptography.
@@ -96,7 +96,7 @@ The browser shall support:
 
 ## 5. Browser Engine
 
-Qaulium shall use a mature browser engine rather than developing its own.
+Quantum shall use a mature browser engine rather than developing its own.
 
 ### Preferred Options
 - **Option A:** Firefox ESR base
@@ -142,13 +142,13 @@ Advanced users can inspect all parameters on demand.
 
 ## 7. Quantum Security Indicator
 
-A major Qaulium feature shall be the **Q-Security Indicator**.
+A major Quantum feature shall be the **Q-Security Indicator**.
 
 Clicking `🛡 Q` opens the live security inspector:
 
 ```text
 ┌──────────────────────────────────────┐
-│       QAULIUM SECURITY               │
+│       QUANTUM SECURITY               │
 ├──────────────────────────────────────┤
 │ Anonymous routing       ✓            │
 │ PQ handshake            ✓            │
@@ -161,7 +161,7 @@ Clicking `🛡 Q` opens the live security inspector:
 │ Ads blocked             24           │
 │ Trackers blocked        13           │
 │ Local history           OFF          │
-│ Qaulium telemetry       OFF          │
+│ Quantum telemetry       OFF          │
 └──────────────────────────────────────┘
 ```
 
@@ -169,7 +169,7 @@ Clicking `🛡 Q` opens the live security inspector:
 
 ## 8. Advertisement Blocking
 
-Qaulium shall provide native advertisement blocking.
+Quantum shall provide native advertisement blocking.
 
 The engine shall detect and block:
 - Advertising domains;
@@ -213,7 +213,7 @@ The browser shall block or isolate:
 
 This is one of the most important components. A browser can hide its IP address and still be uniquely identifiable through its hardware and software fingerprint.
 
-Qaulium shall implement a **population-based fingerprint strategy**:
+Quantum shall implement a **population-based fingerprint strategy**:
 
 ```text
 BAD (Unique Fingerprints):
@@ -279,14 +279,14 @@ Cross-site tracking and cookie sharing shall be strictly eliminated.
 HISTORY = DISABLED
 ```
 
-No centralized Qaulium history service shall exist.
+No centralized Quantum history service shall exist.
 
 If the user explicitly enables local history:
 ```text
 Device
  └── encrypted local database (Argon2id + ChaCha20-Poly1305)
 and:
-Qaulium Cloud
+Quantum Cloud
  └── NO HISTORY
 ```
 
@@ -299,29 +299,29 @@ Qaulium Cloud
 SEARCH HISTORY = OFF
 ```
 
-Qaulium servers shall never create or persist a `User → Search Query` database.
+Quantum servers shall never create or persist a `User → Search Query` database.
 
 ---
 
 ## 15. Private Search Architecture
 
-Qaulium shall include **Qaulium Search**:
+Quantum shall include **Quantum Search**:
 
 ```text
 User
  │
  ▼
-Qaulium Browser
+Quantum Browser
  │
  ▼
 Anonymous Network
  │
  ▼
-Qaulium Search Gateway
+Quantum Search Gateway
  │
  ├── Search Provider A
  ├── Search Provider B
- └── Qaulium Index
+ └── Quantum Index
  │
  ▼
 Results
@@ -340,16 +340,16 @@ IP address + search query + timestamp + persistent identifier
 ```
 as a user profile.
 
-The architecture shall make reconstruction of an individual's search history impractical from Qaulium's ordinary service data.
+The architecture shall make reconstruction of an individual's search history impractical from Quantum's ordinary service data.
 
 ---
 
 ## 17. Anonymous Network
 
-Qaulium v5 shall contain a multi-hop privacy network:
+Quantum v5 shall contain a multi-hop privacy network:
 
 ```text
-                     QAULIUM NETWORK
+                     QUANTUM NETWORK
 User
  │
  ▼
@@ -393,7 +393,7 @@ This prevents cross-site circuit correlation.
 
 ## 19. Post-Quantum Security
 
-Qaulium v5 shall support standardized post-quantum cryptography:
+Quantum v5 shall support standardized post-quantum cryptography:
 - **Primary KEM:** ML-KEM (NIST FIPS 203)
 - **Initial Deployment Candidate:** ML-KEM-768
 
@@ -401,7 +401,7 @@ Qaulium v5 shall support standardized post-quantum cryptography:
 
 ## 20. Hybrid Security
 
-Qaulium shall use hybrid classical + post-quantum cryptography:
+Quantum shall use hybrid classical + post-quantum cryptography:
 
 $$K_{\text{hybrid}} = \text{KDF}(K_{\text{X25519}} \parallel K_{\text{ML-KEM}})$$
 
@@ -456,7 +456,7 @@ The project explicitly prohibits:
 - Homemade signatures;
 - Undocumented cryptographic protocols.
 
-Qaulium's innovation shall reside in:
+Quantum's innovation shall reside in:
 - Protocol integration;
 - Privacy architecture;
 - Browser architecture;
@@ -471,7 +471,7 @@ Qaulium's innovation shall reside in:
 ```text
 Browser
   ↓
-Qaulium Network
+Quantum Network
   ↓
 Secure DNS
   ↓
@@ -484,7 +484,7 @@ No DNS request shall accidentally bypass the intended privacy network path.
 
 ## 24. WebRTC Security
 
-Qaulium shall prevent unintended exposure of:
+Quantum shall prevent unintended exposure of:
 - Local IP addresses (RFC 1918);
 - Public IP addresses;
 - Local network interfaces.
@@ -495,7 +495,7 @@ WebRTC ICE candidates shall be strictly filtered or routed through the proxy.
 
 ## 25. HTTPS Enforcement
 
-Qaulium shall prefer HTTPS and enforce HTTPS-only behavior where practical, upgrading insecure HTTP requests automatically.
+Quantum shall prefer HTTPS and enforce HTTPS-only behavior where practical, upgrading insecure HTTP requests automatically.
 
 ---
 
@@ -513,7 +513,7 @@ High-risk extensions shall be disabled by default.
 
 ## 27. Password Manager
 
-Qaulium shall provide an optional local password manager:
+Quantum shall provide an optional local password manager:
 
 ```text
 Password
@@ -598,7 +598,7 @@ The dashboard shall expose:
 
 ## 32. Threat Model
 
-Qaulium v5 shall account for:
+Quantum v5 shall account for:
 - **T1:** ISP surveillance
 - **T2:** Local network observers (Wi-Fi eavesdropping)
 - **T3:** Malicious websites
@@ -617,13 +617,13 @@ Qaulium v5 shall account for:
 ## 33. Explicit Limitation
 
 The product documentation shall clearly state:
-> *"Qaulium does not guarantee perfect anonymity."*
+> *"Quantum does not guarantee perfect anonymity."*
 
-Therefore Qaulium shall never market:
+Therefore Quantum shall never market:
 > *"Police can never access your history."*
 
 Instead:
-> *"Qaulium is designed not to retain centralized browsing or search history."*
+> *"Quantum is designed not to retain centralized browsing or search history."*
 
 That is a technically defensible, auditable claim.
 
@@ -728,7 +728,7 @@ Browser
    │
    │ IPC / local API
    ▼
-Qaulium Network Daemon
+Quantum Network Daemon
    │
    ▼
 Privacy Network
@@ -754,7 +754,7 @@ The browser shall not implement the entire network stack internally.
 ## 42. Repository Layout
 
 ```text
-qaulium-quantum-browser/
+quantum-browser/
 │
 ├── browser/
 ├── ui/
@@ -838,7 +838,7 @@ Before v5 production release:
 ## 45. Testing Architecture
 
 ```text
-                    QAULIUM TESTING
+                    QUANTUM TESTING
                           │
         ┌─────────────────┼──────────────────┐
         ▼                 ▼                  ▼
@@ -858,7 +858,7 @@ Before v5 production release:
 
 ## 46. Privacy Acceptance Tests
 
-- **Test 01:** Can Qaulium server identify a user's URL?  
+- **Test 01:** Can Quantum server identify a user's URL?  
   *Expected:* **NO**
 - **Test 02:** Can search gateway reconstruct user search history?  
   *Expected:* **NO**
@@ -889,7 +889,7 @@ Where $T$ = time, $B$ = bandwidth bytes, $O$ = overhead percentage.
 
 ## 48. Research Component
 
-Qaulium shall maintain a dedicated **Quantum Privacy Research Lab**:
+Quantum shall maintain a dedicated **Quantum Privacy Research Lab**:
 1. Post-quantum onion-routing handshakes;
 2. Post-quantum circuit construction and forward secrecy;
 3. Hybrid KEM performance and packet optimization;
@@ -907,7 +907,7 @@ Qaulium shall maintain a dedicated **Quantum Privacy Research Lab**:
 ```text
 ┌─────────────────────────────────────────┐
 │                                         │
-│              QAULIUM                    │
+│              QUANTUM                    │
 │       QUANTUM PRIVACY BROWSER           │
 │                                         │
 │       🛡 Quantum-safe privacy            │
@@ -938,9 +938,9 @@ Then the browser opens to the clean New Tab page.
 
 ---
 
-## 50. The Qaulium Privacy Promise
+## 50. The Quantum Privacy Promise
 
-> *"Your browser history belongs to you. Qaulium does not need to possess it."*
+> *"Your browser history belongs to you. Quantum does not need to possess it."*
 
 Not: *"Nobody can ever find anything you do."*
 
@@ -949,7 +949,7 @@ Not: *"Nobody can ever find anything you do."*
 ## 51. Commercial Product Architecture
 
 ```text
-                 QAULIUM ECOSYSTEM
+                 QUANTUM ECOSYSTEM
                          │
         ┌────────────────┼────────────────┐
         │                │                │
@@ -962,7 +962,7 @@ Not: *"Nobody can ever find anything you do."*
         │                │                │
         └────────────────┼────────────────┘
                          ▼
-                   Qaulium Network
+                   Quantum Network
 ```
 
 ---
@@ -975,7 +975,7 @@ For enterprise environments (e.g., banking, healthcare):
 Employee
    │
    ▼
-Qaulium Enterprise Browser
+Quantum Enterprise Browser
    │
    ├── PQC
    ├── Privacy
@@ -995,7 +995,7 @@ Enterprise Infrastructure
 
 The product is not merely "another Tor Browser".
 
-**QAULIUM QUANTUM BROWSER** combines:
+**QUANTUM BROWSER** combines:
 $$\text{Modern Browser} + \text{Ad Blocking} + \text{Anti-Fingerprinting} + \text{Anonymous Routing} + \text{Private Search} + \text{Post-Quantum Cryptography}$$
 
 ---
@@ -1007,7 +1007,7 @@ $$\text{Modern Browser} + \text{Ad Blocking} + \text{Anti-Fingerprinting} + \tex
                             │
                             ▼
               ┌──────────────────────────┐
-              │   QAULIUM QUANTUM        │
+              │   QUANTUM QUANTUM        │
               │        BROWSER           │
               └────────────┬─────────────┘
                            │
@@ -1038,11 +1038,11 @@ $$\text{Modern Browser} + \text{Ad Blocking} + \text{Anti-Fingerprinting} + \tex
                    └──────┼──────┘
                           │
                           ▼
-                 QAULIUM SEARCH
+                 QUANTUM SEARCH
                           │
                           ▼
                        INTERNET
 ```
 
 ### Core Invariant
-**Qaulium should not know what the user browses.** Privacy is not an add-on; it is embedded across Browser, Storage, Search, Network, and Cryptography from day one.
+**Quantum should not know what the user browses.** Privacy is not an add-on; it is embedded across Browser, Storage, Search, Network, and Cryptography from day one.

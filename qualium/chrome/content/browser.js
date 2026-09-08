@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Authoritative Chromium-style Browser Controller
+// Quantum Browser v1 — Authoritative Chromium-style Browser Controller
 document.addEventListener("DOMContentLoaded", () => {
   const browserDeck = document.getElementById("browser-deck");
   const tabStrip = document.getElementById("tab-strip");
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!urlInput) return;
     const displayUrl = canonical || url;
 
-    if (displayUrl.startsWith("qualium://") || displayUrl.startsWith("qaulium://")) {
+    if (displayUrl.startsWith("qualium://") || displayUrl.startsWith("quantum://")) {
       urlInput.value = displayUrl;
       if (securityLabel) securityLabel.textContent = "Private";
     } else {
@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   /**
-   * NewTabPage: Renders the default Qaulium New Tab content inside a tab's viewport.
+   * NewTabPage: Renders the default Quantum New Tab content inside a tab's viewport.
    * Does NOT require or ask for a URL.
    */
   function NewTabPage(tab) {

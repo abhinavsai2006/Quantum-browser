@@ -1,8 +1,8 @@
-# Qaulium Quantum Browser v5 — Module Implementation Plan
+# Quantum Browser v5 — Module Implementation Plan
 
 **Document Version:** 5.0.0  
 **Classification:** Engineering Implementation Roadmap  
-**Author:** Qaulium AI Engineering Team  
+**Author:** Quantum Browser Project Engineering Team  
 
 ---
 
@@ -11,7 +11,7 @@
 The repository layout defined in Section 42 maps into the codebase across native Rust workspace crates, the browser runtime engine, and the chrome frontend:
 
 ```text
-qaulium-quantum-browser/
+quantum-browser/
 │
 ├── browser/              --> crates/qualium-browser (Hardened Gecko launcher & pref engine)
 ├── ui/                   --> qualium/chrome/content (XHTML/HTML5, CSS, Obsidian Glassmorphism)

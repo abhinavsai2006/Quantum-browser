@@ -83,8 +83,8 @@ def find_browser_window(max_wait=10.0):
     return None
 
 def main():
-    print_header("QAULIUM QUANTUM BROWSER v5 — END-TO-END CRYPTOGRAPHY & FLOWS VERIFIER")
-    print("Organization : Qaulium AI")
+    print_header("QUANTUM BROWSER v5 — END-TO-END CRYPTOGRAPHY & FLOWS VERIFIER")
+    print("Organization : Quantum Browser Project")
     print("Specification: SRS v5.0 (54 Sections)")
     print("Target Engine: Hardened Gecko ESR + NIST FIPS 203 ML-KEM + 3-Hop Circuits")
 
@@ -191,7 +191,7 @@ def main():
     if not os.path.exists(exe):
         exe = os.path.join(REPO_ROOT, "QualiumQuantumBrowser.exe")
 
-    print(f"  Launching Qaulium browser from: {exe}")
+    print(f"  Launching Quantum browser from: {exe}")
     proc = subprocess.Popen([exe])
     time.sleep(5.0)
 

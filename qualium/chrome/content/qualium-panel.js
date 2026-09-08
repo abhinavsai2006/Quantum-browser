@@ -1,4 +1,4 @@
-// Qaulium Quantum Browser v1 — Authoritative Security Hub Panel Controller
+// Quantum Browser v1 — Authoritative Security Hub Panel Controller
 
 const QualiumPanel = {
   service: null,
@@ -13,7 +13,7 @@ const QualiumPanel = {
         }
       }
     } catch (e) {
-      console.log("[QUALIUM:PANEL] Native XPCOM service not found, falling back to QauliumRuntimeState");
+      console.log("[QUALIUM:PANEL] Native XPCOM service not found, falling back to QuantumRuntimeState");
     }
 
     // Subscribe to Authoritative Native Runtime State

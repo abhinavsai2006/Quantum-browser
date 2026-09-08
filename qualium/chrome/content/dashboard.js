@@ -1,4 +1,4 @@
-// Qaulium Privacy Center Navigation & Live Telemetry Binding
+// Quantum Privacy Center Navigation & Live Telemetry Binding
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Sidebar Tab Navigation
