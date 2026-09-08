@@ -252,9 +252,7 @@ py scripts/verify_newtab_button_behavior.py
 
 ## 🔒 Security & Responsible Disclosure
 
-Qaulium AI treats security vulnerabilities with the highest priority. If you discover a security or cryptographic vulnerability, please do not file a public issue. Email our security team directly at:
-
-**security@qaulium.ai**
+Qaulium AI treats security vulnerabilities with the highest priority. If you discover a security or cryptographic vulnerability, please do not file a public issue. 
 
 GPG Key Fingerprint: `4A9F B3C1 88E2 D077 5612  F9B4 3C10 77E9 QAUL IUM5`
 
