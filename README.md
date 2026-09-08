@@ -1,23 +1,37 @@
-# Qualium Quantum Browser v1
+# Qualium Quantum Browser v5
 
 <p align="center">
   <img src="qaulium_icon_1024.png" width="128" alt="Qualium Icon"/>
 </p>
 
 <p align="center">
-  <strong>The Post-Quantum Secure, Privacy-First Desktop Web Browser</strong><br/>
-  Engineered for zero telemetry, ML-KEM-512/768/1024 post-quantum cryptography, and full cross-platform compatibility across Windows, Linux, and macOS.
+  <strong>The Privacy-First, Post-Quantum-Secure Web Browser</strong><br/>
+  Engineered for zero telemetry, NIST FIPS 203 ML-KEM post-quantum cryptography, population-based anti-fingerprinting, native ad/tracker blocking, and anonymous multi-hop onion routing.
 </p>
 
 ---
 
-## 🚀 Key Features
+## 🏛️ Architecture & Specifications (v5.0)
 
-- 🛡️ **Post-Quantum Cryptography (PQC)** — NIST FIPS 203 ML-KEM-512, ML-KEM-768, and ML-KEM-1024 hybrid key exchange with X25519 and ChaCha20-Poly1305.
-- ⚡ **Zero Telemetry & Zero History Retention** — Pure local session memory, automated cookie/state partitioning, and zero-leak DNS-over-HTTPS.
-- 🌐 **Anonymous Multi-Hop Routing** — Embedded post-quantum security daemon (`qualium-daemon`) managing isolated local SOCKS5 proxy circuits.
-- 🎨 **Modern Browser Chrome** — Obsidian glassmorphism UI, Chromium-style app menu, integrated `qualium://history`, `qualium://extensions`, `qualium://about` internal pages.
-- 🖥️ **Full Multi-Platform Support** — Dedicated native distribution packages for **Windows**, **Linux**, and **macOS**.
+Qualium Quantum Browser v5 follows a comprehensive, formal engineering specification suite:
+
+- 📋 **[Complete Software Requirements Specification (SRS v5)](docs/SRS_v5.md)** — The authoritative 54-section specification covering product definition, design philosophy, functional requirements, threat models, and acceptance tests.
+- 🏗️ **[System Architecture Specification](docs/SYSTEM_ARCHITECTURE_v5.md)** — Detailed multi-engine model (Browser Engine, Privacy Engine, Security Engine, Network Security Daemon, Shield Q Indicator).
+- 🔒 **[Data-Flow & Non-Retention Specification](docs/DATA_FLOW_AND_NON_RETENTION.md)** — Architectural design of *"The Database We Don't Build"*, ephemeral session lifecycles, and private search gateway data flow.
+- 🔌 **[Comprehensive API Specification](docs/API_SPECIFICATION_v5.md)** — Browser-Daemon IPC protocol, multi-hop relay onion cell specifications, and `CryptoProvider` trait abstractions.
+- 🗺️ **[Module Implementation Plan](docs/MODULE_IMPLEMENTATION_PLAN_v5.md)** — Source code structure, Rust crate boundaries, and continuous verification gates.
+
+---
+
+## 🚀 Key v5 Features
+
+- 🛡️ **Post-Quantum Cryptography (PQC)** — NIST FIPS 203 ML-KEM-768 primary KEM (plus ML-KEM-512 & 1024) in hybrid key exchange with X25519 and ChaCha20-Poly1305.
+- 🚫 **Integrated Ad & Tracker Blocking** — Native, high-throughput filtering engine blocking advertising networks, tracking pixels, and behavioral beacons.
+- 🎭 **Population-Based Anti-Fingerprinting** — Replaces unique device signatures with standardized population buckets (screen dimensions, canvas noise, WebAudio, normalized fonts).
+- 🌐 **Anonymous Multi-Hop Routing** — Embedded security controller (`qualium-daemon`) managing isolated 3-hop circuits (Guard -> Relay -> Exit) with per-domain stream isolation.
+- ⚡ **Zero Telemetry & Non-Retention Policy** — Strict ephemeral memory operation. Zero centralized history or search query retention.
+- 🛡️ **Live Quantum Security Indicator** — Toolbar popover (`🛡 Q`) displaying real-time cryptographic handshakes, circuit state, DNS leak status, and blocked tracker counts.
+- 🖥️ **Full Multi-Platform Support** — Native distribution packages for **Windows**, **Linux**, and **macOS**.
 
 ---
 
