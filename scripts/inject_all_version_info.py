@@ -116,7 +116,7 @@ def inject_version_info(exe_path, strings_dict, version=(5, 0, 0, 0)):
         return False
 
 def main():
-    repo_root = r"e:\Quantum Browser Project\Broswer"
+    repo_root = r"e:\Qaulium AI\Broswer"
     local_app = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qualium")
     local_app_qaulium = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qaulium")
 

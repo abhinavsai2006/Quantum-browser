@@ -7,7 +7,7 @@ import winreg
 import win32com.client
 from ctypes import windll
 
-REPO_ROOT = r"e:\Quantum Browser Project\Broswer"
+REPO_ROOT = r"e:\Qaulium AI\Broswer"
 LOCAL_QUALIUM = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qualium")
 LOCAL_QAULIUM = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Qaulium")
 
@@ -19,7 +19,7 @@ def kill_running_processes():
     try:
         subprocess.run([
             "powershell", "-Command",
-            "Get-Process *qualium*,*qaulium*,*firefox* -ErrorAction SilentlyContinue | Stop-Process -Force"
+            "Get-Process *qualium*,*qaulium*,*firefox*,*tor-real* -ErrorAction SilentlyContinue | Stop-Process -Force"
         ], check=False)
     except Exception as e:
         print(f"  Warning killing processes: {e}")
@@ -102,12 +102,18 @@ def perform_fresh_installation():
     os.makedirs(dest, exist_ok=True)
 
     # 1. Copy primary binaries
+    browser_src = os.path.join(REPO_ROOT, "target", "release", "QualiumQuantumBrowser.exe")
+    if os.path.exists(browser_src):
+        shutil.copy2(browser_src, os.path.join(REPO_ROOT, "QualiumQuantumBrowser.exe"))
+    
     shutil.copy2(os.path.join(REPO_ROOT, "QualiumQuantumBrowser.exe"), os.path.join(dest, "QualiumQuantumBrowser.exe"))
     shutil.copy2(os.path.join(REPO_ROOT, "QualiumQuantumBrowser.exe"), os.path.join(dest, "QauliumQuantumBrowser.exe"))
 
     # Daemon
     daemon_src = os.path.join(REPO_ROOT, "target", "release", "qualium-daemon.exe")
-    if not os.path.exists(daemon_src):
+    if os.path.exists(daemon_src):
+        shutil.copy2(daemon_src, os.path.join(REPO_ROOT, "qualium-daemon.exe"))
+    elif not os.path.exists(daemon_src):
         daemon_src = os.path.join(REPO_ROOT, "dist", "qualium-daemon.exe")
     if os.path.exists(daemon_src):
         shutil.copy2(daemon_src, os.path.join(dest, "qualium-daemon.exe"))

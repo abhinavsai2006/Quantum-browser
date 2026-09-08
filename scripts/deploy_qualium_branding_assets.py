@@ -9,7 +9,7 @@ import ctypes
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from replace_icon import replace_icon
 
-REPO_ROOT = r"e:\Quantum Browser Project\Broswer"
+REPO_ROOT = r"e:\Qaulium AI\Broswer"
 GEN_DIR = os.path.join(REPO_ROOT, "scratch", "generated_icons")
 NEW_ICO = os.path.join(GEN_DIR, "qualium.ico")
 

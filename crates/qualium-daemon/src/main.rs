@@ -28,7 +28,7 @@ impl DaemonState {
         let dns_resolver = Arc::new(PrivacyDnsResolver::default());
         let filter_engine = Arc::new(FilterEngine::default());
         let local_proxy = Arc::new(QualiumLocalProxy::new(
-            9050,
+            9060,
             circuit_controller.clone(),
             dns_resolver.clone(),
             filter_engine.clone(),
@@ -177,7 +177,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let filter_engine = Arc::new(FilterEngine::default());
 
     let mut local_proxy = QualiumLocalProxy::new(
-        9050,
+        9060,
         circuit_controller.clone(),
         dns_resolver.clone(),
         filter_engine.clone(),

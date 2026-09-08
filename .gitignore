@@ -11,6 +11,8 @@ target_repro_b/
 runtime/*
 !runtime/distribution/
 !runtime/distribution/policies.json
+!runtime/tor/
+runtime/tor/data/
 
 # Large installer binaries (distribute via GitHub Releases)
 dist/

@@ -1,0 +1,4 @@
+GeoIPFile C:\Program Files (x86)\Tor\geoip
+GeoIPv6File C:\Program Files (x86)\Tor\geoip6
+SocksPort localhost:9050
+#ExitNodes {us}
