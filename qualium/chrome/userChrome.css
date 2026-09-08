@@ -63,6 +63,19 @@
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-bottom: none !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  position: relative !important;
+}
+
+#TabsToolbar .tabbrowser-tab[selected="true"] .tab-background::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, #00f0ff 0%, #38bdf8 100%) !important;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.6) !important;
+  z-index: 2 !important;
 }
 
 #TabsToolbar .tabbrowser-tab[selected="true"] .tab-label {

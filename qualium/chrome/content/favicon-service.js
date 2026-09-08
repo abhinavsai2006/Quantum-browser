@@ -1234,8 +1234,43 @@
 
       const where = target === "tab" ? "tab" : (target === "window" ? "window" : "current");
 
-      // Check for parent/chrome navigation controller
+      // 1. Check parent / top window qualiumNav controller first (for browser.xhtml multi-tab shell)
       if (typeof window !== "undefined") {
+        if (target === "current") {
+          if (window.parent && window.parent !== window && window.parent.qualiumNav && typeof window.parent.qualiumNav.navigate === "function") {
+            window.parent.qualiumNav.navigate(dest);
+            return;
+          }
+          if (window.top && window.top !== window && window.top.qualiumNav && typeof window.top.qualiumNav.navigate === "function") {
+            window.top.qualiumNav.navigate(dest);
+            return;
+          }
+          if (window.qualiumNav && typeof window.qualiumNav.navigate === "function") {
+            window.qualiumNav.navigate(dest);
+            return;
+          }
+        } else if (target === "tab") {
+          if (window.parent && window.parent !== window && typeof window.parent.createNewTab === "function") {
+            window.parent.createNewTab({ url: dest, activate: true });
+            return;
+          }
+          if (window.top && window.top !== window && typeof window.top.createNewTab === "function") {
+            window.top.createNewTab({ url: dest, activate: true });
+            return;
+          }
+        }
+
+        // Cross-window / iframe message dispatch
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: target === "tab" ? "QUALIUM_OPEN_NEW_TAB" : "QUALIUM_NAVIGATE_CURRENT",
+              url: dest
+            }, "*");
+          }
+        } catch(e) {}
+
+        // 2. Check for Gecko top-level browser chrome window (gBrowser)
         let chromeWin = null;
         try {
           chromeWin = window.browsingContext?.topChromeWindow ||
@@ -1247,18 +1282,35 @@
 
         if (chromeWin) {
           try {
-            if (typeof chromeWin.openTrustedLinkIn === "function") {
-              chromeWin.openTrustedLinkIn(dest, where);
-              return;
-            }
-            if (chromeWin.gBrowser) {
+            if (chromeWin.gBrowser && chromeWin.gBrowser.selectedBrowser) {
+              const b = chromeWin.gBrowser.selectedBrowser;
               const secMan = chromeWin.Services ? chromeWin.Services.scriptSecurityManager : null;
               const principal = secMan ? secMan.getSystemPrincipal() : null;
-              if (target === "tab") {
-                chromeWin.gBrowser.addTab(dest, { triggeringPrincipal: principal });
+              b.userTypedValue = null;
+              if (chromeWin.gBrowser) chromeWin.gBrowser.userTypedValue = null;
+
+              if (where === "tab") {
+                if (typeof chromeWin.openTrustedLinkIn === "function") {
+                  chromeWin.openTrustedLinkIn(dest, "tab");
+                } else {
+                  chromeWin.gBrowser.addTab(dest, { triggeringPrincipal: principal });
+                }
+                return;
               } else {
-                chromeWin.gBrowser.selectedBrowser.loadURI(dest, { triggeringPrincipal: principal });
+                // In-place navigation: ALWAYS navigate existing selected browser
+                if (typeof b.fixupAndLoadURIString === "function") {
+                  b.fixupAndLoadURIString(dest, { triggeringPrincipal: principal });
+                } else if (typeof b.loadURI === "function") {
+                  b.loadURI(dest, { triggeringPrincipal: principal });
+                } else {
+                  b.src = dest;
+                }
+                return;
               }
+            }
+
+            if (typeof chromeWin.openTrustedLinkIn === "function") {
+              chromeWin.openTrustedLinkIn(dest, where);
               return;
             }
           } catch(e) {
@@ -1274,16 +1326,8 @@
           window.openTrustedLinkIn(dest, where);
           return;
         }
-        if (window.parent && window.parent !== window && typeof window.parent.qualiumNav !== "undefined") {
-          window.parent.qualiumNav.navigate(dest);
-          return;
-        }
-        if (window.qualiumNav && typeof window.qualiumNav.navigate === "function") {
-          window.qualiumNav.navigate(dest);
-          return;
-        }
 
-        // Native content tab navigation
+        // Fallback: in-page navigation
         window.location.href = dest;
       }
     }

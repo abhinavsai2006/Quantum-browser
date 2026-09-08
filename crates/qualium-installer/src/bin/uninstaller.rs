@@ -1,5 +1,4 @@
-#![windows_subsystem = "windows"]
-#![cfg(windows)]
+#![cfg_attr(windows, windows_subsystem = "windows")]
 
 //! Qualium Quantum Browser v5 — Production Windows Uninstaller
 //! Pure native Win32 implementation (Zero WinForms, Zero .NET).
@@ -10,12 +9,18 @@
 //! 4. Removing (Shortcut cleanup, Registry deregistration, Manifest deletion)
 //! 5. Verification & Clean Self-Deletion
 
+#[cfg(windows)]
 use qualium_installer_lib::uninstaller_engine::UninstallerEngine;
+#[cfg(windows)]
 use qualium_installer_lib::win32;
+#[cfg(windows)]
 use qualium_installer_lib::win32_gui;
+#[cfg(windows)]
 use std::env;
+#[cfg(windows)]
 use std::path::PathBuf;
 
+#[cfg(windows)]
 fn get_app_dir() -> PathBuf {
     if let Ok(exe) = env::current_exe() {
         if let Some(parent) = exe.parent() {
@@ -30,6 +35,7 @@ fn get_app_dir() -> PathBuf {
     win32::get_default_install_dir()
 }
 
+#[cfg(windows)]
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     let is_silent = args.iter().any(|a| a == "/S" || a == "/silent" || a == "--silent");
@@ -45,4 +51,9 @@ fn main() -> anyhow::Result<()> {
     }
 
     win32_gui::run_uninstaller_gui(engine, install_dir)
+}
+
+#[cfg(not(windows))]
+fn main() -> anyhow::Result<()> {
+    anyhow::bail!("qualium_uninstaller is only supported on Windows")
 }

@@ -340,8 +340,10 @@
     }
   }
 
-  // Global exports for modal handlers
+  // Global exports for modal handlers and search
   window.closeShortcutModal = closeShortcutModal;
   window.saveShortcut = saveShortcut;
+  window.handleSearch = handleSearch;
+  window.handleNewTabSearch = handleSearch;
 
 })();

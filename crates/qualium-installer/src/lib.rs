@@ -17,6 +17,10 @@ pub mod win32;
 pub mod win32 {
     use std::path::{Path, PathBuf};
 
+    pub mod sys {
+        pub const CREATE_NO_WINDOW: u32 = 0;
+    }
+
     pub fn get_disk_free_space(_path: &Path) -> Option<(u64, u64)> {
         None
     }
@@ -49,11 +53,15 @@ pub mod win32 {
     }
 
     pub fn get_default_install_dir() -> PathBuf {
-        std::env::temp_dir().join("Qualium")
+        PathBuf::from("/opt/qualium")
     }
 
     pub fn get_user_data_dir() -> PathBuf {
-        std::env::temp_dir().join("QualiumProfile")
+        if let Ok(home) = std::env::var("HOME") {
+            PathBuf::from(home).join(".qualium")
+        } else {
+            PathBuf::from("/tmp/.qualium")
+        }
     }
 
     pub fn get_desktop_shortcut_paths() -> Vec<PathBuf> {

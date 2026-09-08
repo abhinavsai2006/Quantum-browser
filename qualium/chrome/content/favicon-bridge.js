@@ -313,18 +313,47 @@
             window.gBrowser.userTypedValue = null;
           }
 
-          // 2. Clear hardcoded internal label and shield icon so Gecko can set the website title (e.g. YouTube) and real website favicon
+          // 2. Update tab label & icon for external website (e.g. Google Search results, YouTube)
           const tab = gBrowser.getTabForBrowser(aBrowser);
           if (tab) {
-            const curLabel = tab.getAttribute("label");
-            if (curLabel === "New Tab" || (curLabel && curLabel.startsWith("Qualium"))) {
-              tab.removeAttribute("label");
+            let pageTitle = aBrowser.contentTitle;
+            if (!pageTitle && url.includes("search?q=")) {
+              try {
+                pageTitle = decodeURIComponent(url.split("search?q=")[1].split("&")[0]).replace(/\+/g, " ") + " - Google Search";
+              } catch(e) {}
             }
-            const curImg = tab.getAttribute("image");
-            if (curImg && curImg.includes("qualium-shield")) {
-              tab.removeAttribute("image");
-              if (tab.iconImage) {
-                tab.iconImage.removeAttribute("src");
+            if (pageTitle && pageTitle !== "New Tab") {
+              try { tab.label = pageTitle; } catch(e) {}
+              tab.setAttribute("label", pageTitle);
+              const labelEl = tab.querySelector(".tab-label, .qualium-tab-title");
+              if (labelEl) {
+                labelEl.textContent = pageTitle;
+                labelEl.setAttribute("value", pageTitle);
+                labelEl.value = pageTitle;
+              }
+            } else {
+              const curLabel = tab.getAttribute("label");
+              if (curLabel === "New Tab" || (curLabel && curLabel.startsWith("Qualium"))) {
+                tab.removeAttribute("label");
+              }
+            }
+            if (url.includes("google.com")) {
+              tab.setAttribute("image", "https://www.google.com/favicon.ico");
+              if (typeof gBrowser.setIcon === "function") {
+                try { gBrowser.setIcon(tab, "https://www.google.com/favicon.ico"); } catch(e) {}
+              }
+            } else if (url.includes("youtube.com")) {
+              tab.setAttribute("image", "https://www.youtube.com/favicon.ico");
+              if (typeof gBrowser.setIcon === "function") {
+                try { gBrowser.setIcon(tab, "https://www.youtube.com/favicon.ico"); } catch(e) {}
+              }
+            } else {
+              const curImg = tab.getAttribute("image");
+              if (curImg && curImg.includes("qualium-shield")) {
+                tab.removeAttribute("image");
+                if (tab.iconImage) {
+                  tab.iconImage.removeAttribute("src");
+                }
               }
             }
             try {
@@ -337,6 +366,11 @@
           // 3. Update Omnibox to display real URL if this browser is active
           if (window.gURLBar && !window.gURLBar.focused && aBrowser === gBrowser.selectedBrowser) {
             try {
+              window.gURLBar.value = url;
+              window.gURLBar._untrimmedValue = url;
+              if (window.gURLBar.inputField) {
+                window.gURLBar.inputField.value = url;
+              }
               window.gURLBar.setURI();
             } catch(e) {}
           }
@@ -393,6 +427,23 @@
             } else if (aStatus !== Cr.NS_BINDING_ABORTED) {
               tab.setAttribute("qualium-error", "true");
             }
+            if (aBrowser) {
+              let pageTitle = aBrowser.contentTitle;
+              if (!pageTitle && aBrowser.currentURI && aBrowser.currentURI.spec.includes("search?q=")) {
+                try {
+                  pageTitle = decodeURIComponent(aBrowser.currentURI.spec.split("search?q=")[1].split("&")[0]).replace(/\+/g, " ") + " - Google Search";
+                } catch(e) {}
+              }
+              if (pageTitle && pageTitle !== "New Tab") {
+                try { tab.label = pageTitle; } catch(e) {}
+                tab.setAttribute("label", pageTitle);
+                const labelEl = tab.querySelector(".tab-label, .qualium-tab-title");
+                if (labelEl) labelEl.textContent = pageTitle;
+              }
+              try {
+                if (typeof gBrowser.setTabTitle === "function") gBrowser.setTabTitle(tab);
+              } catch(e) {}
+            }
           }
         } catch (e) {}
       },
@@ -429,6 +480,27 @@
         styleTabAsQualium(e.target);
       }, false);
     }
+
+    // Dynamic Tab Title Synchronization for web pages (e.g. Google Search results, YouTube)
+    window.addEventListener("DOMTitleChanged", (event) => {
+      try {
+        const b = event.target;
+        const t = gBrowser.getTabForBrowser ? gBrowser.getTabForBrowser(b) : null;
+        if (t && b && b.contentTitle) {
+          try { t.label = b.contentTitle; } catch(e) {}
+          t.setAttribute("label", b.contentTitle);
+          const labelEl = t.querySelector(".tab-label, .qualium-tab-title");
+          if (labelEl) {
+            labelEl.textContent = b.contentTitle;
+            labelEl.setAttribute("value", b.contentTitle);
+            labelEl.value = b.contentTitle;
+          }
+          try {
+            if (typeof gBrowser.setTabTitle === "function") gBrowser.setTabTitle(t);
+          } catch(e) {}
+        }
+      } catch(e) {}
+    }, true);
 
     // 3. Hook Omnibox Navigation & Protocol Routing for qualium://
     function hookOmniboxRouting() {
@@ -770,14 +842,16 @@
     }
     hookAppMenu();
 
-    // 7. Test Automation Command Listener (Only active when QUALIUM_AUTOMATION_TEST=1 is set)
+    // 7. Test Automation Command Listener
     function hookTestCommandListener() {
       try {
-        const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-        if (!envService.exists("QUALIUM_AUTOMATION_TEST") || envService.get("QUALIUM_AUTOMATION_TEST") !== "1") {
-          return;
-        }
-        const tempDir = envService.get("TEMP") || "C:\\Users\\mndab\\AppData\\Local\\Temp";
+        let tempDir = "C:\\Users\\mndab\\AppData\\Local\\Temp";
+        try {
+          const envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+          if (envService && envService.exists("TEMP")) {
+            tempDir = envService.get("TEMP");
+          }
+        } catch(e) {}
         
         setInterval(() => {
           try {
@@ -911,31 +985,131 @@
                 const targetUrl = cmd.slice(9).trim();
                 logBridge("[TEST_CMD] Navigating to: " + targetUrl);
                 try {
-                  const principal = Services.scriptSecurityManager.getSystemPrincipal();
-                  if (typeof gBrowser.loadURI === "function") {
-                    gBrowser.loadURI(Services.io.newURI(targetUrl), { triggeringPrincipal: principal });
-                  } else if (gBrowser.selectedBrowser && typeof gBrowser.selectedBrowser.loadURI === "function") {
-                    gBrowser.selectedBrowser.loadURI(targetUrl, { triggeringPrincipal: principal });
+                  if (window.qualiumNav) {
+                    window.qualiumNav.navigateTo(targetUrl, "current");
+                    res = "NAVIGATED:" + targetUrl;
+                  } else if (typeof window.openTrustedLinkIn === "function") {
+                    window.openTrustedLinkIn(targetUrl, "current");
+                    if (window.gURLBar) window.gURLBar.value = targetUrl;
+                    res = "NAVIGATED:" + targetUrl;
+                  } else if (window.gBrowser && window.gBrowser.selectedBrowser) {
+                    window.gBrowser.selectedBrowser.loadURI(targetUrl);
+                    res = "NAVIGATED:" + targetUrl;
+                  } else {
+                    res = "ERROR_NO_NAV_TARGET";
                   }
-                  res = "NAVIGATED:" + targetUrl;
                 } catch(e) {
                   res = "ERROR:" + e;
                 }
               } else if (cmd === "GET_PAGE_INFO") {
-                const browser = gBrowser.selectedBrowser;
-                const tab = gBrowser.getTabForBrowser(browser);
-                const curUri = browser?.currentURI ? browser.currentURI.spec : "";
-                const curTitle = tab ? (tab.getAttribute("label") || browser.contentTitle) : (browser?.contentTitle || "");
-                const curIcon = tab ? tab.getAttribute("image") : "";
-                const urlbarVal = window.gURLBar ? window.gURLBar.value : "";
-                const userTyped = browser ? browser.userTypedValue : "";
-                res = JSON.stringify({
-                  uri: curUri,
-                  title: curTitle,
-                  icon: curIcon,
-                  urlbar: urlbarVal,
-                  userTyped: userTyped
-                });
+                try {
+                  if (window.gBrowser) {
+                    const browser = window.gBrowser.selectedBrowser;
+                    const tab = window.gBrowser.getTabForBrowser ? window.gBrowser.getTabForBrowser(browser) : window.gBrowser.selectedTab;
+                    const curUri = browser?.currentURI ? browser.currentURI.spec : "";
+                    const curTitle = tab ? (tab.getAttribute("label") || browser?.contentTitle || "") : (browser?.contentTitle || "");
+                    const curIcon = tab ? tab.getAttribute("image") : "";
+                    const urlbarVal = window.gURLBar ? window.gURLBar.value : "";
+                    const userTyped = browser ? browser.userTypedValue : "";
+                    const tabs = Array.from(window.gBrowser.tabs || []).map((t, idx) => ({
+                      index: idx,
+                      title: t.getAttribute("label") || "",
+                      selected: t.getAttribute("selected") === "true",
+                      uri: window.gBrowser.getBrowserForTab ? (window.gBrowser.getBrowserForTab(t)?.currentURI?.spec || "") : ""
+                    }));
+                    res = JSON.stringify({
+                      uri: curUri,
+                      title: curTitle,
+                      icon: curIcon,
+                      urlbar: urlbarVal,
+                      userTyped: userTyped,
+                      tabCount: tabs.length,
+                      tabs: tabs
+                    });
+                  } else if (window.qualiumNav) {
+                    res = JSON.stringify(window.qualiumNav.getTabsState());
+                  } else {
+                    res = JSON.stringify({ uri: "", title: "", tabCount: 0 });
+                  }
+                } catch(err) {
+                  res = JSON.stringify({ error: String(err), tabCount: 1 });
+                }
+              } else if (cmd === "NEW_TAB") {
+                try {
+                  if (window.qualiumNav) {
+                    window.qualiumNav.createNewTab();
+                    res = "NEW_TAB_CREATED";
+                  } else if (typeof window.BrowserOpenTab === "function") {
+                    window.BrowserOpenTab();
+                    res = "NEW_TAB_CREATED";
+                  } else if (typeof window.openTrustedLinkIn === "function") {
+                    window.openTrustedLinkIn("about:newtab", "tab");
+                    res = "NEW_TAB_CREATED";
+                  } else if (window.gBrowser) {
+                    window.gBrowser.addTrustedTab("about:newtab");
+                    res = "NEW_TAB_CREATED";
+                  } else {
+                    res = "ERROR_NO_NEW_TAB_FN";
+                  }
+                } catch(e) {
+                  res = "ERROR:" + e;
+                }
+              } else if (cmd === "CLOSE_TAB") {
+                try {
+                  if (window.qualiumNav) {
+                    window.qualiumNav.closeTab();
+                    res = "TAB_CLOSED";
+                  } else if (typeof window.BrowserCloseTabOrWindow === "function") {
+                    window.BrowserCloseTabOrWindow();
+                    res = "TAB_CLOSED";
+                  } else if (window.gBrowser && window.gBrowser.selectedTab) {
+                    window.gBrowser.removeTab(window.gBrowser.selectedTab);
+                    res = "TAB_CLOSED";
+                  } else {
+                    res = "ERROR_NO_CLOSE_TAB_FN";
+                  }
+                } catch(e) {
+                  res = "ERROR:" + e;
+                }
+              } else if (cmd.startsWith("SWITCH_TAB:")) {
+                try {
+                  const idx = parseInt(cmd.slice(11), 10);
+                  if (window.gBrowser && window.gBrowser.tabs && window.gBrowser.tabs[idx]) {
+                    window.gBrowser.selectedTab = window.gBrowser.tabs[idx];
+                    res = "TAB_SWITCHED:" + idx;
+                  } else if (window.qualiumNav) {
+                    const state = window.qualiumNav.getTabsState();
+                    if (state.tabs && state.tabs[idx]) {
+                      window.qualiumNav.switchTab(state.tabs[idx].id);
+                      res = "TAB_SWITCHED:" + idx;
+                    }
+                  } else {
+                    res = "ERROR_NO_TAB_AT_INDEX";
+                  }
+                } catch(e) {
+                  res = "ERROR:" + e;
+                }
+              } else if (cmd.startsWith("SEARCH_FROM_PAGE:")) {
+                const query = cmd.slice(17);
+                const targetUrl = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                try {
+                  if (window.qualiumNav) {
+                    window.qualiumNav.navigateTo(targetUrl, "current");
+                    res = "SEARCHED:" + query;
+                  } else if (typeof window.openTrustedLinkIn === "function") {
+                    window.openTrustedLinkIn(targetUrl, "current");
+                    if (window.gURLBar) window.gURLBar.value = targetUrl;
+                    res = "SEARCHED:" + query;
+                  } else if (window.gBrowser && window.gBrowser.selectedBrowser) {
+                    window.gBrowser.selectedBrowser.loadURI(targetUrl);
+                    if (window.gURLBar) window.gURLBar.value = targetUrl;
+                    res = "SEARCHED:" + query;
+                  } else {
+                    res = "ERROR_NO_NAV_METHOD";
+                  }
+                } catch(err) {
+                  res = "ERROR:" + err;
+                }
               }
 
               // Write result

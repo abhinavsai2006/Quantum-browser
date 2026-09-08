@@ -19,20 +19,14 @@
     <!-- 1. TAB BAR & WINDOW CONTROLS -->
     <header class="browser-titlebar" id="titlebar">
       <div class="tab-strip" id="tab-strip" role="tablist">
-        <div class="tab active" data-url="newtab.xhtml" id="tab-1" role="tab" aria-selected="true">
-          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
-          <span class="tab-title">New Tab</span>
-          <button type="button" class="tab-close-btn" aria-label="Close tab">
-            <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-
-        <div class="tab" data-url="dashboard.xhtml" id="tab-2" role="tab" aria-selected="false">
-          <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span class="tab-title">Privacy Center</span>
-          <button type="button" class="tab-close-btn" aria-label="Close tab">
-            <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+        <div class="tab-strip-tabs" id="tab-strip-tabs">
+          <div class="tab active" data-url="newtab.xhtml" id="tab-1" role="tab" aria-selected="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm tab-favicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2" fill="#38bdf8"/></svg>
+            <span class="tab-title">New Tab</span>
+            <button type="button" class="tab-close-btn" aria-label="Close tab" title="Close tab (Ctrl+W)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="q-icon q-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
 
         <button type="button" class="q-icon-btn btn-new-tab" id="btn-add-tab" title="New Tab (Ctrl+T)" aria-label="New Tab">
@@ -246,7 +240,7 @@
 
     <!-- 5. NATIVE GECKO WEB CONTENT VIEWPORT (TOP-LEVEL BROWSING CONTEXT) -->
     <main class="browser-viewport" id="browser-deck">
-      <browser id="content-browser" type="content" remote="true" primary="true" src="newtab.xhtml" class="content-browser"/>
+      <browser id="content-browser" type="content" remote="true" primary="true" src="newtab.xhtml" class="content-browser" data-tab-id="tab-1"/>
     </main>
 
     <!-- Toast Notification Container -->

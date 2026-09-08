@@ -126,7 +126,7 @@ fn main() {
     );
 
     let mut zip_created = false;
-    for py_bin in ["python3", "python", "py"] {
+    for py_bin in ["py", "python3", "python"] {
         if let Ok(status) = Command::new(py_bin).args(["-c", &py_cmd]).status() {
             if status.success() && payload_zip.exists() {
                 zip_created = true;
