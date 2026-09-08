@@ -347,7 +347,7 @@ override chrome://browser/content/blanktab.html chrome://qualium/content/newtab.
         val = this.window.QualiumRouteRegistry.internalToPublic(val);
       } else {
         let v = val.trim();
-        if (v.startsWith("chrome://qualium/content/newtab.xhtml") || v === "about:newtab" || v === "about:home" || v === "about:blank" || v === "about:privatebrowsing" || v === "chrome://browser/content/blanktab.html") {
+        if (v.startsWith("chrome://qualium/content/newtab.xhtml") || v === "about:newtab" || v === "about:home") {
           val = "qualium://newtab";
         } else if (v.startsWith("chrome://qualium/content/about.xhtml") || v.startsWith("chrome://qualium/content/settings.xhtml#about")) {
           val = "qualium://about";
@@ -374,12 +374,16 @@ override chrome://browser/content/blanktab.html chrome://qualium/content/newtab.
           val = m ? decodeURIComponent(m[1]) : "qualium://error";
         }
       }
+    } else if (!val) {
+      let curSpec = this.window?.gBrowser?.selectedBrowser?.currentURI?.spec || "";
+      if (curSpec.startsWith("chrome://qualium/content/newtab.xhtml") || curSpec === "about:newtab" || curSpec === "about:home") {
+        val = "qualium://newtab";
+        untrimmedValue = "qualium://newtab";
+      }
     }
     if (untrimmedValue && typeof untrimmedValue === "string") {
       if (this.window?.QualiumRouteRegistry) {
         untrimmedValue = this.window.QualiumRouteRegistry.internalToPublic(untrimmedValue);
-      } else if (untrimmedValue === "about:blank") {
-        untrimmedValue = "qualium://newtab";
       } else if (untrimmedValue.includes("chrome://qualium/content/")) {
         if (untrimmedValue.includes("newtab.xhtml")) untrimmedValue = "qualium://newtab";
         else if (untrimmedValue.includes("about.xhtml")) untrimmedValue = "qualium://about";
@@ -457,25 +461,31 @@ override chrome://browser/content/blanktab.html chrome://qualium/content/newtab.
     }"""
     mod_urlbar = mod_urlbar.replace(urlbar_load_target, urlbar_load_replacement, 1)
 
-    # Ensure browser.userTypedValue is never set for internal qualium URLs so subsequent navigations update URL bar normally
+    # Ensure browser.userTypedValue is never set for internal qualium URLs or web navigations so subsequent navigations update URL bar normally
     user_typed_target = "browser.userTypedValue = this.value;"
-    user_typed_replacement = """browser.userTypedValue = (url && (url.startsWith("qualium://") || url.startsWith("chrome://qualium/"))) ? null : this.value;
-      if (url && (url.startsWith("qualium://") || url.startsWith("chrome://qualium/")) && this.window?.gBrowser) {
-        this.window.gBrowser.userTypedValue = null;
+    user_typed_replacement = """browser.userTypedValue = (url && (url.startsWith("qualium://") || url.startsWith("chrome://qualium/") || url.startsWith("http://") || url.startsWith("https://"))) ? null : this.value;
+      if (this.window?.gBrowser) {
+        if (url && (url.startsWith("qualium://") || url.startsWith("chrome://qualium/") || url.startsWith("http://") || url.startsWith("https://"))) {
+          this.window.gBrowser.userTypedValue = null;
+        }
       }"""
     if user_typed_target in mod_urlbar:
         mod_urlbar = mod_urlbar.replace(user_typed_target, user_typed_replacement, 1)
 
-    # Patch setURI in UrlbarInput.sys.mjs to clear stale qualium:// userTypedValue on external navigation
+    # Patch setURI in UrlbarInput.sys.mjs to clear stale userTypedValue on external navigation and tab switches
     seturi_target = """    let value = this.window.gBrowser.userTypedValue;
     let valid = false;
     let isReverting = !uri;"""
-    seturi_replacement = """    let value = this.window.gBrowser.userTypedValue;
-    if (value && (value.startsWith("qualium://") || value.startsWith("chrome://qualium/")) && uri && !uri.spec.startsWith("chrome://qualium/") && !uri.spec.startsWith("about:newtab") && !uri.spec.startsWith("about:home") && !uri.spec.startsWith("about:blank")) {
-      value = null;
-      this.window.gBrowser.userTypedValue = null;
-      if (this.window.gBrowser.selectedBrowser) {
-        this.window.gBrowser.selectedBrowser.userTypedValue = null;
+    seturi_replacement = """    let currentSpec = uri ? uri.spec : (this.window.gBrowser.selectedBrowser?.currentURI?.spec || "");
+    let isWebUri = currentSpec.startsWith("http://") || currentSpec.startsWith("https://") || currentSpec.startsWith("file://") || currentSpec.startsWith("ftp://");
+    let value = this.window.gBrowser.userTypedValue;
+    if (isWebUri || (value && (value.startsWith("qualium://") || value.startsWith("chrome://qualium/")))) {
+      if (isWebUri || dueToTabSwitch) {
+        value = null;
+        this.window.gBrowser.userTypedValue = null;
+        if (this.window.gBrowser.selectedBrowser) {
+          this.window.gBrowser.selectedBrowser.userTypedValue = null;
+        }
       }
     }
     let valid = false;

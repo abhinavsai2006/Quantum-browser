@@ -236,6 +236,9 @@
       onLocationChange(aBrowser, aWebProgress, aRequest, aLocation, aFlags) {
         try {
           if (!aBrowser || !aLocation) return;
+          const isTopLevel = !aWebProgress || aWebProgress.isTopLevel;
+          if (!isTopLevel) return;
+
           const url = aLocation.spec;
           if (!url) return;
 
@@ -253,11 +256,14 @@
             }
 
             // Sync Omnibox value to clean public URL (e.g. qualium://newtab, qualium://settings)
-            if (window.gURLBar && !window.gURLBar.focused) {
+            if (window.gURLBar && aBrowser === gBrowser.selectedBrowser) {
               window.gURLBar.value = publicUrl;
               window.gURLBar._untrimmedValue = publicUrl;
               if (window.gURLBar.inputField) {
                 window.gURLBar.inputField.value = publicUrl;
+              }
+              if (typeof window.gURLBar.setPageProxyState === "function") {
+                window.gURLBar.setPageProxyState("valid");
               }
             }
 
@@ -266,6 +272,12 @@
             if (tab) {
               tab.setAttribute("label", cleanTitle);
               tab.setAttribute("image", "chrome://qualium/skin/qualium-shield.svg");
+              const labelEl = tab.querySelector(".tab-label, .qualium-tab-title");
+              if (labelEl) {
+                labelEl.textContent = "";
+                labelEl.setAttribute("value", cleanTitle);
+                labelEl.value = cleanTitle;
+              }
             }
 
             // Record internal route visit (excluding history itself to avoid self-loop noise)
@@ -284,8 +296,8 @@
             return;
           }
 
-          // Case 2: Standard about:blank, about:newtab, about:home internal landing pages
-          if (url === "about:blank" || url === "about:newtab" || url === "about:home") {
+          // Case 2: Standard about:newtab, about:home internal landing pages
+          if (url === "about:newtab" || url === "about:home") {
             if (aBrowser) {
               aBrowser.userTypedValue = null;
             }
@@ -296,11 +308,27 @@
             if (tab) {
               tab.setAttribute("label", "New Tab");
               tab.setAttribute("image", "chrome://qualium/skin/qualium-shield.svg");
+              const labelEl = tab.querySelector(".tab-label, .qualium-tab-title");
+              if (labelEl) {
+                labelEl.textContent = "";
+                labelEl.setAttribute("value", "New Tab");
+                labelEl.value = "New Tab";
+              }
+            }
+            if (window.gURLBar && aBrowser === gBrowser.selectedBrowser) {
+              window.gURLBar.value = "qualium://newtab";
+              window.gURLBar._untrimmedValue = "qualium://newtab";
+              if (window.gURLBar.inputField) {
+                window.gURLBar.inputField.value = "qualium://newtab";
+              }
+              if (typeof window.gURLBar.setPageProxyState === "function") {
+                window.gURLBar.setPageProxyState("valid");
+              }
             }
             return;
           }
 
-          if (url.startsWith("about:") || url.startsWith("chrome://qualium/")) {
+          if (url === "about:blank" || url.startsWith("about:") || url.startsWith("chrome://qualium/")) {
             return;
           }
 
@@ -327,7 +355,7 @@
               tab.setAttribute("label", pageTitle);
               const labelEl = tab.querySelector(".tab-label, .qualium-tab-title");
               if (labelEl) {
-                labelEl.textContent = pageTitle;
+                labelEl.textContent = "";
                 labelEl.setAttribute("value", pageTitle);
                 labelEl.value = pageTitle;
               }
@@ -364,14 +392,21 @@
           }
 
           // 3. Update Omnibox to display real URL if this browser is active
-          if (window.gURLBar && !window.gURLBar.focused && aBrowser === gBrowser.selectedBrowser) {
+          if (window.gURLBar && aBrowser === gBrowser.selectedBrowser) {
             try {
+              aBrowser.userTypedValue = null;
+              if (window.gBrowser) window.gBrowser.userTypedValue = null;
               window.gURLBar.value = url;
               window.gURLBar._untrimmedValue = url;
               if (window.gURLBar.inputField) {
                 window.gURLBar.inputField.value = url;
               }
-              window.gURLBar.setURI();
+              if (typeof window.gURLBar.setURI === "function") {
+                window.gURLBar.setURI(aLocation, false, false, false, !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT));
+              }
+              if (typeof window.gURLBar.setPageProxyState === "function") {
+                window.gURLBar.setPageProxyState("valid");
+              }
             } catch(e) {}
           }
 
@@ -438,7 +473,11 @@
                 try { tab.label = pageTitle; } catch(e) {}
                 tab.setAttribute("label", pageTitle);
                 const labelEl = tab.querySelector(".tab-label, .qualium-tab-title");
-                if (labelEl) labelEl.textContent = pageTitle;
+                if (labelEl) {
+                  labelEl.textContent = "";
+                  labelEl.setAttribute("value", pageTitle);
+                  labelEl.value = pageTitle;
+                }
               }
               try {
                 if (typeof gBrowser.setTabTitle === "function") gBrowser.setTabTitle(tab);
@@ -479,6 +518,39 @@
       gBrowser.tabContainer.addEventListener("TabOpen", (e) => {
         styleTabAsQualium(e.target);
       }, false);
+      gBrowser.tabContainer.addEventListener("TabSelect", (e) => {
+        try {
+          const tab = e.target;
+          const b = gBrowser.getBrowserForTab ? gBrowser.getBrowserForTab(tab) : gBrowser.selectedBrowser;
+          if (!b || !window.gURLBar) return;
+          const curUri = b.currentURI ? b.currentURI.spec : "";
+          if (!curUri) return;
+
+          if (window.QualiumRouteRegistry && window.QualiumRouteRegistry.isInternalResource(curUri)) {
+            const pub = window.QualiumRouteRegistry.internalToPublic(curUri);
+            b.userTypedValue = null;
+            if (window.gBrowser) window.gBrowser.userTypedValue = null;
+            window.gURLBar.value = pub;
+            window.gURLBar._untrimmedValue = pub;
+            if (window.gURLBar.inputField) window.gURLBar.inputField.value = pub;
+            if (typeof window.gURLBar.setPageProxyState === "function") {
+              window.gURLBar.setPageProxyState("valid");
+            }
+          } else if (curUri.startsWith("http://") || curUri.startsWith("https://") || curUri.startsWith("file://")) {
+            b.userTypedValue = null;
+            if (window.gBrowser) window.gBrowser.userTypedValue = null;
+            window.gURLBar.value = curUri;
+            window.gURLBar._untrimmedValue = curUri;
+            if (window.gURLBar.inputField) window.gURLBar.inputField.value = curUri;
+            if (typeof window.gURLBar.setURI === "function") {
+              window.gURLBar.setURI(b.currentURI, true);
+            }
+            if (typeof window.gURLBar.setPageProxyState === "function") {
+              window.gURLBar.setPageProxyState("valid");
+            }
+          }
+        } catch(err) {}
+      }, false);
     }
 
     // Dynamic Tab Title Synchronization for web pages (e.g. Google Search results, YouTube)
@@ -491,7 +563,7 @@
           t.setAttribute("label", b.contentTitle);
           const labelEl = t.querySelector(".tab-label, .qualium-tab-title");
           if (labelEl) {
-            labelEl.textContent = b.contentTitle;
+            labelEl.textContent = "";
             labelEl.setAttribute("value", b.contentTitle);
             labelEl.value = b.contentTitle;
           }
@@ -1109,6 +1181,21 @@
                   }
                 } catch(err) {
                   res = "ERROR:" + err;
+                }
+              } else if (cmd.startsWith("OPEN_IN_NEW_TAB:")) {
+                const targetUrl = cmd.slice(16).trim();
+                try {
+                  if (typeof window.openTrustedLinkIn === "function") {
+                    window.openTrustedLinkIn(targetUrl, "tab");
+                    res = "OPENED_NEW_TAB:" + targetUrl;
+                  } else if (window.gBrowser) {
+                    window.gBrowser.addTrustedTab(targetUrl);
+                    res = "OPENED_NEW_TAB:" + targetUrl;
+                  } else {
+                    res = "ERROR_NO_TAB_FN";
+                  }
+                } catch(e) {
+                  res = "ERROR:" + e;
                 }
               }
 

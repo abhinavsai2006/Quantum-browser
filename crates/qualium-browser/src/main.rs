@@ -234,6 +234,8 @@ user_pref("browser.cache.memory.capacity", 65536);
 user_pref("browser.urlbar.suggest.searches", true);
 user_pref("browser.urlbar.autoFill", true);
 user_pref("browser.urlbar.speculativeConnect.enabled", true);
+user_pref("browser.urlbar.showSearchTerms.enabled", false);
+user_pref("browser.urlbar.showSearchTerms.featureGate", false);
 user_pref("network.http.speculative-parallel-limit", 6);
 user_pref("network.dns.disablePrefetch", false);
 user_pref("network.prefetch-next", true);
