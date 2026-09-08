@@ -1,7 +1,7 @@
-# Qualium Quantum Browser v5
+# Qaulium Quantum Browser v5
 
 <p align="center">
-  <img src="qaulium_icon_1024.png" width="128" alt="Qualium Icon"/>
+  <img src="qaulium_icon_1024.png" width="128" alt="Qaulium Icon"/>
 </p>
 
 <p align="center">
@@ -13,13 +13,14 @@
 
 ## 🏛️ Architecture & Specifications (v5.0)
 
-Qualium Quantum Browser v5 follows a comprehensive, formal engineering specification suite:
+Qaulium Quantum Browser v5 follows a comprehensive, formal engineering specification suite:
 
 - 📋 **[Complete Software Requirements Specification (SRS v5)](docs/SRS_v5.md)** — The authoritative 54-section specification covering product definition, design philosophy, functional requirements, threat models, and acceptance tests.
 - 🏗️ **[System Architecture Specification](docs/SYSTEM_ARCHITECTURE_v5.md)** — Detailed multi-engine model (Browser Engine, Privacy Engine, Security Engine, Network Security Daemon, Shield Q Indicator).
 - 🔒 **[Data-Flow & Non-Retention Specification](docs/DATA_FLOW_AND_NON_RETENTION.md)** — Architectural design of *"The Database We Don't Build"*, ephemeral session lifecycles, and private search gateway data flow.
 - 🔌 **[Comprehensive API Specification](docs/API_SPECIFICATION_v5.md)** — Browser-Daemon IPC protocol, multi-hop relay onion cell specifications, and `CryptoProvider` trait abstractions.
 - 🗺️ **[Module Implementation Plan](docs/MODULE_IMPLEMENTATION_PLAN_v5.md)** — Source code structure, Rust crate boundaries, and continuous verification gates.
+- 🔬 **[Cryptographic Proof & Verification Document](docs/CRYPTOGRAPHIC_PROOF_AND_VERIFICATION.md)** — Formal mathematical security reductions (M-LWE, IND-CCA2 hybrid security, transcript binding, onion routing anonymity proofs) and empirical performance benchmarks.
 
 ---
 
@@ -42,7 +43,7 @@ Qualium Quantum Browser v5 follows a comprehensive, formal engineering specifica
 | **Windows x64** | Installer (`.exe`) | [`dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe`](dist/Qualium-Quantum-Browser-v1.0.0-Setup.exe) | Run installer wizard or execute [`QualiumQuantumBrowser.exe`](QualiumQuantumBrowser.exe) directly |
 | **Linux x86_64** | Tarball (`.tar.gz`) | [`dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-linux-x86_64.tar.gz) | Extract and run `./AppRun` or run `sudo ./install.sh` |
 | **Linux (Debian/Ubuntu)** | Package (`.deb`) | `dist/linux/qualium-deb/` | Run `bash dist/linux/build-deb.sh` to produce `.deb` |
-| **macOS Universal** | App Bundle (`.app`) | [`dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz) | Drag `Qualium Quantum Browser.app` to `/Applications` |
+| **macOS Universal** | App Bundle (`.app`) | [`dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz`](dist/Qualium-Quantum-Browser-v1.0.0-macOS-Universal.tar.gz) | Drag `Qaulium Quantum Browser.app` to `/Applications` |
 | **macOS Disk Image** | DMG (`.dmg`) | `dist/macos/create-dmg.sh` | Run `bash dist/macos/create-dmg.sh` on macOS |
 
 ---
@@ -103,4 +104,4 @@ Every release package is indexed in the signed SHA-256 verification manifest and
 
 ---
 
-<p align="center">© 2026 Qualium AI. Built for the Quantum Era.</p>
+<p align="center">© 2026 Qaulium AI. Built for the Quantum Era.</p>

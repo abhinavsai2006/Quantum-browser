@@ -1,21 +1,21 @@
-# Qualium Quantum Browser v5 — Detailed System Architecture
+# Qaulium Quantum Browser v5 — Detailed System Architecture
 
 **Document Version:** 5.0.0  
 **Classification:** Engineering Architecture & Design  
-**Author:** Qualium AI Engineering Team  
+**Author:** Qaulium AI Engineering Team  
 
 ---
 
 ## 1. Architectural Overview & System Model
 
-Qualium Quantum Browser v5 is structured as a decoupled, multi-process architecture combining a hardened web browser engine frontend, native post-quantum cryptographic primitives, an ad/tracker filtering pipeline, and an external network security daemon managing isolated anonymous circuits.
+Qaulium Quantum Browser v5 is structured as a decoupled, multi-process architecture combining a hardened web browser engine frontend, native post-quantum cryptographic primitives, an ad/tracker filtering pipeline, and an external network security daemon managing isolated anonymous circuits.
 
 ```text
                            USER
                             │
                             ▼
               ┌──────────────────────────┐
-              │   QUALIUM QUANTUM        │
+              │   QAULIUM QUANTUM        │
               │        BROWSER           │
               └────────────┬─────────────┘
                            │
@@ -46,7 +46,7 @@ Qualium Quantum Browser v5 is structured as a decoupled, multi-process architect
                    └──────┼──────┘
                           │
                           ▼
-                 QUALIUM SEARCH
+                 QAULIUM SEARCH
                           │
                           ▼
                        INTERNET
@@ -62,7 +62,7 @@ Qualium Quantum Browser v5 is structured as a decoupled, multi-process architect
   - `privacy.firstparty.isolate = true` — Dynamic first-party cookie/storage jar partitioning.
   - `privacy.resistFingerprinting = true` — Baseline canvas/timing/locale shielding.
   - `dom.webrtc.ip_handling_policy = disable_non_proxied_udp` — Disables host ICE candidate leakage.
-  - `network.proxy.type = 1` (Manual SOCKS5) bound strictly to `127.0.0.1:<PORT>` (Qualium Daemon).
+  - `network.proxy.type = 1` (Manual SOCKS5) bound strictly to `127.0.0.1:<PORT>` (Qaulium Daemon).
   - `network.proxy.socks_remote_dns = true` — All DNS resolution forced over the remote multi-hop circuit.
   - `network.http.speculative-parallel-limit = 0` — Prevents speculative network pre-connects that bypass proxy.
   - `datareporting.policy.dataSubmissionEnabled = false` — Telemetry completely stripped.
@@ -107,7 +107,7 @@ Browser Window
      │
      │ SOCKS5 / HTTP Proxy (127.0.0.1:PORT)
      ▼
-Qualium Daemon (qualium-daemon.exe)
+Qaulium Daemon (qualium-daemon.exe)
      │
      ├── Inbound Protocol Demuxer
      ├── Circuit Manager & State Controller
@@ -138,7 +138,7 @@ Clicking the `🛡 Q` button in the browser chrome toolbar opens the live securi
 
 ```text
 ┌──────────────────────────────────────┐
-│       QUALIUM SECURITY               │
+│       QAULIUM SECURITY               │
 ├──────────────────────────────────────┤
 │ Anonymous routing       ✓            │
 │ PQ handshake            ✓            │
@@ -151,7 +151,7 @@ Clicking the `🛡 Q` button in the browser chrome toolbar opens the live securi
 │ Ads blocked             24           │
 │ Trackers blocked        13           │
 │ Local history           OFF          │
-│ Qualium telemetry       OFF          │
+│ Qaulium telemetry       OFF          │
 └──────────────────────────────────────┘
 ```
 
@@ -184,7 +184,7 @@ When the user clicks "New Identity" (`Ctrl+Shift+U`):
 
 ## 5. Security & Threat Mitigation Summary
 
-| Threat | Description | Qualium v5 Defense |
+| Threat | Description | Qaulium v5 Defense |
 | :--- | :--- | :--- |
 | **T1: ISP Surveillance** | Local ISP logs visited hosts and DNS | 3-hop onion circuit + Remote DNS encapsulation |
 | **T2: Wi-Fi Eavesdropper** | Local sniffer intercepts unencrypted traffic | Universal HTTPS enforcement + PQC hybrid transport tunnel |

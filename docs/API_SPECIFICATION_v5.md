@@ -1,8 +1,8 @@
-# Qualium Quantum Browser v5 — Comprehensive API Specification
+# Qaulium Quantum Browser v5 — Comprehensive API Specification
 
 **Document Version:** 5.0.0  
 **Classification:** Engineering Interface Specification  
-**Author:** Qualium AI Engineering Team  
+**Author:** Qaulium AI Engineering Team  
 
 ---
 
@@ -94,7 +94,7 @@ Messages are framed using a 4-byte big-endian length prefix followed by a UTF-8 
 
 ## 2. Daemon ↔ Relay Onion Routing Protocol
 
-Qualium circuits employ fixed-size **512-byte cells** with multi-layer symmetric AEAD encapsulation:
+Qaulium circuits employ fixed-size **512-byte cells** with multi-layer symmetric AEAD encapsulation:
 
 ```text
 ┌──────────────┬──────────────┬──────────────┬───────────────────────────┐
