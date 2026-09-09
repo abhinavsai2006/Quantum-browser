@@ -295,12 +295,20 @@ const COLOR_ALERT_YELLOW: u32 = 0x0024BFFB;// Amber 400 (RGB 251, 191, 36)
 const COLOR_ALERT_GREEN: u32 = 0x005EC522; // Green 500 (RGB 34, 197, 94)
 
 fn set_window_icon(hwnd: ffi::HWND) {
-    let candidates = [
-        PathBuf::from(r"C:\Users\mndab\AppData\Local\Programs\Qaulium\resources\qualium.ico"),
-        PathBuf::from(r"C:\Users\mndab\AppData\Local\Programs\Qualium\resources\qualium.ico"),
-        PathBuf::from(r"E:\Qaulium AI\Broswer\qualium.ico"),
-        PathBuf::from(r"E:\Qaulium AI\Broswer\dist\qualium.ico"),
-    ];
+    let mut candidates = Vec::new();
+    if let Ok(current_exe) = std::env::current_exe() {
+        if let Some(parent) = current_exe.parent() {
+            candidates.push(parent.join("qualium.ico"));
+            candidates.push(parent.join("resources").join("qualium.ico"));
+        }
+    }
+    #[cfg(windows)]
+    if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+        candidates.push(PathBuf::from(&local_appdata).join("Programs").join("Qaulium").join("resources").join("qualium.ico"));
+        candidates.push(PathBuf::from(&local_appdata).join("Programs").join("Qualium").join("resources").join("qualium.ico"));
+    }
+    candidates.push(PathBuf::from("qualium.ico"));
+    candidates.push(PathBuf::from("resources").join("qualium.ico"));
     for cand in &candidates {
         if cand.exists() {
             let wide = to_wide_null(&cand.to_string_lossy());
@@ -465,7 +473,7 @@ pub fn run_installer_gui(engine: InstallEngine, default_dest: PathBuf) -> anyhow
         let pos_x = (screen_w - win_w) / 2;
         let pos_y = (screen_h - win_h) / 2;
 
-        let title = to_wide_null("Qaulium Quantum Browser v5.0.0 Setup");
+        let title = to_wide_null("Qaulium Quantum Browser v5.0.1 Setup");
         let hwnd = ffi::CreateWindowExW(
             0,
             class_name.as_ptr(),
@@ -489,9 +497,9 @@ pub fn run_installer_gui(engine: InstallEngine, default_dest: PathBuf) -> anyhow
             req_bytes: metrics.total_uncompressed_bytes,
             total_files: metrics.total_file_count,
             avail_bytes: free_bytes,
-            create_desktop: true,
+            create_desktop: false,
             create_startmenu: true,
-            launch_after: true,
+            launch_after: false,
             start_with_win: false,
             license_accepted: true,
             engine: Arc::new(engine),
@@ -976,6 +984,7 @@ fn start_install_worker(hwnd: ffi::HWND) {
                 create_start_menu_shortcut: state.create_startmenu,
                 launch_after_install: state.launch_after,
                 start_with_windows: state.start_with_win,
+                is_portable: false,
             }
         } else {
             return;

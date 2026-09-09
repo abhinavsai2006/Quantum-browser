@@ -30,17 +30,28 @@ const EMBEDDED_PAYLOAD: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/payloa
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     let is_silent = args.iter().any(|a| a == "/S" || a == "/silent" || a == "--silent");
-    let dest_dir = get_destination_from_args(&args).unwrap_or_else(win32::get_default_install_dir);
+    let is_portable = args.iter().any(|a| a == "/PORTABLE" || a == "/portable" || a == "--portable" || a == "-p");
+    let dest_dir = get_destination_from_args(&args).unwrap_or_else(|| {
+        if is_portable {
+            env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|dir| dir.join("QuantumBrowser")))
+                .unwrap_or_else(|| PathBuf::from("QuantumBrowser"))
+        } else {
+            win32::get_default_install_dir()
+        }
+    });
 
     let engine = InstallEngine::new(EMBEDDED_PAYLOAD);
 
     if is_silent {
         let options = InstallOptions {
             install_dir: dest_dir,
-            create_desktop_shortcut: true,
-            create_start_menu_shortcut: true,
+            create_desktop_shortcut: false,
+            create_start_menu_shortcut: !is_portable,
             launch_after_install: false,
             start_with_windows: false,
+            is_portable,
         };
         match engine.install(&options, |_, _, _, _, _, _| {}) {
             Ok(_) => return Ok(()),

@@ -16,6 +16,7 @@ pub struct InstallOptions {
     pub create_start_menu_shortcut: bool,
     pub launch_after_install: bool,
     pub start_with_windows: bool,
+    pub is_portable: bool,
 }
 
 pub struct PayloadMetrics {
@@ -81,21 +82,36 @@ impl InstallEngine {
         }
         fs::create_dir_all(&staging_dir)?;
 
-        // Resolve user data dir: Windows uses LOCALAPPDATA, others use XDG_DATA_HOME or ~/.local/share
-        #[cfg(windows)]
-        let user_data_dir = win32::get_user_data_dir();
-        #[cfg(not(windows))]
-        let user_data_dir = std::env::var("XDG_DATA_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| {
-                // Pure stdlib home detection: try HOME (Linux/macOS), then /tmp fallback
-                std::env::var("HOME")
+        // Resolve user data dir: portable mode uses dest/Data, Windows standard uses LOCALAPPDATA\Programs\Qaulium\Data
+        let user_data_dir = if options.is_portable {
+            let p = dest.join("Data");
+            let _ = fs::create_dir_all(&p);
+            let _ = fs::write(dest.join("portable.dat"), b"portable=1\n");
+            p
+        } else {
+            #[cfg(windows)]
+            {
+                let p = win32::get_user_data_dir().join("Data");
+                let _ = fs::create_dir_all(&p);
+                p
+            }
+            #[cfg(not(windows))]
+            {
+                let p = std::env::var("XDG_DATA_HOME")
                     .map(PathBuf::from)
-                    .unwrap_or_else(|_| PathBuf::from("/tmp"))
-                    .join(".local")
-                    .join("share")
-                    .join("qualium")
-            });
+                    .unwrap_or_else(|_| {
+                        std::env::var("HOME")
+                            .map(PathBuf::from)
+                            .unwrap_or_else(|_| PathBuf::from("/tmp"))
+                            .join(".local")
+                            .join("share")
+                            .join("qualium")
+                    })
+                    .join("Data");
+                let _ = fs::create_dir_all(&p);
+                p
+            }
+        };
         let mut manifest = InstallManifest::new(dest.clone(), user_data_dir);
         manifest.total_installed_bytes = metrics.total_uncompressed_bytes;
         manifest.total_file_count = metrics.total_file_count;
@@ -200,8 +216,8 @@ impl InstallEngine {
             let candidates = [
                 std::env::current_exe().ok().and_then(|p| p.parent().map(|dir| dir.join("QualiumUninstall.exe"))),
                 std::env::current_exe().ok().and_then(|p| p.parent().map(|dir| dir.join("QauliumUninstall.exe"))),
-                Some(PathBuf::from(r"E:\Qaulium AI\Broswer\dist\QualiumUninstall.exe")),
-                Some(PathBuf::from(r"E:\Qaulium AI\Broswer\target\release\qualium_uninstaller.exe")),
+                std::env::current_exe().ok().and_then(|p| p.parent().map(|dir| dir.join("uninstall").join("QualiumUninstall.exe"))),
+                std::env::var("CARGO_MANIFEST_DIR").ok().map(|d| PathBuf::from(d).join("..").join("..").join("dist").join("QualiumUninstall.exe")),
             ];
             for cand in candidates.into_iter().flatten() {
                 if cand.exists() {
@@ -225,7 +241,7 @@ impl InstallEngine {
         let primary_exe = if main_browser_exe.exists() { main_browser_exe.clone() } else { alt_browser_exe.clone() };
 
         #[cfg(windows)]
-        if options.create_desktop_shortcut {
+        if !options.is_portable && options.create_desktop_shortcut {
             let icon_ref = if icon_path.exists() { Some(icon_path.as_path()) } else { None };
             for desktop_lnk in win32::get_desktop_shortcut_paths() {
                 if let Ok(()) = win32::create_shortcut(
@@ -243,7 +259,7 @@ impl InstallEngine {
         }
 
         #[cfg(windows)]
-        if options.create_start_menu_shortcut {
+        if !options.is_portable && options.create_start_menu_shortcut {
             if let Some(menu_dir) = win32::get_start_menu_shortcut_dir() {
                 let _ = fs::create_dir_all(&menu_dir);
                 let app_lnk = menu_dir.join("Qaulium Quantum Browser.lnk");
@@ -274,13 +290,13 @@ impl InstallEngine {
 
         // 9. Windows Run entry (Option 4: Start with Windows)
         #[cfg(windows)]
-        if options.start_with_windows {
+        if !options.is_portable && options.start_with_windows {
             let _ = win32::register_startup(&primary_exe);
         }
 
         // 10. Windows Installed Apps Registry Registration
         #[cfg(windows)]
-        {
+        if !options.is_portable {
             let total_size_kb = (metrics.total_uncompressed_bytes / 1024).max(1);
             let reg_icon = if icon_path.exists() { icon_path } else { primary_exe.clone() };
             win32::register_uninstall(dest, &root_uninstaller, &reg_icon, total_size_kb)?;
@@ -289,7 +305,7 @@ impl InstallEngine {
         // 11. Write authoritative install-manifest.json
         manifest.save_to_dir(dest)?;
 
-        // 11. Final Verification of Critical Files
+        // 12. Final Verification of Critical Files
         self.verify_installation(dest)?;
 
         Ok(manifest)
@@ -302,6 +318,7 @@ impl InstallEngine {
             dest.join("qualium-daemon.exe"),
             dest.join("runtime").join("qualium-core.exe"),
             dest.join("runtime").join("browser").join("omni.ja"),
+            dest.join("runtime").join("tor").join("tor-real.exe"),
             dest.join("install-manifest.json"),
         ];
 

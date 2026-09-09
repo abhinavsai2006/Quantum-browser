@@ -30,6 +30,8 @@ fn main() {
         repo_root.join("target").join("release").join("QualiumQuantumBrowser.exe"),
         repo_root.join("dist").join("QualiumQuantumBrowser.exe"),
         repo_root.join("target_build").join("release").join("QualiumQuantumBrowser.exe"),
+        repo_root.join("QualiumQuantumBrowser.exe"),
+        repo_root.join("QauliumQuantumBrowser.exe"),
     ];
     let target_browser_exe = stage_dir.join("QualiumQuantumBrowser.exe");
     let target_qaulium_exe = stage_dir.join("QauliumQuantumBrowser.exe");
@@ -46,6 +48,7 @@ fn main() {
         repo_root.join("target").join("release").join("qualium-daemon.exe"),
         repo_root.join("target_build").join("release").join("qualium-daemon.exe"),
         repo_root.join("dist").join("qualium-daemon.exe"),
+        repo_root.join("qualium-daemon.exe"),
     ];
     let target_daemon_exe = stage_dir.join("qualium-daemon.exe");
     for cand in &daemon_candidates {
@@ -103,6 +106,8 @@ fn main() {
         repo_root.join("target").join("release").join("qualium_uninstaller.exe"),
         repo_root.join("dist").join("QualiumUninstall.exe"),
         repo_root.join("target_build").join("release").join("qualium_uninstaller.exe"),
+        repo_root.join("QualiumUninstall.exe"),
+        repo_root.join("QauliumUninstall.exe"),
     ];
     let uninstall_sub_dir = stage_dir.join("uninstall");
     let _ = fs::create_dir_all(&uninstall_sub_dir);
@@ -157,9 +162,9 @@ fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
         let entry = entry?;
         let ty = entry.file_type()?;
         if ty.is_dir() {
-            copy_dir_all(&entry.path(), &dst.join(entry.file_name()))?;
+            let _ = copy_dir_all(&entry.path(), &dst.join(entry.file_name()));
         } else {
-            fs::copy(entry.path(), dst.join(entry.file_name()))?;
+            let _ = fs::copy(entry.path(), dst.join(entry.file_name()));
         }
     }
     Ok(())

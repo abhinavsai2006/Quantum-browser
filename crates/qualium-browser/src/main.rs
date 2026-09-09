@@ -22,6 +22,9 @@ use std::process::{Child, Command};
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
+// Import our custom install paths module
+mod install_paths;
+use install_paths::data_dir;
 
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 const EMBEDDED_USER_CHROME: &str = include_str!("../../../qualium/chrome/userChrome.css");
@@ -85,8 +88,17 @@ fn get_app_dir() -> PathBuf {
 }
 
 fn get_profile_dir() -> PathBuf {
+    if install_paths::is_portable_mode() {
+        let p = data_dir().join("Profile");
+        let _ = fs::create_dir_all(&p);
+        return p;
+    }
     #[cfg(windows)]
     {
+        let p_data = data_dir().join("Profile");
+        if p_data.exists() {
+            return p_data;
+        }
         if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
             let p_qau = PathBuf::from(&local_appdata).join("Qaulium").join("Profile");
             let p_qua = PathBuf::from(&local_appdata).join("Qualium").join("Profile");
@@ -95,9 +107,9 @@ fn get_profile_dir() -> PathBuf {
             } else if p_qua.exists() {
                 return p_qua;
             }
-            let _ = fs::create_dir_all(&p_qua);
-            return p_qua;
         }
+        let _ = fs::create_dir_all(&p_data);
+        return p_data;
     }
     #[cfg(target_os = "macos")]
     {
@@ -119,9 +131,12 @@ fn get_profile_dir() -> PathBuf {
             return p_lin;
         }
     }
-    let p = env::temp_dir().join("qualium_profile");
-    let _ = fs::create_dir_all(&p);
-    p
+    #[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
+    {
+        let p = env::temp_dir().join("qualium_profile");
+        let _ = fs::create_dir_all(&p);
+        p
+    }
 }
 
 fn wait_for_port_ready(port: u16, max_wait_ms: u64) -> bool {
@@ -385,6 +400,17 @@ fn spawn_onion_router(app_dir: &Path) -> Option<Child> {
         app_dir.join("tor").join("tor-real.exe"),
     ];
 
+    if let Ok(current_exe) = env::current_exe() {
+        if let Some(parent) = current_exe.parent() {
+            candidate_paths.push(parent.join("runtime").join("tor").join("tor-real.exe"));
+            candidate_paths.push(parent.join("tor").join("tor-real.exe"));
+        }
+    }
+
+    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+        candidate_paths.push(PathBuf::from(manifest_dir).join("..").join("..").join("runtime").join("tor").join("tor-real.exe"));
+    }
+
     #[cfg(windows)]
     if let Ok(local_appdata) = env::var("LOCALAPPDATA") {
         candidate_paths.push(PathBuf::from(&local_appdata).join("Programs").join("Qualium").join("runtime").join("tor").join("tor-real.exe"));
@@ -394,7 +420,8 @@ fn spawn_onion_router(app_dir: &Path) -> Option<Child> {
     for tor_exe in candidate_paths {
         if tor_exe.exists() {
             let tor_dir = tor_exe.parent().unwrap();
-            let data_dir = tor_dir.join("data");
+            // Use a per-user writable data directory (portable-aware) for Tor data
+            let data_dir = data_dir().join("tor_data");
             let _ = fs::create_dir_all(&data_dir);
             let mut cmd = Command::new(&tor_exe);
             cmd.current_dir(tor_dir);

@@ -1,4 +1,3 @@
-GeoIPFile C:\Program Files (x86)\Tor\geoip
-GeoIPv6File C:\Program Files (x86)\Tor\geoip6
-SocksPort localhost:9050
-#ExitNodes {us}
+# Quantum Browser Bundled Tor Configuration
+# Dynamic runtime paths for DataDirectory and GeoIP are provided via command-line arguments.
+SocksPort 127.0.0.1:9050
